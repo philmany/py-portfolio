@@ -74,16 +74,9 @@
     var T = function (q) { var a = P(q); return [(a[0] - x0) * s, (a[1] - y0) * s]; };
     var w = (Math.max.apply(0, xs) - x0) * s, h = (Math.max.apply(0, ys) - y0) * s;
     var fmt = function (a) { return a[0].toFixed(2) + " " + a[1].toFixed(2); };
-    // Catmull-Rom through the traced points, so every shore is a smooth curve.
+    // straight segments between the points: no smoothing, so shores stay crisp
     var curve = function (p, closed) {
-      var n = p.length, s = "M" + fmt(p[0]), last = closed ? n : n - 1;
-      var at = function (i) { return closed ? p[(i + n) % n] : p[Math.max(0, Math.min(n - 1, i))]; };
-      for (var i = 0; i < last; i++) {
-        var p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2);
-        s += "C" + fmt([p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6]) + " " +
-          fmt([p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6]) + " " + fmt(p2);
-      }
-      return s + (closed ? "Z" : "");
+      return "M" + p.map(fmt).join("L") + (closed ? "Z" : "");
     };
     var d = [];
     (sh.rings || []).forEach(function (r) { d.push(curve(r.map(T), true)); });
@@ -109,28 +102,31 @@
     svg.setAttribute("aria-hidden", "true");
     var path = document.createElementNS(NS, "path");
     path.setAttribute("d", o.d);
-    path.setAttribute("pathLength", "1");
-    path.style.animationDelay = (0.9 + i * 0.12) + "s";
-    path.addEventListener("animationend", function () { path.style.animation = "none"; path.style.strokeDasharray = "none"; path.style.strokeDashoffset = "0"; });
     svg.appendChild(path);
-    var b = el("button", { class: "mem", type: "button", "aria-label": p.name + ", " + p.where + ". " + lastLine(p) + "." },
+    var b = el("button", { class: "mem", type: "button", "aria-expanded": "false",
+                           "aria-label": p.name + ", " + p.where + ". " + lastLine(p) + ". Select to focus on it." },
       el("span", { class: "mem-card", "aria-hidden": "true" },
         el("b", { text: p.name }), el("span", { class: "where", text: p.where }), el("span", { class: "when", text: lastLine(p) })));
     b.insertBefore(el("span", { class: "mem-fx", "aria-hidden": "true" }, svg), b.firstChild);
     b._ar = o.w / o.h;
-    b.addEventListener("pointerenter", function () { setOn(b, true); });
-    b.addEventListener("pointerleave", function () { setOn(b, false); });
-    b.addEventListener("focus", function () { setOn(b, true); });
-    b.addEventListener("blur", function () { setOn(b, false); });
+    b.addEventListener("click", function (e) { e.stopPropagation(); setOn(b, !b.classList.contains("on")); });
     memLayer.appendChild(b);
     return b;
   });
 
-  // Hovering a memory: the dots dim, and its outline drifts toward the centre and grows.
+  // Hover shows the label in place. A click focuses: the dots dim, and the
+  // outline glides toward the centre and grows. Click again, click the water,
+  // or press Escape to let it go.
   function setOn(b, on) {
-    b.classList.toggle("on", on);
-    hero.classList.toggle("focus", mems.some(function (m) { return m.classList.contains("on"); }));
+    mems.forEach(function (m) {
+      var x = m === b && on;
+      m.classList.toggle("on", x);
+      m.setAttribute("aria-expanded", String(x));
+    });
+    hero.classList.toggle("focus", !!on);
   }
+  hero.addEventListener("click", function (e) { if (!e.target.closest(".mem, .ctl, a")) setOn(null, false); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") setOn(null, false); });
 
   // Size and place each outline on the lake; returns markers for the water engine.
   function placeShapes(w, h) {
@@ -401,8 +397,7 @@
     hero.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
     clearTimeout(memTimer);
     memTimer = setTimeout(function () {
-      mems.forEach(function (m, k) { setOn(m, k === i); });
-      memTimer = setTimeout(function () { setOn(mems[i], false); }, 3600);
+      setOn(mems[i], true);
     }, reduce ? 0 : 750);
   }
 

@@ -1,12 +1,14 @@
 /*
-  A water molecule (H2O) in 3D, drawn in the same halftone as the lake.
-  Canvas 2D, no libraries.
+  A water molecule (H2O) as a 3D line drawing. Canvas 2D, no libraries.
 
-  - Geometry: one oxygen and two hydrogens, O-H bonds at the real 104.5 degree
-    angle. Atoms are shaded spheres, bonds are shaded cylinders, both made of dots.
-  - It spins slowly on its own. Hovering it spins it faster; when the pointer
-    leaves it eases back to its resting speed.
-  - Reduced motion: a still view. Off screen: it stops drawing.
+  - Geometry: one oxygen and two hydrogens with O-H bonds at the real
+    104.5 degree angle. Each atom is a wireframe globe (outline, meridians and
+    parallels); each bond is drawn as a cylinder outline.
+  - It turns slowly on its own. Press and drag to turn it any way you like,
+    like a globe; let go and it keeps your spin, then settles back into its
+    slow turn. Arrow keys turn it too.
+  - Lines on the far side of each atom are drawn fainter.
+  - Reduced motion: it holds still until you turn it.
 */
 (function () {
   "use strict";
@@ -16,19 +18,32 @@
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var TAU = Math.PI * 2;
 
-  var half = (104.5 / 2) * Math.PI / 180, bond = 1.25;
-  // positions in molecule space (y down), centred roughly on the middle of the shape
+  var half = (104.5 / 2) * Math.PI / 180, bond = 1.3;
   var atoms = [
-    { name: "O", p: [0, -0.32, 0], r: 0.78, lo: [70, 40, 70], hi: [255, 214, 178] },
-    { name: "H", p: [-Math.sin(half) * bond, -0.32 + Math.cos(half) * bond, 0], r: 0.46, lo: [30, 40, 92], hi: [178, 196, 236] },
-    { name: "H", p: [Math.sin(half) * bond, -0.32 + Math.cos(half) * bond, 0], r: 0.46, lo: [30, 40, 92], hi: [178, 196, 236] },
+    { label: "O", p: [0, -0.34, 0], r: 0.72, color: [255, 138, 61] },
+    { label: "H", p: [-Math.sin(half) * bond, -0.34 + Math.cos(half) * bond, 0], r: 0.42, color: [95, 211, 196] },
+    { label: "H", p: [Math.sin(half) * bond, -0.34 + Math.cos(half) * bond, 0], r: 0.42, color: [95, 211, 196] },
   ];
   var bonds = [[0, 1], [0, 2]];
-  var L = (function (v) { var m = Math.hypot(v[0], v[1], v[2]); return [v[0] / m, v[1] / m, v[2] / m]; })([-0.55, -0.62, 0.56]);
 
-  var W = 0, H = 0, unit = 1, pitch = 5;
-  var angle = 0.6, speed = 0.55, target = 0.55, BASE = 0.55, FAST = 3.4;
-  var visible = true, raf = 0, last = 0;
+  function mul(A, B) {
+    var C = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++)
+      C[i][j] = A[i][0] * B[0][j] + A[i][1] * B[1][j] + A[i][2] * B[2][j];
+    return C;
+  }
+  function rotX(a) { var c = Math.cos(a), s = Math.sin(a); return [[1, 0, 0], [0, c, -s], [0, s, c]]; }
+  function rotY(a) { var c = Math.cos(a), s = Math.sin(a); return [[c, 0, s], [0, 1, 0], [-s, 0, c]]; }
+  function apply(M, v) {
+    return [M[0][0] * v[0] + M[0][1] * v[1] + M[0][2] * v[2],
+            M[1][0] * v[0] + M[1][1] * v[1] + M[1][2] * v[2],
+            M[2][0] * v[0] + M[2][1] * v[1] + M[2][2] * v[2]];
+  }
+  var R = mul(rotX(0.35), rotY(0.6));   // orientation
+
+  var W = 0, H = 0, unit = 1;
+  var vx = 0, vy = 0.5, BASE_VY = 0.5;  // angular velocity (rad/s) about screen x and y
+  var visible = true, raf = 0, last = 0, drag = null;
 
   function size() {
     var r = canvas.getBoundingClientRect();
@@ -37,81 +52,75 @@
     W = r.width; H = r.height;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    unit = Math.min(W, H) * 0.27;
-    pitch = Math.max(4, Math.round(W / 88));
+    unit = Math.min(W, H) * 0.26;
     return true;
   }
-
-  function project(v, a, tilt) {
-    // spin around the vertical axis, then tip slightly toward the viewer
-    var ca = Math.cos(a), sa = Math.sin(a);
-    var x = v[0] * ca + v[2] * sa, z = -v[0] * sa + v[2] * ca, y = v[1];
-    var ct = Math.cos(tilt), st = Math.sin(tilt);
-    var y2 = y * ct - z * st, z2 = y * st + z * ct;
-    var f = 6 / (6 + z2);
-    return { x: W / 2 + x * unit * f, y: H * 0.47 + y2 * unit * f, z: z2, s: f };
+  function proj(v) {
+    var f = 7 / (7 + v[2]);
+    return [W / 2 + v[0] * unit * f, H * 0.47 + v[1] * unit * f, v[2], f];
   }
+  function rgba(c, a) { return "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + a.toFixed(3) + ")"; }
 
-  function mix(a, b, t) {
-    return "rgb(" + Math.round(a[0] + (b[0] - a[0]) * t) + "," + Math.round(a[1] + (b[1] - a[1]) * t) + "," + Math.round(a[2] + (b[2] - a[2]) * t) + ")";
-  }
-
-  function sphere(c, R, lo, hi) {
-    var buckets = {};
-    for (var gy = -R; gy <= R; gy += pitch) for (var gx = -R; gx <= R; gx += pitch) {
-      var nx = gx / R, ny = gy / R, q = nx * nx + ny * ny;
-      if (q > 1) continue;
-      var nz = Math.sqrt(1 - q);
-      var d = nx * L[0] + ny * L[1] + nz * L[2];
-      var I = 0.22 + 0.78 * Math.max(0, d);
-      var sp = Math.pow(Math.max(0, d), 24) * 0.6;
-      var rim = Math.pow(1 - nz, 3) * 0.25;
-      var lum = Math.min(1, I + sp + rim);
-      var r = pitch * 0.5 * Math.pow(lum, 0.75) * (0.55 + 0.45 * nz);
-      if (r < 0.35) continue;
-      var key = Math.min(9, (lum * 10) | 0);
-      (buckets[key] = buckets[key] || []).push(c.x + gx, c.y + gy, r);
-    }
-    for (var k in buckets) {
-      var b = buckets[k];
-      ctx.fillStyle = mix(lo, hi, (+k + 0.5) / 10);
-      ctx.beginPath();
-      for (var i = 0; i < b.length; i += 3) { ctx.moveTo(b[i] + b[i + 2], b[i + 1]); ctx.arc(b[i], b[i + 1], b[i + 2], 0, TAU); }
-      ctx.fill();
+  // a great or small circle on an atom, drawn in short pieces so the far side can be fainter
+  function ring(center, rad, color, fn) {
+    var N = 56, prev = null;
+    for (var k = 0; k <= N; k++) {
+      var v = apply(R, fn((k / N) * TAU));
+      var p = proj([center[0] + v[0] * rad, center[1] + v[1] * rad, center[2] + v[2] * rad]);
+      if (prev) {
+        var front = (v[2] + prev.vz) / 2 < 0;
+        ctx.strokeStyle = rgba(color, front ? 0.9 : 0.2);
+        ctx.beginPath(); ctx.moveTo(prev.p[0], prev.p[1]); ctx.lineTo(p[0], p[1]); ctx.stroke();
+      }
+      prev = { p: p, vz: v[2] };
     }
   }
 
-  function cylinder(a, b, w) {
-    var dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy);
-    if (len < 1) return;
-    var ux = dx / len, uy = dy / len, px = -uy, py = ux;
-    ctx.fillStyle = "rgb(150,140,170)";
-    var buckets = {};
-    for (var t = 0; t <= len; t += pitch) for (var s = -w; s <= w; s += pitch) {
-      var n = s / w, lum = 0.18 + 0.7 * Math.max(0, Math.cos(n * 1.4 - 0.45));
-      var r = pitch * 0.42 * Math.pow(lum, 0.8);
-      if (r < 0.35) continue;
-      var key = Math.min(9, (lum * 10) | 0);
-      (buckets[key] = buckets[key] || []).push(a.x + ux * t + px * s, a.y + uy * t + py * s, r);
+  function globe(at, c) {
+    var rad = at.r, pc = proj(c);
+    ctx.lineWidth = 1.4;
+    ctx.strokeStyle = rgba(at.color, 1);
+    ctx.beginPath(); ctx.arc(pc[0], pc[1], rad * unit * pc[3], 0, TAU); ctx.stroke();
+    ctx.lineWidth = 1;
+    for (var m = 0; m < 4; m++) {
+      (function (a) {
+        ring(c, rad, at.color, function (t) { return [Math.cos(a) * Math.sin(t), Math.cos(t), Math.sin(a) * Math.sin(t)]; });
+      })((m / 4) * Math.PI);
     }
-    for (var k in buckets) {
-      var bb = buckets[k];
-      ctx.fillStyle = mix([46, 40, 74], [214, 196, 216], (+k + 0.5) / 10);
-      ctx.beginPath();
-      for (var i = 0; i < bb.length; i += 3) { ctx.moveTo(bb[i] + bb[i + 2], bb[i + 1]); ctx.arc(bb[i], bb[i + 1], bb[i + 2], 0, TAU); }
-      ctx.fill();
-    }
+    [-0.5, 0, 0.5].forEach(function (yy) {
+      var rr = Math.sqrt(1 - yy * yy);
+      ring(c, rad, at.color, function (t) { return [rr * Math.cos(t), yy, rr * Math.sin(t)]; });
+    });
+    ctx.fillStyle = rgba(at.color, 1);
+    ctx.font = "italic " + Math.round(unit * 0.34 * pc[3]) + "px 'Instrument Serif', Georgia, serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(at.label, pc[0], pc[1]);
+  }
+
+  function bondLines(a, b, ra, rb) {
+    var pa = proj(a), pb = proj(b);
+    var dx = pb[0] - pa[0], dy = pb[1] - pa[1], len = Math.hypot(dx, dy);
+    var sa = ra * unit * pa[3] * 0.95, sb = rb * unit * pb[3] * 0.95;
+    if (len <= sa + sb + 2) return;
+    var ux = dx / len, uy = dy / len, nx = -uy, ny = ux, w = unit * 0.07 * (pa[3] + pb[3]) / 2;
+    var x0 = pa[0] + ux * sa, y0 = pa[1] + uy * sa, x1 = pb[0] - ux * sb, y1 = pb[1] - uy * sb;
+    ctx.strokeStyle = "rgba(232, 224, 234, 0.75)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x0 + nx * w, y0 + ny * w); ctx.lineTo(x1 + nx * w, y1 + ny * w);
+    ctx.moveTo(x0 - nx * w, y0 - ny * w); ctx.lineTo(x1 - nx * w, y1 - ny * w);
+    ctx.stroke();
   }
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
-    var tilt = 0.32 + 0.06 * Math.sin(angle * 0.7);
-    var P = atoms.map(function (at) { return project(at.p, angle, tilt); });
+    ctx.lineCap = "round";
+    var C = atoms.map(function (at) { return apply(R, at.p); });
     var items = [];
-    atoms.forEach(function (at, i) { items.push({ z: P[i].z, f: function () { sphere(P[i], at.r * unit * P[i].s, at.lo, at.hi); } }); });
+    atoms.forEach(function (at, i) { items.push({ z: C[i][2], f: function () { globe(at, C[i]); } }); });
     bonds.forEach(function (bd) {
-      var a = P[bd[0]], b = P[bd[1]];
-      items.push({ z: (a.z + b.z) / 2 + 0.01, f: function () { cylinder(a, b, unit * 0.11 * (a.s + b.s) / 2); } });
+      items.push({ z: (C[bd[0]][2] + C[bd[1]][2]) / 2 + 0.05,
+        f: function () { bondLines(C[bd[0]], C[bd[1]], atoms[bd[0]].r, atoms[bd[1]].r); } });
     });
     items.sort(function (m, n) { return n.z - m.z; }).forEach(function (it) { it.f(); });
   }
@@ -121,21 +130,52 @@
     if (!visible) return;
     var dt = Math.min(0.05, (ts - (last || ts)) / 1000);
     last = ts;
-    speed += (target - speed) * Math.min(1, dt * 2.2);
-    angle += speed * dt;
+    if (!drag) {
+      // a flick carries on, then eases back to the slow turn
+      var k = Math.min(1, dt * 1.4);
+      vx += (0 - vx) * k;
+      vy += ((reduce ? 0 : BASE_VY) - vy) * k;
+      R = mul(mul(rotX(vx * dt), rotY(vy * dt)), R);
+    }
     draw();
-    raf = requestAnimationFrame(frame);
+    if (drag || Math.abs(vx) > 0.002 || Math.abs(vy) > 0.002) raf = requestAnimationFrame(frame);
   }
-  function kick() { if (!raf && visible && !reduce) { last = 0; raf = requestAnimationFrame(frame); } }
+  function kick() { if (!raf && visible) { last = 0; raf = requestAnimationFrame(frame); } }
 
-  canvas.addEventListener("pointerenter", function () { target = FAST; if (reduce) { angle += 0.9; draw(); } });
-  canvas.addEventListener("pointerleave", function () { target = BASE; });
+  canvas.addEventListener("pointerdown", function (e) {
+    drag = { x: e.clientX, y: e.clientY, t: performance.now() };
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    canvas.classList.add("dragging");
+    kick();
+  });
+  canvas.addEventListener("pointermove", function (e) {
+    if (!drag) return;
+    var now = performance.now(), dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    var dt = Math.max(0.008, (now - drag.t) / 1000), s = 1 / unit;
+    var ay = dx * s, ax = -dy * s;
+    R = mul(mul(rotX(ax), rotY(ay)), R);
+    vx = vx * 0.5 + (ax / dt) * 0.5; vy = vy * 0.5 + (ay / dt) * 0.5;
+    drag = { x: e.clientX, y: e.clientY, t: now };
+  });
+  function end() { if (!drag) return; drag = null; canvas.classList.remove("dragging"); kick(); }
+  canvas.addEventListener("pointerup", end);
+  canvas.addEventListener("pointercancel", end);
+  canvas.tabIndex = 0;
+  canvas.addEventListener("keydown", function (e) {
+    var k = { ArrowLeft: [0, -0.25], ArrowRight: [0, 0.25], ArrowUp: [-0.25, 0], ArrowDown: [0.25, 0] }[e.key];
+    if (!k) return;
+    e.preventDefault();
+    R = mul(mul(rotX(k[0]), rotY(k[1])), R);
+    draw(); kick();
+  });
+
   if ("IntersectionObserver" in window) {
     new IntersectionObserver(function (es) { visible = es[0].isIntersecting && !document.hidden; kick(); }).observe(canvas);
   }
   document.addEventListener("visibilitychange", function () { visible = !document.hidden; kick(); });
   var rt = 0;
   window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (size()) draw(); }, 120); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (size()) draw(); });
 
   if (size()) draw();
   kick();

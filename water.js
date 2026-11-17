@@ -11,9 +11,9 @@
     you, with slow wave groups, like wind on Lake Ontario. On top of them a
     wave-equation height field carries the wake behind the pointer, the only
     thing that makes ripples; they spread as ellipses because of the tilt.
-  - Light: faces of the waves that tilt toward you reflect a sunset sky,
-    warming from dusk blue through rose to peach and gold; faces tilting away
-    show the deep navy water. Far
+  - Light: faces of the waves that tilt toward you catch the light, from slate
+    teal to sea-glass aqua, and the brightest crests flash tangerine like a low
+    sun; faces tilting away show deep green-black water. Far
     water reflects more sky (brighter, hazier), near water is darker.
   - Texture: two fine line screens woven over the dots (moiré), as before.
   - Dots fade under the text, under the navigation and into the page below.
@@ -22,18 +22,20 @@
 (function () {
   "use strict";
 
-  // Blue water under a sunset: navy and dusk blue in the troughs, warming
-  // through lavender and rose to peach and gold on the crests that face you.
+  // Pacific Northwest water: deep green-black in the troughs, through slate
+  // teal and sea-glass to pale aqua; only the crests that catch the low sun
+  // flash tangerine.
   var STOPS = [
-    [0.0, [20, 22, 56]],
-    [0.16, [36, 46, 104]],
-    [0.32, [52, 82, 146]],
-    [0.47, [74, 122, 176]],
-    [0.6, [122, 154, 196]],
-    [0.72, [186, 166, 196]],
-    [0.84, [238, 178, 164]],
-    [0.93, [252, 204, 166]],
-    [1.0, [255, 228, 186]],
+    [0.0, [8, 26, 36]],
+    [0.14, [12, 48, 62]],
+    [0.28, [16, 80, 92]],
+    [0.42, [22, 112, 118]],
+    [0.56, [38, 148, 144]],
+    [0.68, [92, 190, 176]],
+    [0.78, [170, 226, 210]],
+    [0.82, [255, 176, 110]],
+    [0.9, [255, 136, 56]],
+    [1.0, [255, 196, 132]],
   ];
   var NB = 48, COLORS = [];
   (function () {
