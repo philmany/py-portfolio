@@ -54,13 +54,33 @@ Open http://localhost:8000. Use a local server rather than double-clicking the f
 - Outlines are hand-traced and simplified, not survey-accurate or to scale. Motion never changes any data.
 - Reduced motion: starts as a still frame with "Play motion". No JavaScript: a static dot pattern.
 
-## Hosting on Cloudflare (free, with your own domain)
+## Brand banner
+
+`data.js` → `brands.items`. Each brand shows as a wordmark in the site's own type until you add an official
+logo file: put it in `logos/` (SVG or transparent PNG) and set `logo: "logos/microsoft.svg"`. Logos are
+recoloured to white automatically, sit at low opacity, and brighten on hover while the banner pauses.
+
+## Trial site: GitHub Pages
+
+Live at https://philmany.github.io/py-portfolio/ (deploys from `main`, root folder).
+Every push to `main` updates it. To retire it later: repo Settings → Pages → Unpublish site.
+
+## Moving to your own domain: Cloudflare Pages
 
 This is a static site with no build step.
 
-1. Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git → choose this repository.
-2. Build settings: Framework preset **None**, build command **empty**, build output directory **/**.
-3. Deploy. You get a `*.pages.dev` address.
-4. In the project → Custom domains → Set up a custom domain. If the domain's DNS is already on Cloudflare, it adds the record for you; otherwise point a CNAME at the `*.pages.dev` address.
+1. Cloudflare dashboard → Workers & Pages → Create → Pages → **Connect to Git** → choose `philmany/py-portfolio`.
+2. Build settings: Framework preset **None**, build command **empty**, build output directory **/** (leave root directory empty).
+3. Save and deploy. You get `py-portfolio.pages.dev` (or similar). Check it there first.
+4. Domain (registered at Porkbun). Pick one:
+   - **Bare domain, recommended** (yourdomain.com): Cloudflare must run the domain's DNS.
+     a. Cloudflare → Onboard a domain → enter it → Free plan. Check the imported records, especially any email (MX/TXT) records.
+     b. Porkbun → domain → **turn off DNSSEC** first, then Nameservers → replace Porkbun's with the two Cloudflare gives you.
+        The domain stays registered (and renewed) at Porkbun; only DNS moves.
+     c. Once Cloudflare shows the domain Active: Pages project → Custom domains → add `yourdomain.com` and `www.yourdomain.com`.
+   - **Subdomain only, keeps DNS at Porkbun** (e.g. www.yourdomain.com): Pages project → Custom domains → add it, then in
+     Porkbun add a CNAME `www` → `py-portfolio.pages.dev`. Use Porkbun URL forwarding to send the bare domain to www.
+5. Optional: redirect `*.pages.dev` to your domain (Cloudflare Bulk Redirects) so there is one public address.
+6. When the domain works, unpublish the GitHub Pages trial.
 
-Every push to the main branch redeploys. `pretzel.html` is also served at `/pretzel`.
+`pretzel.html` is also served at `/pretzel` on Cloudflare.

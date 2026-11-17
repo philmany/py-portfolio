@@ -93,6 +93,22 @@ window.SITE_DATA = {
   },
 
   // url: null shows the item as "to add".
+  /*
+    BRANDS: the scrolling banner above Selected work.
+    logo: path to an official logo file (SVG or transparent PNG), e.g. "logos/microsoft.svg".
+          It is shown in white automatically. Leave it null to show the name as a wordmark.
+  */
+  brands: {
+    label: "Brands I\u2019ve worked for and with",
+    items: [
+      { name: "Microsoft", logo: null },
+      { name: "L\u2019Or\u00e9al Paris", logo: null },
+      { name: "Yves Saint Laurent", logo: null },
+      { name: "Armani", logo: null },
+      { name: "Lanc\u00f4me", logo: null },
+    ],
+  },
+
   links: [
     { label: "Resume", url: "Resume_2027_PhilmanYeung.pdf" },
     { label: "LinkedIn", url: "https://www.linkedin.com/in/philmanyeung/" },

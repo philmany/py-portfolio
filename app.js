@@ -183,6 +183,22 @@
   });
   requestAnimationFrame(function () { setTimeout(function () { hero.classList.add("ready"); }, reduce ? 0 : 450); });
 
+  /* ---------- brands marquee ---------- */
+  if (D.brands && D.brands.items && D.brands.items.length) {
+    $("#brands-h").textContent = D.brands.label;
+    var track = $("#brand-track");
+    var addSet = function (hidden) {
+      D.brands.items.forEach(function (b) {
+        var inner = b.logo ? el("img", { src: b.logo, alt: hidden ? "" : b.name, loading: "lazy" })
+                           : el("span", { class: "wordmark", text: b.name });
+        track.appendChild(el("li", { class: "logo-item", "aria-hidden": hidden ? "true" : null }, inner));
+      });
+    };
+    addSet(false); addSet(true); // second copy makes the loop seamless
+  } else {
+    $(".brands").hidden = true;
+  }
+
   /* ---------- work ---------- */
   var list = $("#work-list"), num = 0, layers = {}, peekIn = $("#peek-in");
 
@@ -405,7 +421,7 @@
     ticking = false;
     var h = document.documentElement.scrollHeight - window.innerHeight;
     prog.style.transform = "scaleX(" + (h > 0 ? window.scrollY / h : 0) + ")";
-    nav.classList.toggle("solid", window.scrollY > hero.offsetHeight - 80);
+    nav.classList.toggle("solid", window.scrollY > 40);
   }
   var nav = $(".nav");
   window.addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
