@@ -95,17 +95,18 @@ window.SITE_DATA = {
   // url: null shows the item as "to add".
   /*
     BRANDS: the scrolling banner above Selected work.
-    logo: path to an official logo file (SVG or transparent PNG), e.g. "logos/microsoft.svg".
-          It is shown in white automatically. Leave it null to show the name as a wordmark.
+    logo:   path to a white, transparent logo file in logos/. Leave it null to show the name as a wordmark.
+    url:    where the logo links (opens in a new tab).
+    height: logo height in px on desktop, to balance logos of different shapes (phones use 80%).
   */
   brands: {
     label: "Brands I\u2019ve worked for and with",
     items: [
-      { name: "Microsoft", logo: null },
-      { name: "L\u2019Or\u00e9al Paris", logo: null },
-      { name: "Yves Saint Laurent", logo: null },
-      { name: "Armani", logo: null },
-      { name: "Lanc\u00f4me", logo: null },
+      { name: "Microsoft", logo: "logos/microsoft.svg", url: "https://www.microsoft.com", height: 26 },
+      { name: "L\u2019Or\u00e9al Paris", logo: "logos/loreal-paris.svg", url: "https://www.lorealparis.ca", height: 36 },
+      { name: "Yves Saint Laurent", logo: "logos/ysl.svg", url: "https://www.yslbeauty.ca", height: 28 },
+      { name: "Armani", logo: "logos/armani.svg", url: "https://www.armani-beauty.ca", height: 26 },
+      { name: "Lanc\u00f4me", logo: "logos/lancome.svg", url: "https://www.lancome.ca", height: 36 },
     ],
   },
 

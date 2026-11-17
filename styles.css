@@ -153,13 +153,14 @@ h2.sec em { font-style: italic; color: var(--accent); }
 .marquee:hover .track, .marquee:focus-within .track { animation-play-state: paused; }
 @keyframes marquee { to { transform: translateX(-50%); } }
 .logo-item { display: flex; align-items: center; height: clamp(92px, 9vw, 120px); padding: 0 clamp(36px, 5vw, 72px); }
-.logo-item img { height: 28px; width: auto; filter: brightness(0) invert(1); opacity: 0.32; transition: opacity 0.5s var(--ease); }
+.logo-item a { display: flex; align-items: center; height: 100%; border-radius: 8px; }
+.logo-item a:focus-visible { outline-offset: 6px; }
+.logo-item img { height: var(--h, 28px); width: auto; display: block; opacity: 0.32; transition: opacity 0.5s var(--ease), filter 0.5s; }
 .wordmark {
   font: 500 clamp(18px, 1.7vw, 24px)/1 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
   color: #fff; opacity: 0.3; transition: opacity 0.5s var(--ease), text-shadow 0.5s;
 }
-.logo-item:hover img, .logo-item:hover .wordmark { opacity: 1; }
-.logo-item:hover .wordmark { text-shadow: 0 0 24px rgba(111, 224, 207, 0.35); }
+.logo-item:hover img, .logo-item:hover .wordmark, .logo-item a:focus-visible img { opacity: 1; }
 
 /* Work */
 .work-list { margin-top: clamp(56px, 7vw, 96px); }
@@ -289,6 +290,7 @@ h2.sec em { font-style: italic; color: var(--accent); }
   .hero.memories .mem:not(:hover):not(:focus-visible):not(.show) .mem-card .when { display: none; }
   .mem-card b { font-size: 12.5px; }
   .mem-card { padding: 7px 10px; }
+  .logo-item img { height: calc(var(--h, 28px) * 0.8); }
 }
 @media (prefers-reduced-motion: reduce) {
   .track { animation: none; flex-wrap: wrap; width: auto; justify-content: center; }

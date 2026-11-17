@@ -189,9 +189,14 @@
     var track = $("#brand-track");
     var addSet = function (hidden) {
       D.brands.items.forEach(function (b) {
-        var inner = b.logo ? el("img", { src: b.logo, alt: hidden ? "" : b.name, loading: "lazy" })
+        var inner = b.logo ? el("img", { src: b.logo, alt: hidden ? "" : b.name, loading: "lazy",
+                                         style: "--h:" + (b.height || 28) + "px" })
                            : el("span", { class: "wordmark", text: b.name });
-        track.appendChild(el("li", { class: "logo-item", "aria-hidden": hidden ? "true" : null }, inner));
+        var node = b.url
+          ? el("a", { href: b.url, target: "_blank", rel: "noopener", tabindex: hidden ? "-1" : null,
+                      "aria-label": hidden ? null : b.name + " (opens in a new tab)" }, inner)
+          : inner;
+        track.appendChild(el("li", { class: "logo-item", "aria-hidden": hidden ? "true" : null }, node));
       });
     };
     addSet(false); addSet(true); // second copy makes the loop seamless
