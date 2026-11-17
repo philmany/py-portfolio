@@ -29,7 +29,7 @@ Open http://localhost:8000. Use a local server rather than double-clicking the f
 | `app.js` | Builds the page from `data.js`: work list, live preview, page transition, Play list. |
 | `water.js` | The halftone lake (Canvas 2D). |
 | `shapes.js` | Outlines of each body of water: Natural Earth data for the Mediterranean and Lake Washington, hand-traced for the rest (see the note in the file). |
-| `molecule.js` | The spinning H2O molecule in About. |
+| `heron.js` | The dot-drawn heron in About: swoops in, snatches a fish, flies off left. Click the section to replay. |
 | `Resume_2027_PhilmanYeung.pdf` | Your resume, linked from About. |
 | `pretzel.html`, `img/` | The Pretzel 1.0 case study, grafted in unchanged except for two things listed below. |
 

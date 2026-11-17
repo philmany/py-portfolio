@@ -15,6 +15,8 @@
     teal to sea-glass aqua, and the brightest crests flash tangerine like a low
     sun; faces tilting away show deep green-black water. Far
     water reflects more sky (brighter, hazier), near water is darker.
+  - Depth of field: a blurred copy of the lake is faded in over the distant
+    rows and the sharp lake faded out, so the far water goes soft.
   - Texture: two fine line screens woven over the dots (moiré), as before.
   - Dots fade under the text, under the navigation and into the page below.
   - Ambient motion and pausing never change any data value.
@@ -22,20 +24,21 @@
 (function () {
   "use strict";
 
-  // Pacific Northwest water: deep green-black in the troughs, through slate
-  // teal and sea-glass to pale aqua; only the crests that catch the low sun
-  // flash tangerine.
+  // Pacific Northwest water at sunset: deep green-black troughs, slate teal and
+  // sea-glass faces, then a long gradual warm-up (dusty sage, sand, coral) into
+  // tangerine where the faces catch the low sun, so orange blends into the blue.
   var STOPS = [
     [0.0, [8, 26, 36]],
-    [0.14, [12, 48, 62]],
-    [0.28, [16, 80, 92]],
-    [0.42, [22, 112, 118]],
-    [0.56, [38, 148, 144]],
-    [0.68, [92, 190, 176]],
-    [0.78, [170, 226, 210]],
-    [0.82, [255, 176, 110]],
-    [0.9, [255, 136, 56]],
-    [1.0, [255, 196, 132]],
+    [0.13, [12, 48, 62]],
+    [0.26, [16, 80, 92]],
+    [0.38, [24, 112, 118]],
+    [0.5, [44, 146, 142]],
+    [0.6, [104, 176, 162]],
+    [0.68, [168, 182, 152]],
+    [0.76, [226, 168, 118]],
+    [0.84, [252, 140, 70]],
+    [0.92, [255, 128, 48]],
+    [1.0, [255, 198, 140]],
   ];
   var NB = 48, COLORS = [];
   (function () {
@@ -86,6 +89,7 @@
     var ctx = canvas.getContext && canvas.getContext("2d");
     if (!ctx) return null;
     var gctx = glow && glow.getContext ? glow.getContext("2d") : null;
+    var haze = o.haze, hctx = haze && haze.getContext ? haze.getContext("2d") : null;
     var cutTile = lineTile(2.65, 1.05, "#000", 1.6), threadTile = lineTile(3.7, 0.9, "#fff", 2.2);
     var cutPat = cutTile && ctx.createPattern(cutTile, "repeat");
     var threadPat = threadTile && ctx.createPattern(threadTile, "repeat");
@@ -112,6 +116,7 @@
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       if (gctx) { glow.width = Math.ceil(W / 4); glow.height = Math.ceil(H / 4); }
+      if (hctx) { haze.width = Math.ceil(W / 2); haze.height = Math.ceil(H / 2); }
 
       var narrow = W < 760;
       pNear = narrow ? 15 : W < 1200 ? 19 : 22;
@@ -149,7 +154,8 @@
         for (var r = 0; r < rects.length; r++) {
           var Q = rects[r];
           var nx = (px - (Q.x + Q.w / 2)) / (Q.w / 2 + Q.pad), ny = (py - (Q.y + Q.h / 2)) / (Q.h / 2 + Q.pad);
-          q = Math.min(q, smooth(0.45, 1.3, Math.sqrt(nx * nx + ny * ny)));
+          var fl = Q.floor || 0;
+          q = Math.min(q, fl + (1 - fl) * smooth(0.45, 1.3, Math.sqrt(nx * nx + ny * ny)));
         }
         q *= smooth(yTop, yTop + H * 0.16, py) * smooth(20, 200, H - py);
         if (q < 0.02) continue;
@@ -232,6 +238,7 @@
       var f1 = TAU * 1.09, f2 = TAU * 0.945;
       var ccx = cols * (0.5 + 0.2 * Math.sin(t * 0.045)), ccy = rows * (0.5 + 0.16 * Math.cos(t * 0.037));
       var ph1 = t * 0.5, ph2 = t * 0.7;
+      var sunX = W * 0.62;
       var lift = pNear * 0.95, revealY = intro < 1 ? intro * (H + 160) - 80 : 1e9;
 
       for (var k = 0; k < L; k++) {
@@ -240,12 +247,14 @@
         var s = rowS[y], pch = rowP[y];
 
         // wind swells rolling toward the viewer (y grows into the distance)
-        var grp = 0.7 + 0.3 * Math.sin(x * 0.025 - y * 0.035 + t * 0.1);
-        var a1 = x * 0.06 + y * 0.52 + t * 1.15, a2 = -x * 0.2 + y * 0.86 + t * 1.6;
-        var a3 = x * 0.38 + y * 1.25 + t * 2.2, a4 = x * 1.05 + y * 0.45 + t * 2.9;
-        var hs = grp * (0.55 * Math.sin(a1) + 0.28 * Math.sin(a2)) + 0.16 * Math.sin(a3) + 0.07 * Math.sin(a4);
-        var dz = grp * (0.55 * 0.52 * Math.cos(a1) + 0.28 * 0.86 * Math.cos(a2)) + 0.16 * 1.25 * Math.cos(a3) + 0.07 * 0.45 * Math.cos(a4);
-        var dxs = grp * (0.55 * 0.06 * Math.cos(a1) - 0.28 * 0.2 * Math.cos(a2)) + 0.16 * 0.38 * Math.cos(a3) + 0.07 * 1.05 * Math.cos(a4);
+        var grp = 0.6 + 0.4 * Math.sin(x * 0.025 - y * 0.035 + t * 0.16) * Math.cos(x * 0.011 + y * 0.019 - t * 0.09);
+        var a1 = x * 0.06 + y * 0.52 + t * 1.6, a2 = -x * 0.22 + y * 0.86 + t * 2.25;
+        var a3 = x * 0.4 + y * 1.3 + t * 3.1, a4 = x * 1.05 + y * 0.45 + t * 3.9;
+        var a5 = -x * 0.7 + y * 1.6 + t * 4.4, a6 = x * 0.17 - y * 0.12 + t * 0.7;
+        var chop = 0.7 + 0.3 * Math.sin(x * 0.05 + y * 0.09 - t * 0.33);
+        var hs = grp * (0.5 * Math.sin(a1) + 0.3 * Math.sin(a2)) + chop * (0.2 * Math.sin(a3) + 0.1 * Math.sin(a4) + 0.08 * Math.sin(a5)) + 0.12 * Math.sin(a6);
+        var dz = grp * (0.5 * 0.52 * Math.cos(a1) + 0.3 * 0.86 * Math.cos(a2)) + chop * (0.2 * 1.3 * Math.cos(a3) + 0.1 * 0.45 * Math.cos(a4) + 0.08 * 1.6 * Math.cos(a5)) - 0.12 * 0.12 * Math.cos(a6);
+        var dxs = grp * (0.5 * 0.06 * Math.cos(a1) - 0.3 * 0.22 * Math.cos(a2)) + chop * (0.2 * 0.4 * Math.cos(a3) + 0.1 * 1.05 * Math.cos(a4) - 0.08 * 0.7 * Math.cos(a5)) + 0.12 * 0.17 * Math.cos(a6);
 
         var h = u[i], gx = u[i + 1] - u[i - 1], gy = u[i + cols] - u[i - cols];
         var lap = u[i + 1] + u[i - 1] + u[i + cols] + u[i - cols] - 4 * h;
@@ -266,7 +275,9 @@
                  0.25 * Math.cos(f2 * Math.sqrt(dx2 * dx2 + dy2 * dy2) - ph2);
         var r = pch * 0.62 * Math.pow(Lm, 0.7) * (0.5 + 0.5 * Math.pow(mo, 1.2));
         if (r < 0.45) continue;
-        var ct = 0.08 + 0.2 * far + 0.2 * dp * (1 - far) + 0.44 * Lm + spec * 0.2 + 0.05 * (mo - 0.5);
+        var sunx = (xs[i] - sunX) / (W * (0.16 + 0.22 * far));
+        var sun = Math.exp(-sunx * sunx) * (0.35 + 0.65 * far);
+        var ct = 0.06 + 0.18 * far + 0.16 * dp * (1 - far) + 0.4 * Lm + spec * 0.26 * (0.6 + sun) + sun * 0.16 + 0.05 * (mo - 0.5);
         var b = ct <= 0 ? 0 : ct >= 1 ? NB - 1 : (ct * (NB - 1)) | 0;
         bOf[i] = b; rad[i] = r;
         rady[i] = r * Math.min(1, tilt * s * 1.35);
@@ -308,6 +319,10 @@
       if (gctx) {
         gctx.clearRect(0, 0, glow.width, glow.height);
         gctx.drawImage(canvas, 0, 0, glow.width, glow.height);
+      }
+      if (hctx) {
+        hctx.clearRect(0, 0, haze.width, haze.height);
+        hctx.drawImage(canvas, 0, 0, haze.width, haze.height);
       }
     }
 

@@ -57,7 +57,17 @@ a { color: inherit; }
 }
 .hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .hero .glow { filter: blur(14px) saturate(1.2); opacity: 0.45; z-index: 0; }
-.hero .water { z-index: 1; }
+.hero .water {
+  z-index: 1;
+  -webkit-mask: linear-gradient(to bottom, transparent 8%, rgba(0,0,0,0.25) 20%, #000 52%);
+  mask: linear-gradient(to bottom, transparent 8%, rgba(0,0,0,0.25) 20%, #000 52%);
+}
+/* depth of field: the far water, softly blurred, crossfades into the sharp near water */
+.hero .haze {
+  z-index: 1; filter: blur(2.2px); opacity: 0.95; pointer-events: none;
+  -webkit-mask: linear-gradient(to bottom, #000 8%, rgba(0,0,0,0.8) 20%, transparent 52%);
+  mask: linear-gradient(to bottom, #000 8%, rgba(0,0,0,0.8) 20%, transparent 52%);
+}
 .hero:not(.live)::before {
   content: ""; position: absolute; left: 50%; top: 52%; width: min(82vw, 1040px); height: min(64vh, 620px);
   transform: translate(-50%, -50%);
@@ -107,10 +117,11 @@ a { color: inherit; }
 .mem.on .mem-fx { transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--sc, 1)); }
 .shape { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .shape path {
-  fill: none; stroke: #fff; stroke-width: 1; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke;
-  opacity: 0.6; transition: opacity 0.4s, stroke-width 0.4s;
+  fill: none; stroke: #fff; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke;
+  opacity: 0.78; transition: opacity 0.4s, stroke-width 0.4s;
 }
-.mem:hover .shape path, .mem:focus-visible .shape path, .mem.on .shape path, .hero.memories .shape path { opacity: 1; stroke-width: 1.3; }
+.shape { filter: drop-shadow(0 0 3px rgba(12, 6, 16, 0.95)) drop-shadow(0 0 10px rgba(12, 6, 16, 0.8)); }
+.mem:hover .shape path, .mem:focus-visible .shape path, .mem.on .shape path, .hero.memories .shape path { opacity: 1; stroke-width: 2.3; }
 .mem:focus-visible { outline-offset: 8px; }
 .mem-card {
   position: absolute; left: 50%; top: calc(100% + 10px); white-space: nowrap; text-align: left; z-index: 2;
@@ -132,10 +143,10 @@ a { color: inherit; }
 .mem-card span { display: block; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
 .mem-card .when { color: var(--accent); }
 /* focus: the lake dims so the outline reads */
-.hero .water, .hero .glow { transition: opacity 0.9s var(--ease); }
-.hero.focus .water { opacity: 0.3; }
+.hero .water, .hero .glow, .hero .haze { transition: opacity 0.9s var(--ease); }
+.hero.focus .water, .hero.focus .haze { opacity: 0.3; }
 .hero.focus .glow { opacity: 0.12; }
-.hero.memories .water { opacity: 0.5; }
+.hero.memories .water, .hero.memories .haze { opacity: 0.5; }
 .hero.focus .hero-text { opacity: 0.1; }
 .hero.focus .mem:not(.on) { opacity: 0.25; }
 
@@ -270,15 +281,11 @@ h2.sec em { font-style: italic; color: var(--accent-2); }
 
 /* About */
 .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
-.about-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 32px 64px; align-items: center; }
-.molecule { margin: 0; position: relative; justify-self: center; width: min(100%, 440px); aspect-ratio: 1; }
-.molecule canvas { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; border-radius: 50%; }
-.molecule canvas.dragging { cursor: grabbing; }
-.molecule figcaption span { display: block; margin-top: 8px; font: 400 12px/1 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); opacity: 0.7; }
-.molecule figcaption {
-  position: absolute; left: 0; right: 0; bottom: 4px; text-align: center; font: italic 400 22px/1 var(--serif); color: var(--muted);
-}
-.about h2.sec { max-width: 12ch; }
+.about { position: relative; min-height: clamp(660px, 92vh, 880px); padding-bottom: 210px; overflow: hidden; cursor: pointer; }
+.about .wrap { position: relative; z-index: 1; cursor: auto; }
+.heron { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.heron-replay { position: absolute; right: var(--gutter); bottom: 22px; z-index: 2; }
+.about h2.sec { max-width: 12ch; padding-top: 6vh; }
 .links { list-style: none; display: flex; flex-wrap: wrap; gap: 14px 44px; margin-top: 56px; }
 .links a, .links .todo { font-size: clamp(20px, 2vw, 26px); text-decoration: none; letter-spacing: -0.01em; }
 .links a span { display: inline-block; transition: transform 0.6s var(--ease); }
@@ -292,8 +299,6 @@ h2.sec em { font-style: italic; color: var(--accent-2); }
 
 @media (max-width: 900px) {
   .play-grid { grid-template-columns: minmax(0, 1fr); }
-  .about-grid { grid-template-columns: minmax(0, 1fr); }
-  .molecule { width: min(100%, 320px); }
 }
 @media (max-width: 760px) {
   body { font-size: 16px; }

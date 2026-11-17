@@ -28,6 +28,7 @@
   <section class="hero" id="top" aria-labelledby="hero-name">
     <canvas class="glow" id="glow" aria-hidden="true"></canvas>
     <canvas class="water" id="water" aria-hidden="true"></canvas>
+    <canvas class="haze" id="haze" aria-hidden="true"></canvas>
     <div class="hero-text" id="hero-text">
       <h1 id="hero-name"></h1>
       <p id="hero-tagline"></p>
@@ -67,18 +68,12 @@
   </section>
 
   <section class="section about" id="about" aria-labelledby="about-h">
+    <canvas class="heron" id="heron" role="img" aria-label="Animation: a great blue heron, drawn in dots, swoops down from the top right, snatches a fish from the water and flies off to the left behind the heading."></canvas>
     <div class="wrap">
-      <div class="about-grid">
-        <div>
-          <h2 class="sec" id="about-h"></h2>
-          <ul class="links" id="links"></ul>
-        </div>
-        <figure class="molecule">
-          <canvas id="h2o" role="img" aria-label="A water molecule, H2O, slowly turning: one oxygen atom bonded to two hydrogen atoms at about 104.5 degrees. Drag, or use the arrow keys, to turn it."></canvas>
-          <figcaption>H<sub>2</sub>O <span>drag to turn</span></figcaption>
-        </figure>
-      </div>
+      <h2 class="sec" id="about-h"></h2>
+      <ul class="links" id="links"></ul>
     </div>
+    <button type="button" class="ctl heron-replay" id="heron-replay"><span aria-hidden="true">&#8634;</span> Watch the heron again</button>
   </section>
 </main>
 
@@ -98,6 +93,6 @@
 <script src="shapes.js"></script>
 <script src="water.js"></script>
 <script src="app.js"></script>
-<script src="molecule.js"></script>
+<script src="heron.js"></script>
 </body>
 </html>

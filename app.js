@@ -159,9 +159,13 @@
   }
 
   var art = window.WaterArt && window.WaterArt.create({
-    canvas: $("#water"), glow: $("#glow"), host: hero, places: W.places, startPaused: reduce,
+    canvas: $("#water"), glow: $("#glow"), haze: $("#haze"), host: hero, places: W.places, startPaused: reduce,
     getQuietRects: function () {
-      return [rel($("#hero-name"), 34), rel($("#hero-tagline"), 26)];
+      // the title, plus a soft dark feather around each outline
+      placeShapes(hero.clientWidth, hero.clientHeight);
+      var r = [rel($("#hero-name"), 34), rel($("#hero-tagline"), 26)];
+      mems.forEach(function (b) { var q = rel(b, 16); q.floor = 0.18; r.push(q); });
+      return r;
     },
     getMarkers: function (w, h) { return placeShapes(w, h); },
     onLayout: function (w) {
