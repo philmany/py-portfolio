@@ -9,10 +9,11 @@
     swells visibly roll across the surface instead of only changing brightness.
   - Waves: three wind swells of different lengths and directions roll toward
     you, with slow wave groups, like wind on Lake Ontario. On top of them a
-    wave-equation height field carries rain, a wake behind the pointer and a
-    stone where you click; its ripples spread as ellipses because of the tilt.
-  - Light: faces of the waves that tilt toward you reflect the sky and glow
-    (cool aqua to a warm glint); faces tilting away show the deep water. Far
+    wave-equation height field carries the wake behind the pointer, the only
+    thing that makes ripples; they spread as ellipses because of the tilt.
+  - Light: faces of the waves that tilt toward you reflect a sunset sky,
+    warming from dusk blue through rose to peach and gold; faces tilting away
+    show the deep navy water. Far
     water reflects more sky (brighter, hazier), near water is darker.
   - Texture: two fine line screens woven over the dots (moiré), as before.
   - Dots fade under the text, under the navigation and into the page below.
@@ -21,15 +22,18 @@
 (function () {
   "use strict";
 
+  // Blue water under a sunset: navy and dusk blue in the troughs, warming
+  // through lavender and rose to peach and gold on the crests that face you.
   var STOPS = [
-    [0.0, [16, 18, 70]],
-    [0.15, [38, 40, 156]],
-    [0.3, [30, 92, 214]],
-    [0.45, [16, 150, 214]],
-    [0.6, [18, 196, 182]],
-    [0.74, [104, 230, 204]],
-    [0.88, [208, 250, 236]],
-    [1.0, [255, 230, 194]],
+    [0.0, [20, 22, 56]],
+    [0.16, [36, 46, 104]],
+    [0.32, [52, 82, 146]],
+    [0.47, [74, 122, 176]],
+    [0.6, [122, 154, 196]],
+    [0.72, [186, 166, 196]],
+    [0.84, [238, 178, 164]],
+    [0.93, [252, 204, 166]],
+    [1.0, [255, 228, 186]],
   ];
   var NB = 48, COLORS = [];
   (function () {
@@ -160,12 +164,6 @@
       });
       if (o.onLayout) o.onLayout(W, H);
 
-      seed = 11;
-      for (k = 0; k < 12; k++) {
-        var ci = drawList[(srand() * drawList.length) | 0];
-        drop(ci % cols, (ci / cols) | 0, 0.8 + srand() * 0.8, 1.6);
-      }
-      for (k = 0; k < 70; k++) integrate();
       return true;
     }
 
@@ -204,16 +202,6 @@
     }
 
     function step() {
-      if (Math.random() < 0.035) {
-        var ci = drawList[(Math.random() * drawList.length) | 0];
-        drop(ci % cols, (ci / cols) | 0, 0.45 + Math.random() * 0.9, 1.1 + Math.random() * 0.8);
-      }
-      if (markers.length && Math.random() < 0.012) {
-        var t = Math.random() * wSum, p = 0;
-        while (p < n - 1 && t > weights[p]) { t -= weights[p]; p++; }
-        var m = markers[p];
-        if (m) drop(m.gx + (Math.random() - 0.5) * m.gr, m.gy + (Math.random() - 0.5) * m.gr, 0.5 + Math.random() * 0.6, 1.3);
-      }
       if (ptr.on && ptr.moved) {
         var g1 = toGrid(ptr.x, ptr.y), g0 = toGrid(ptr.lx, ptr.ly);
         var gx = g1[0], gy = g1[1], lx = g0[0], ly = g0[1];
@@ -242,7 +230,7 @@
       var f1 = TAU * 1.09, f2 = TAU * 0.945;
       var ccx = cols * (0.5 + 0.2 * Math.sin(t * 0.045)), ccy = rows * (0.5 + 0.16 * Math.cos(t * 0.037));
       var ph1 = t * 0.5, ph2 = t * 0.7;
-      var lift = pNear * 0.55, revealY = intro < 1 ? intro * (H + 160) - 80 : 1e9;
+      var lift = pNear * 0.95, revealY = intro < 1 ? intro * (H + 160) - 80 : 1e9;
 
       for (var k = 0; k < L; k++) {
         var i = drawList[k], q = fade[i];
@@ -263,15 +251,8 @@
         // faces tilting toward the viewer (height rising into the distance) reflect the sky
         var spec = (dz * 1.7 + gy * 1.2) + (dxs * 0.45 - gx * 0.4);
         var caus = lap < 0 ? Math.min(-lap * 2, 0.6) : 0;
-        var Lm = 0.2 + 0.26 * far + 0.08 * (1 - dp) + spec * 0.5 + caus * 0.45;
+        var Lm = 0.25 + 0.27 * far + 0.06 * (1 - dp) + spec * 0.66 + caus * 0.45;
         var hl = 0;
-        if (anyAct) for (p = 0; p < markers.length; p++) {
-          if (act[p] <= 0.01) continue;
-          var m = markers[p], ddx = x - m.gx, ddy = y - m.gy, rr = m.gr * m.gr;
-          var dd = ddx * ddx + ddy * ddy;
-          if (dd < rr * 2.2) hl += act[p] * Math.exp(-dd / (rr * 0.6));
-        }
-        Lm += hl * 0.45;
         var py0 = rowY[y];
         if (py0 > revealY) Lm *= smooth(revealY + 80, revealY, py0);
         Lm *= q;
@@ -283,7 +264,7 @@
                  0.25 * Math.cos(f2 * Math.sqrt(dx2 * dx2 + dy2 * dy2) - ph2);
         var r = pch * 0.62 * Math.pow(Lm, 0.7) * (0.5 + 0.5 * Math.pow(mo, 1.2));
         if (r < 0.45) continue;
-        var ct = 0.1 + 0.22 * far + 0.24 * dp * (1 - far) + 0.42 * Lm + spec * 0.16 + 0.05 * (mo - 0.5) + hl * 0.35;
+        var ct = 0.08 + 0.2 * far + 0.2 * dp * (1 - far) + 0.44 * Lm + spec * 0.2 + 0.05 * (mo - 0.5);
         var b = ct <= 0 ? 0 : ct >= 1 ? NB - 1 : (ct * (NB - 1)) | 0;
         bOf[i] = b; rad[i] = r;
         rady[i] = r * Math.min(1, tilt * s * 1.35);
@@ -355,12 +336,6 @@
       ptr.x = x; ptr.y = y; ptr.on = true; ptr.moved = true;
     }, { passive: true });
     host.addEventListener("pointerleave", function () { ptr.on = false; });
-    host.addEventListener("pointerdown", function (e) {
-      if (paused || e.target.closest("button,a")) return;
-      var b = host.getBoundingClientRect();
-      var g = toGrid(e.clientX - b.left, e.clientY - b.top);
-      drop(g[0], g[1], 2.2, 2);
-    });
     document.addEventListener("visibilitychange", function () { visible = !document.hidden; kick(); });
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(function (en) {
@@ -388,13 +363,10 @@
       isPaused: function () { return paused; },
       setActive: function (i) {
         active = i == null ? -1 : i;
-        var m = markers[active];
-        if (m && !paused) drop(m.gx, m.gy, 1.6, 1.6);
         setTargets();
       },
       setAll: function (b) {
         all = !!b;
-        if (all && !paused) markers.forEach(function (m) { drop(m.gx, m.gy, 1.4, 1.5); });
         setTargets();
       },
     };

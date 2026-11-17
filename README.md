@@ -28,7 +28,8 @@ Open http://localhost:8000. Use a local server rather than double-clicking the f
 | `styles.css` | Look and layout. Tokens at the top in `:root`. |
 | `app.js` | Builds the page from `data.js`: work list, live preview, page transition, Play list. |
 | `water.js` | The halftone lake (Canvas 2D). |
-| `shapes.js` | Hand-traced outlines of each body of water (simplified, see the note in the file). |
+| `shapes.js` | Outlines of each body of water: Natural Earth data for the Mediterranean and Lake Washington, hand-traced for the rest (see the note in the file). |
+| `molecule.js` | The spinning H2O molecule in About. |
 | `Resume_2027_PhilmanYeung.pdf` | Your resume, linked from About. |
 | `pretzel.html`, `img/` | The Pretzel 1.0 case study, grafted in unchanged except for two things listed below. |
 
@@ -47,7 +48,7 @@ Open http://localhost:8000. Use a local server rather than double-clicking the f
 
 ## How the water works
 
-- A wave equation on a grid moves the surface: rain, a wake behind the cursor, a stone where you click. Ripples reflect off the shore and fade.
+- The lake is tilted in perspective (2.5D). Wind swells roll toward you; a wave equation adds ripples only where your cursor moves.
 - The dots carry a woven moiré texture: two fine line screens at slightly different angles, cut into and laid over the dots, drifting slowly.
 - Dot size is light (swell, sun on slopes, caustics), scaled again by two moiré gratings that sit just off the dot grid's frequency, so they alias into slow, drifting interference bands.
 - Colour runs indigo, cobalt, cerulean, teal, aqua and seafoam with a warm glint, on an aubergine background. The lake is a large rounded shape with a bright shoreline. Change the palette in `STOPS` at the top of `water.js`.

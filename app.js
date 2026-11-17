@@ -111,19 +111,26 @@
     path.setAttribute("d", o.d);
     path.setAttribute("pathLength", "1");
     path.style.animationDelay = (0.9 + i * 0.12) + "s";
+    path.addEventListener("animationend", function () { path.style.animation = "none"; path.style.strokeDasharray = "none"; path.style.strokeDashoffset = "0"; });
     svg.appendChild(path);
     var b = el("button", { class: "mem", type: "button", "aria-label": p.name + ", " + p.where + ". " + lastLine(p) + "." },
       el("span", { class: "mem-card", "aria-hidden": "true" },
         el("b", { text: p.name }), el("span", { class: "where", text: p.where }), el("span", { class: "when", text: lastLine(p) })));
-    b.insertBefore(svg, b.firstChild);
+    b.insertBefore(el("span", { class: "mem-fx", "aria-hidden": "true" }, svg), b.firstChild);
     b._ar = o.w / o.h;
-    b.addEventListener("pointerenter", function () { art && art.setActive(i); });
-    b.addEventListener("pointerleave", function () { art && art.setActive(null); });
-    b.addEventListener("focus", function () { art && art.setActive(i); });
-    b.addEventListener("blur", function () { art && art.setActive(null); });
+    b.addEventListener("pointerenter", function () { setOn(b, true); });
+    b.addEventListener("pointerleave", function () { setOn(b, false); });
+    b.addEventListener("focus", function () { setOn(b, true); });
+    b.addEventListener("blur", function () { setOn(b, false); });
     memLayer.appendChild(b);
     return b;
   });
+
+  // Hovering a memory: the dots dim, and its outline drifts toward the centre and grows.
+  function setOn(b, on) {
+    b.classList.toggle("on", on);
+    hero.classList.toggle("focus", mems.some(function (m) { return m.classList.contains("on"); }));
+  }
 
   // Size and place each outline on the lake; returns markers for the water engine.
   function placeShapes(w, h) {
@@ -136,7 +143,16 @@
       cx = Math.max(bw / 2 + 12, Math.min(w - bw / 2 - 12, cx));
       b.style.left = cx - bw / 2 + "px"; b.style.top = cy - bh / 2 + "px";
       b.style.width = bw + "px"; b.style.height = bh + "px";
-      b.classList.toggle("up", ((narrow && p.labelNarrow) || p.label || (at[1] > 0.5 ? "above" : "below")) === "above");
+      var up = ((narrow && p.labelNarrow) || p.label || (at[1] > 0.5 ? "above" : "below")) === "above";
+      b.classList.toggle("up", up);
+      // where it travels on hover: halfway to the centre, grown to a comfortable size
+      var big = Math.min(Math.max(bw, bh) * (narrow ? 2.2 : 1.9), w * (narrow ? 0.7 : 0.4), h * 0.42);
+      var sc = Math.max(1.15, big / Math.max(bw, bh));
+      var tx = (w / 2 - cx) * 0.5, ty = (h * 0.52 - cy) * 0.5;
+      b.style.setProperty("--tx", tx.toFixed(1) + "px");
+      b.style.setProperty("--ty", ty.toFixed(1) + "px");
+      b.style.setProperty("--sc", sc.toFixed(3));
+      b.style.setProperty("--cdy", ((sc - 1) * bh / 2 * (up ? -1 : 1)).toFixed(1) + "px");
       return { x: cx, y: cy, r: Math.max(bw, bh) * 0.5 };
     });
   }
@@ -385,9 +401,8 @@
     hero.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
     clearTimeout(memTimer);
     memTimer = setTimeout(function () {
-      mems.forEach(function (m, k) { m.classList.toggle("show", k === i); });
-      art && art.setActive(i);
-      memTimer = setTimeout(function () { mems[i].classList.remove("show"); art && art.setActive(null); }, 3600);
+      mems.forEach(function (m, k) { setOn(m, k === i); });
+      memTimer = setTimeout(function () { setOn(mems[i], false); }, 3600);
     }, reduce ? 0 : 750);
   }
 
