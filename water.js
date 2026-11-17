@@ -1,25 +1,21 @@
 /*
-  Halftone lake. Canvas 2D, no libraries.
+  Halftone lake, seen at an angle. Canvas 2D, no libraries.
 
-  - The lake fills the whole opening screen. A height field on a grid (one
-    cell per dot) is moved by the 2D wave equation with a 9-point Laplacian,
-    so ripples stay round, reflect, interfere and die away.
-  - Rain falls at random, a little more often over recent memories. The
-    pointer drags a wake through the surface; a click drops a stone.
-  - Dot size is light: a slow drifting swell, sun on the slopes and caustics
-    where the surface focuses light. Dots fade out under the text, under the
-    navigation and into the page below.
-  - Moiré: each dot is also scaled by two gratings sampled at the dot grid,
-    one straight and slowly turning, one concentric and slowly drifting.
-    Because they sit just off the grid's own frequency they alias into broad,
-    shifting interference bands: a digital texture that moves like water.
-  - Colour runs deep indigo, cobalt, cerulean, teal, aqua and seafoam, with a
-    warm glint on the brightest highlights, over an aubergine background.
-  - Texture: after the dots are drawn, two fine line screens are laid over
-    them, one cutting thin stripes out of each dot and one adding a light
-    thread on top, each at a slightly different angle. Against the dot grid
-    and each other they weave into wavy moiré bands, like a printed screen.
-    Both screens drift and turn slowly, so the weave moves with the water.
+  - Perspective: the lake is a flat grid of water tilted away from you. Each
+    row of dots further back is smaller, closer together, and drawn as a
+    flatter ellipse, until the rows pack into a hazy horizon near the top.
+    Near the bottom of the screen the dots are large and widely spaced.
+  - 2.5D relief: every dot is lifted by the height of the water under it, so
+    swells visibly roll across the surface instead of only changing brightness.
+  - Waves: three wind swells of different lengths and directions roll toward
+    you, with slow wave groups, like wind on Lake Ontario. On top of them a
+    wave-equation height field carries rain, a wake behind the pointer and a
+    stone where you click; its ripples spread as ellipses because of the tilt.
+  - Light: faces of the waves that tilt toward you reflect the sky and glow
+    (cool aqua to a warm glint); faces tilting away show the deep water. Far
+    water reflects more sky (brighter, hazier), near water is darker.
+  - Texture: two fine line screens woven over the dots (moiré), as before.
+  - Dots fade under the text, under the navigation and into the page below.
   - Ambient motion and pausing never change any data value.
 */
 (function () {
@@ -92,8 +88,9 @@
     var weights = places.map(function (p) { return recency(p.last); });
     var wSum = weights.reduce(function (s, w) { return s + w; }, 0) || 1;
 
-    var W = 0, H = 0, pitch, cols, rows, N, gx0, gy0;
-    var u, v, fade, shore, depth, cellList, vis, order, bOf, rad, offx, offy, counts, starts;
+    var W = 0, H = 0, pNear, tilt, cols, rows, N;
+    var rowS, rowY, rowP;             // per row: scale, resting screen y, horizontal pitch
+    var u, v, fade, depth, xs, cellList, drawList, vis, order, bOf, rad, rady, sx, sy, counts, starts;
     var markers = [];
     var act = new Float32Array(n), target = new Float32Array(n);
     var active = -1, all = false, paused = !!o.startPaused, visible = true;
@@ -110,49 +107,79 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       if (gctx) { glow.width = Math.ceil(W / 4); glow.height = Math.ceil(H / 4); }
 
-      pitch = W < 760 ? 7 : W < 1200 ? 8 : W < 1700 ? 9 : 10;
-      cols = Math.ceil(W / pitch) + 3;
-      rows = Math.ceil(H / pitch) + 3;
-      gx0 = (W - (cols - 1) * pitch) / 2;
-      gy0 = (H - (rows - 1) * pitch) / 2;
+      var narrow = W < 760;
+      pNear = narrow ? 15 : W < 1200 ? 19 : 22;
+      tilt = 0.74;
+      var yTop = Math.max(64, H * 0.1), sEnd = 0.4;
+      var Dn = (H + pNear - yTop) / (pNear * tilt * (1 - sEnd));
+      // rows from near (k = 0, just below the screen) to far (top)
+      var ys = [], ss = [], y = H + pNear * 0.6, k = 0;
+      while (y > yTop && k < 400) {
+        var s = Dn / (Dn + k);
+        ss.push(s); ys.push(y);
+        y -= pNear * tilt * s * s;
+        k++;
+      }
+      rows = ss.length + 1;
+      ss.push(Dn / (Dn + k)); ys.push(y);
+      cols = Math.ceil(W / (pNear * ss[rows - 1])) + 4;
+      rowS = new Float32Array(ss); rowY = new Float32Array(ys); rowP = new Float32Array(rows);
+      for (k = 0; k < rows; k++) rowP[k] = pNear * rowS[k];
       N = cols * rows;
       u = new Float32Array(N); v = new Float32Array(N);
-      fade = new Float32Array(N); shore = new Float32Array(N); depth = new Float32Array(N);
+      fade = new Float32Array(N); depth = new Float32Array(N); xs = new Float32Array(N);
       vis = new Int32Array(N); order = new Int32Array(N); bOf = new Uint8Array(N);
-      rad = new Float32Array(N); offx = new Float32Array(N); offy = new Float32Array(N);
+      rad = new Float32Array(N); rady = new Float32Array(N); sx = new Float32Array(N); sy = new Float32Array(N);
       counts = new Int32Array(NB); starts = new Int32Array(NB);
 
       var rects = o.getQuietRects ? o.getQuietRects() : [];
-      var list = [];
-      for (var y = 1; y < rows - 1; y++) for (var x = 1; x < cols - 1; x++) {
-        var i = y * cols + x, px = gx0 + x * pitch, py = gy0 + y * pitch;
+      var list = [], dlist = [];
+      for (k = 1; k < rows - 1; k++) for (var c = 1; c < cols - 1; c++) {
+        var i = k * cols + c, px = W / 2 + (c - cols / 2) * rowP[k], py = rowY[k];
+        list.push(i);
+        xs[i] = px;
+        if (px < -rowP[k] || px > W + rowP[k]) continue;
         var q = 1;
         for (var r = 0; r < rects.length; r++) {
           var Q = rects[r];
           var nx = (px - (Q.x + Q.w / 2)) / (Q.w / 2 + Q.pad), ny = (py - (Q.y + Q.h / 2)) / (Q.h / 2 + Q.pad);
           q = Math.min(q, smooth(0.45, 1.3, Math.sqrt(nx * nx + ny * ny)));
         }
-        q *= smooth(30, 120, py) * smooth(0, 170, H - py);
-        shore[i] = 0;
-        list.push(i);
-        fade[i] = q < 0.02 ? 0 : 0.04 + 0.96 * q;
-        // shallows and deeps: a fixed, slow pattern across the lake
-        depth[i] = 0.5 + 0.3 * Math.sin(x * 0.021 + 1.3) * Math.cos(y * 0.027 - 0.4) + 0.2 * Math.sin((x + y) * 0.013 + 2.1);
+        q *= smooth(yTop, yTop + H * 0.16, py) * smooth(20, 200, H - py);
+        if (q < 0.02) continue;
+        fade[i] = 0.04 + 0.96 * q;
+        depth[i] = 0.5 + 0.3 * Math.sin(c * 0.021 + 1.3) * Math.cos(k * 0.05 - 0.4) + 0.2 * Math.sin((c + k) * 0.013 + 2.1);
+        dlist.push(i);
       }
       cellList = new Int32Array(list);
+      drawList = new Int32Array(dlist);
 
       markers = (o.getMarkers ? o.getMarkers(W, H) : []).map(function (m) {
-        return { gx: (m.x - gx0) / pitch, gy: (m.y - gy0) / pitch, gr: Math.max(3, m.r / pitch) };
+        var g = toGrid(m.x, m.y);
+        return { gx: g[0], gy: g[1], gr: Math.max(3, m.r / rowP[Math.round(g[1])]) };
       });
       if (o.onLayout) o.onLayout(W, H);
 
       seed = 11;
-      for (var k = 0; k < 12; k++) {
-        var ci = cellList[(srand() * cellList.length) | 0];
+      for (k = 0; k < 12; k++) {
+        var ci = drawList[(srand() * drawList.length) | 0];
         drop(ci % cols, (ci / cols) | 0, 0.8 + srand() * 0.8, 1.6);
       }
       for (k = 0; k < 70; k++) integrate();
       return true;
+    }
+
+    // screen point -> grid coordinates (column, row) on the tilted lake
+    function toGrid(x, y) {
+      var lo = 0, hi = rows - 1;
+      if (y >= rowY[0]) lo = hi = 0;
+      else if (y <= rowY[rows - 1]) lo = hi = rows - 1;
+      else {
+        while (hi - lo > 1) { var mid = (lo + hi) >> 1; if (rowY[mid] > y) lo = mid; else hi = mid; }
+      }
+      var f = lo === hi ? 0 : (rowY[lo] - y) / (rowY[lo] - rowY[hi]);
+      var k = lo + f, p = rowP[lo] + (rowP[hi] - rowP[lo]) * f;
+      return [(x - W / 2) / p + cols / 2, k];
     }
 
     function drop(gx, gy, amp, r) {
@@ -178,7 +205,7 @@
 
     function step() {
       if (Math.random() < 0.035) {
-        var ci = cellList[(Math.random() * cellList.length) | 0];
+        var ci = drawList[(Math.random() * drawList.length) | 0];
         drop(ci % cols, (ci / cols) | 0, 0.45 + Math.random() * 0.9, 1.1 + Math.random() * 0.8);
       }
       if (markers.length && Math.random() < 0.012) {
@@ -188,8 +215,8 @@
         if (m) drop(m.gx + (Math.random() - 0.5) * m.gr, m.gy + (Math.random() - 0.5) * m.gr, 0.5 + Math.random() * 0.6, 1.3);
       }
       if (ptr.on && ptr.moved) {
-        var gx = (ptr.x - gx0) / pitch, gy = (ptr.y - gy0) / pitch;
-        var lx = (ptr.lx - gx0) / pitch, ly = (ptr.ly - gy0) / pitch;
+        var g1 = toGrid(ptr.x, ptr.y), g0 = toGrid(ptr.lx, ptr.ly);
+        var gx = g1[0], gy = g1[1], lx = g0[0], ly = g0[1];
         var dist = Math.sqrt((gx - lx) * (gx - lx) + (gy - ly) * (gy - ly));
         if (dist > 0.05 && dist < 40) {
           var amp = Math.min(dist * 0.06, 0.42), ns = Math.max(1, Math.ceil(dist / 0.8));
@@ -207,40 +234,46 @@
       if (!u || !cellList) return;
       ctx.clearRect(0, 0, W, H);
       counts.fill(0);
-      var t = time, nv = 0, L = cellList.length, anyAct = false, p;
+      var t = time, nv = 0, L = drawList.length, anyAct = false, p;
       for (p = 0; p < markers.length; p++) if (act[p] > 0.01) anyAct = true;
-      var half = pitch * 0.5;
 
       // moiré gratings for this frame
       var th = 0.42 + 0.12 * Math.sin(t * 0.06), ca = Math.cos(th), sa = Math.sin(th);
       var f1 = TAU * 1.09, f2 = TAU * 0.945;
       var ccx = cols * (0.5 + 0.2 * Math.sin(t * 0.045)), ccy = rows * (0.5 + 0.16 * Math.cos(t * 0.037));
       var ph1 = t * 0.5, ph2 = t * 0.7;
+      var lift = pNear * 0.55, revealY = intro < 1 ? intro * (H + 160) - 80 : 1e9;
 
       for (var k = 0; k < L; k++) {
-        var i = cellList[k], q = fade[i];
-        if (q === 0) continue;
+        var i = drawList[k], q = fade[i];
         var x = i % cols, y = (i / cols) | 0;
+        var s = rowS[y], pch = rowP[y];
+
+        // wind swells rolling toward the viewer (y grows into the distance)
+        var grp = 0.7 + 0.3 * Math.sin(x * 0.025 - y * 0.035 + t * 0.1);
+        var a1 = x * 0.06 + y * 0.52 + t * 1.15, a2 = -x * 0.2 + y * 0.86 + t * 1.6;
+        var a3 = x * 0.38 + y * 1.25 + t * 2.2, a4 = x * 1.05 + y * 0.45 + t * 2.9;
+        var hs = grp * (0.55 * Math.sin(a1) + 0.28 * Math.sin(a2)) + 0.16 * Math.sin(a3) + 0.07 * Math.sin(a4);
+        var dz = grp * (0.55 * 0.52 * Math.cos(a1) + 0.28 * 0.86 * Math.cos(a2)) + 0.16 * 1.25 * Math.cos(a3) + 0.07 * 0.45 * Math.cos(a4);
+        var dxs = grp * (0.55 * 0.06 * Math.cos(a1) - 0.28 * 0.2 * Math.cos(a2)) + 0.16 * 0.38 * Math.cos(a3) + 0.07 * 1.05 * Math.cos(a4);
+
         var h = u[i], gx = u[i + 1] - u[i - 1], gy = u[i + cols] - u[i - cols];
         var lap = u[i + 1] + u[i - 1] + u[i + cols] + u[i - cols] - 4 * h;
-        var nz = 0.6 * Math.sin(x * 0.06 + t * 0.15 + 1.6 * Math.sin(y * 0.045 - t * 0.1)) +
-                 0.4 * Math.sin(y * 0.08 - t * 0.12 + 1.2 * Math.sin(x * 0.035 + t * 0.08));
-        var dp = depth[i];
-        var spec = -(gx * 0.62 + gy * 0.78) * 1.6;
-        var caus = lap < 0 ? Math.min(-lap * 2.2, 0.7) : 0;
-        var Lm = 0.27 + 0.24 * nz + 0.12 * (1 - dp) + spec * 0.6 + caus * 0.5 + shore[i] * (0.32 + Math.min(Math.abs(v[i]) * 6, 0.4));
+        var dp = depth[i], far = 1 - (s - 0.4) / 0.6;
+        // faces tilting toward the viewer (height rising into the distance) reflect the sky
+        var spec = (dz * 1.7 + gy * 1.2) + (dxs * 0.45 - gx * 0.4);
+        var caus = lap < 0 ? Math.min(-lap * 2, 0.6) : 0;
+        var Lm = 0.2 + 0.26 * far + 0.08 * (1 - dp) + spec * 0.5 + caus * 0.45;
         var hl = 0;
         if (anyAct) for (p = 0; p < markers.length; p++) {
           if (act[p] <= 0.01) continue;
-          var m = markers[p], dx = x - m.gx, dy = y - m.gy, rr = m.gr * m.gr;
-          var dd = dx * dx + dy * dy;
+          var m = markers[p], ddx = x - m.gx, ddy = y - m.gy, rr = m.gr * m.gr;
+          var dd = ddx * ddx + ddy * ddy;
           if (dd < rr * 2.2) hl += act[p] * Math.exp(-dd / (rr * 0.6));
         }
         Lm += hl * 0.45;
-        if (intro < 1) {
-          var ex = (x / cols - 0.5), ey = (y / rows - 0.52), rn = Math.sqrt(ex * ex + ey * ey) * 1.6;
-          Lm *= smooth(rn - 0.12, rn + 0.04, intro * 1.15);
-        }
+        var py0 = rowY[y];
+        if (py0 > revealY) Lm *= smooth(revealY + 80, revealY, py0);
         Lm *= q;
         if (Lm < 0.05) continue;
         if (Lm > 1) Lm = 1;
@@ -248,13 +281,14 @@
         var dx2 = x - ccx, dy2 = y - ccy;
         var mo = 0.5 + 0.25 * Math.cos(f1 * (x * ca + y * sa) + ph1) +
                  0.25 * Math.cos(f2 * Math.sqrt(dx2 * dx2 + dy2 * dy2) - ph2);
-        var r = half * 1.3 * Math.pow(Lm, 0.7) * (0.45 + 0.55 * Math.pow(mo, 1.2));
-        if (r < 0.5) continue;
-        var ct = 0.06 + 0.3 * dp + 0.16 * nz + 0.44 * Lm + spec * 0.18 + 0.06 * (mo - 0.5) + hl * 0.35;
+        var r = pch * 0.62 * Math.pow(Lm, 0.7) * (0.5 + 0.5 * Math.pow(mo, 1.2));
+        if (r < 0.45) continue;
+        var ct = 0.1 + 0.22 * far + 0.24 * dp * (1 - far) + 0.42 * Lm + spec * 0.16 + 0.05 * (mo - 0.5) + hl * 0.35;
         var b = ct <= 0 ? 0 : ct >= 1 ? NB - 1 : (ct * (NB - 1)) | 0;
         bOf[i] = b; rad[i] = r;
-        offx[i] = Math.max(-half, Math.min(half, gx * pitch * 1.1));
-        offy[i] = Math.max(-half, Math.min(half, gy * pitch * 1.1));
+        rady[i] = r * Math.min(1, tilt * s * 1.35);
+        sx[i] = xs[i] + Math.max(-pch * 0.5, Math.min(pch * 0.5, (gx + dxs * 0.6) * pch));
+        sy[i] = py0 - (hs * 0.9 + h * 1.4) * lift * s;
         counts[b]++; vis[nv++] = i;
       }
       var s0 = 0;
@@ -267,9 +301,9 @@
           ctx.fillStyle = COLORS[b2];
           ctx.beginPath();
           for (k = c0; k < c1; k++) {
-            var j = order[k], px = gx0 + (j % cols) * pitch + offx[j], py = gy0 + ((j / cols) | 0) * pitch + offy[j], rj = rad[j];
-            ctx.moveTo(px + rj, py);
-            ctx.arc(px, py, rj, 0, TAU);
+            var j = order[k], rj = rad[j];
+            ctx.moveTo(sx[j] + rj, sy[j]);
+            ctx.ellipse(sx[j], sy[j], rj, rady[j], 0, 0, TAU);
           }
           ctx.fill();
         }
@@ -324,7 +358,8 @@
     host.addEventListener("pointerdown", function (e) {
       if (paused || e.target.closest("button,a")) return;
       var b = host.getBoundingClientRect();
-      drop((e.clientX - b.left - gx0) / pitch, (e.clientY - b.top - gy0) / pitch, 2.2, 2);
+      var g = toGrid(e.clientX - b.left, e.clientY - b.top);
+      drop(g[0], g[1], 2.2, 2);
     });
     document.addEventListener("visibilitychange", function () { visible = !document.hidden; kick(); });
     if ("IntersectionObserver" in window) {
