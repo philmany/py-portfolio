@@ -204,7 +204,7 @@
     }
 
     function draw() {
-      if (!u) return;
+      if (!u || !cellList) return;
       ctx.clearRect(0, 0, W, H);
       counts.fill(0);
       var t = time, nv = 0, L = cellList.length, anyAct = false, p;
@@ -297,6 +297,7 @@
     function frame(ts) {
       raf = 0;
       if (paused || !visible) return;
+      if (!cellList) { relayout(true); if (!cellList) return; }
       var dt = Math.min(50, ts - (last || ts));
       last = ts; time += dt / 1000; acc += dt;
       if (intro < 1) intro = Math.min(1, intro + dt / 1900);
@@ -334,9 +335,8 @@
     var lastW = 0, lastH = 0, rt = 0;
     function relayout(force) {
       var w = host.clientWidth, h = host.clientHeight;
-      if (!force && w === lastW && Math.abs(h - lastH) < 60) return;
-      lastW = w; lastH = h;
-      if (layout()) { act.set(target); draw(); }
+      if (!force && cellList && w === lastW && Math.abs(h - lastH) < 60) return;
+      if (layout()) { lastW = w; lastH = h; act.set(target); draw(); kick(); }
     }
     if ("ResizeObserver" in window) {
       new ResizeObserver(function () { clearTimeout(rt); rt = setTimeout(relayout, 140); }).observe(host);
