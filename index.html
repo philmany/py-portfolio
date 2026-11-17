@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#140a18">
+<title>Philman Yeung</title>
+<meta name="description" content="Philman Yeung, a product manager and designer that nurtures ideas and people.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#work">Skip to work</a>
+<div id="progress" aria-hidden="true"></div>
+
+<header class="nav">
+  <a class="brand" id="brand" href="#top">Philman Yeung</a>
+  <nav aria-label="Sections">
+    <a href="#work">Work</a>
+    <a href="#play">Play</a>
+    <a href="#about">About</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero" id="top" aria-labelledby="hero-name">
+    <canvas class="glow" id="glow" aria-hidden="true"></canvas>
+    <canvas class="water" id="water" aria-hidden="true"></canvas>
+    <div class="hero-text" id="hero-text">
+      <h1 id="hero-name"></h1>
+      <p id="hero-tagline"></p>
+    </div>
+    <div class="mem-layer" id="mem-layer" role="group" aria-label="Memories in the water. The same list is in the Play section."></div>
+    <div class="hero-ctl">
+      <button type="button" class="ctl" id="memories" aria-pressed="false"><span class="sw" aria-hidden="true"><i></i></span>Water contains memories.</button>
+      <button type="button" class="ctl" id="pause" aria-pressed="false"><span class="pz" aria-hidden="true"></span><span class="pl">Pause motion</span></button>
+    </div>
+  </section>
+
+  <section class="section" id="work" aria-labelledby="work-h">
+    <div class="wrap">
+      <div class="eyebrow rv"><b>01</b>Work</div>
+      <h2 class="sec" id="work-h" data-split>Selected <em>work.</em></h2>
+      <div class="work-list" id="work-list"></div>
+    </div>
+  </section>
+
+  <section class="section" id="play" aria-labelledby="play-h">
+    <div class="wrap">
+      <div class="eyebrow rv"><b>02</b>Play</div>
+      <h2 class="sec" id="play-h" data-split>Water contains <em>memories.</em></h2>
+      <div class="play-grid">
+        <div class="play-side rv">
+          <p class="lede" id="play-sub"></p>
+          <p class="note">Each memory sits somewhere in the pool at the top of this page. Recently visited water gets more rain. The pool is stylised, not a map.</p>
+        </div>
+        <div class="places" id="places"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section about" id="about" aria-labelledby="about-h">
+    <div class="wrap">
+      <div class="eyebrow rv"><b>03</b>About</div>
+      <h2 class="sec" id="about-h"></h2>
+      <ul class="links" id="links"></ul>
+    </div>
+  </section>
+</main>
+
+<footer class="foot wrap">
+  <span id="copy"></span>
+  <a href="#top">Back to top <span aria-hidden="true">&uarr;</span></a>
+</footer>
+
+<div class="peek" id="peek" aria-hidden="true">
+  <div class="peek-in" id="peek-in"></div>
+</div>
+<div class="wipe" id="wipe" aria-hidden="true"></div>
+
+<noscript><p class="wrap">This page needs JavaScript for the project list. <a href="pretzel.html">Pretzel 1.0 case study</a> · <a href="https://www.linkedin.com/in/philmanyeung/">LinkedIn</a> · <a href="mailto:philmanyeung@gmail.com">philmanyeung@gmail.com</a></p></noscript>
+
+<script src="data.js"></script>
+<script src="shapes.js"></script>
+<script src="water.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
