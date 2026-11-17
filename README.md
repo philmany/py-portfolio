@@ -53,3 +53,14 @@ Open http://localhost:8000. Use a local server rather than double-clicking the f
 - Colour runs indigo, cobalt, cerulean, teal, aqua and seafoam with a warm glint, on an aubergine background. The lake is a large rounded shape with a bright shoreline. Change the palette in `STOPS` at the top of `water.js`.
 - Outlines are hand-traced and simplified, not survey-accurate or to scale. Motion never changes any data.
 - Reduced motion: starts as a still frame with "Play motion". No JavaScript: a static dot pattern.
+
+## Hosting on Cloudflare (free, with your own domain)
+
+This is a static site with no build step.
+
+1. Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git → choose this repository.
+2. Build settings: Framework preset **None**, build command **empty**, build output directory **/**.
+3. Deploy. You get a `*.pages.dev` address.
+4. In the project → Custom domains → Set up a custom domain. If the domain's DNS is already on Cloudflare, it adds the record for you; otherwise point a CNAME at the `*.pages.dev` address.
+
+Every push to the main branch redeploys. `pretzel.html` is also served at `/pretzel`.

@@ -70,10 +70,10 @@
     for (var y = 0; y < s; y += period) {
       g.beginPath();
       for (var x = 0; x <= s; x += 2) {
-        var yy = y + Math.sin((x / s) * TAU * 2) * wave;
+        var yy = y + Math.sin((x / s) * TAU * 3) * wave;
         if (x === 0) g.moveTo(x, yy); else g.lineTo(x, yy);
       }
-      for (x = s; x >= 0; x -= 2) g.lineTo(x, y + Math.sin((x / s) * TAU * 2) * wave + thick);
+      for (x = s; x >= 0; x -= 2) g.lineTo(x, y + Math.sin((x / s) * TAU * 3) * wave + thick);
       g.closePath(); g.fill();
     }
     return c;
@@ -84,7 +84,7 @@
     var ctx = canvas.getContext && canvas.getContext("2d");
     if (!ctx) return null;
     var gctx = glow && glow.getContext ? glow.getContext("2d") : null;
-    var cutTile = lineTile(3, 1.15, "#000", 0.8), threadTile = lineTile(4, 0.9, "#fff", 1.2);
+    var cutTile = lineTile(2.65, 1.05, "#000", 1.6), threadTile = lineTile(3.7, 0.9, "#fff", 2.2);
     var cutPat = cutTile && ctx.createPattern(cutTile, "repeat");
     var threadPat = threadTile && ctx.createPattern(threadTile, "repeat");
     var canTurn = !!(cutPat && cutPat.setTransform && window.DOMMatrix);
@@ -276,15 +276,15 @@
         c0 = c1;
       }
       if (cutPat && canTurn) {
-        var a1 = 0.07 + 0.05 * Math.sin(t * 0.05), a2 = -0.11 + 0.04 * Math.cos(t * 0.043);
+        var a1 = 0.09 + 0.05 * Math.sin(t * 0.05), a2 = -0.19 + 0.05 * Math.cos(t * 0.043);
         cutPat.setTransform(new DOMMatrix().translate(t * 3.1, t * 1.3).rotate(a1 * 57.2958).scale(1, 1 + 0.06 * Math.sin(t * 0.09)));
         threadPat.setTransform(new DOMMatrix().translate(-t * 2.2, t * 0.8).rotate(a2 * 57.2958));
         ctx.save();
         ctx.globalCompositeOperation = "destination-out";
-        ctx.globalAlpha = 0.82;
+        ctx.globalAlpha = 0.66;
         ctx.fillStyle = cutPat; ctx.fillRect(0, 0, W, H);
         ctx.globalCompositeOperation = "source-atop";
-        ctx.globalAlpha = 0.26;
+        ctx.globalAlpha = 0.3;
         ctx.fillStyle = threadPat; ctx.fillRect(0, 0, W, H);
         ctx.restore();
       }
