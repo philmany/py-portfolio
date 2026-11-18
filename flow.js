@@ -15,8 +15,8 @@
   var css = document.createElement("style");
   css.textContent =
     ".flow-cv{position:fixed;inset:0;width:100%;height:100%;z-index:300;pointer-events:none;display:block}" +
-    "html.flowing body>*:not(.flow-cv){filter:blur(16px) saturate(1.4);transform:scale(1.08);transition:filter .85s cubic-bezier(.7,0,.3,1),transform 1.05s cubic-bezier(.7,0,.3,1)}" +
-    "html.flow-settle body>*:not(.flow-cv){transition:filter 1.1s cubic-bezier(.2,.8,.2,1),transform 1.3s cubic-bezier(.2,.8,.2,1)}" +
+    "html.flowing body>*:not(.flow-cv){filter:blur(26px) saturate(1.5);transform:scale(1.12);transition:filter .5s cubic-bezier(.7,0,.3,1),transform .63s cubic-bezier(.7,0,.3,1)}" +
+    "html.flow-settle body>*:not(.flow-cv){transition:filter .66s cubic-bezier(.2,.8,.2,1),transform .78s cubic-bezier(.2,.8,.2,1)}" +
     "html.flowing{overflow:hidden}";
   document.head.appendChild(css);
 
@@ -41,14 +41,14 @@
   /* mode "out": accelerate into the tunnel. mode "in": rush on, then thin out. */
   function run(mode, x, y, done) {
     mount();
-    var t0 = performance.now(), last = t0, D = mode === "out" ? 1.0 : 1.15;
+    var t0 = performance.now(), last = t0, D = mode === "out" ? 0.6 : 0.69;
     var sx = x == null ? W / 2 : x, sy = y == null ? H / 2 : y;
     cancelAnimationFrame(raf);
     (function frame(now) {
       var dt = Math.min(0.05, (now - last) / 1000); last = now;
       var p = Math.min(1, (now - t0) / 1000 / D);
       var e = mode === "out" ? p * p * (3 - 2 * p) : 1 - Math.pow(1 - p, 3);
-      var speed = mode === "out" ? 0.15 + 2.6 * p * p : 2.8 * Math.pow(1 - p, 2) + 0.05;
+      var speed = mode === "out" ? 0.3 + 5.2 * p * p : 5.4 * Math.pow(1 - p, 2) + 0.1;
       var veil = mode === "out" ? Math.min(1, p * 1.5) : Math.max(0, 1 - e * 1.25);
       var glow = mode === "out" ? Math.min(1, p * 2.2) : Math.max(0, 1 - e);
       var cx = mode === "out" ? sx + (W / 2 - sx) * e : W / 2, cy = mode === "out" ? sy + (H / 2 - sy) * e : H / 2;
@@ -76,7 +76,7 @@
         var a = glow * (0.25 + 0.75 * near) * (0.5 + q.s * 0.5);
         if (a < 0.02) continue;
         // a dot with a short trail, not a streak: drifting, not warping
-        var dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy), cap = 3 + 16 * near;
+        var dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy), cap = 4 + 30 * near;
         if (L > cap) { x0 = x1 - dx / L * cap; y0 = y1 - dy / L * cap; }
         var col = mix((q.m * 0.6 + (1 - q.z) * 0.5) % 1), size = Math.max(0.8, Math.min(9, 0.7 + q.s * 6 * near));
         if (near > 0.35) {   // soft out-of-focus halo on the dots closest to you
@@ -98,7 +98,7 @@
     root.classList.add("flowing");
     var went = false, go = function () { if (!went) { went = true; window.location.href = url; } };
     run("out", x, y, go);
-    setTimeout(go, 1400);   // in case frames are throttled
+    setTimeout(go, 850);   // in case frames are throttled
   };
 
   /* arriving through the stream */
