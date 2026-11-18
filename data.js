@@ -82,6 +82,15 @@ window.SITE_DATA = {
           preview: { type: "image", src: "previews/pastelprimate.jpg" },
         },
         {
+          id: "eatyourvegetables",
+          title: "Eat Your Vegetables",
+          tags: ["Game", "Three.js", "WebRTC"],
+          status: "complete",
+          href: "https://philmany.github.io/eat-your-vegetables/",
+          summary: "A Three.js browser game where players connect directly to each other through PeerJS (WebRTC).",
+          preview: { type: "image", src: "previews/eatyourvegetables.jpg" },
+        },
+        {
           id: "nwhacks",
           title: "nwHacks Brand Identity",
           tags: ["Brand Identity", "Product Design"],
@@ -131,7 +140,7 @@ window.SITE_DATA = {
     height: logo height in px on desktop, to balance logos of different shapes (phones use 80%).
   */
   brands: {
-    label: "Brands I\u2019ve worked for and with",
+    label: "I\u2019ve worked for and with",
     items: [
       { name: "Microsoft", logo: "logos/microsoft.svg", url: "https://www.microsoft.com", height: 26 },
       { name: "L\u2019Or\u00e9al Paris", logo: "logos/loreal-paris.svg", url: "https://www.lorealparis.ca", height: 36 },

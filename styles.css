@@ -276,6 +276,12 @@ h2.sec em { font-style: italic; color: var(--accent-2); }
   border: 1px solid var(--line-2); border-radius: 999px; padding: 5px 11px;
 }
 
+.layer .cap {
+  position: absolute; left: 0; right: 0; bottom: 0; margin: 0; padding: 26px 16px 13px;
+  font-size: 12.5px; line-height: 1.45; color: var(--text);
+  background: linear-gradient(to top, rgba(20, 10, 24, 0.92) 55%, rgba(20, 10, 24, 0));
+}
+
 /* Page transition: a ripple that floods the screen */
 .wipe { position: fixed; inset: 0; z-index: 300; pointer-events: none; }
 .wipe::before, .wipe::after {

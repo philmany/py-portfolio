@@ -308,6 +308,7 @@
           layer.appendChild(f);
         } else if (pv.type === "image") {
           layer.appendChild(el("img", { class: "shot", src: pv.src, alt: "", loading: "lazy" }));
+          if (it.summary) layer.appendChild(el("p", { class: "cap", text: it.summary }));
         } else {
           var c = el("canvas");
           paintThumb(c, pv.colors || ["#2b6cd6", "#6fe0cf"]);
