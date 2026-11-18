@@ -5,7 +5,7 @@
 window.SITE_DATA = {
   person: {
     name: "Philman Yeung",
-    tagline: ["a Product Manager & Designer", "who flows like water."],  // one string per line
+    tagline: ["a {Product Manager} & Designer", "who flows like water."],  // one string per line; {braces} = accent colour
   },
 
   // Shown in the About section. Placeholder until you write a longer introduction.

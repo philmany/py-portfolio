@@ -39,7 +39,10 @@
   $("#hero-name").textContent = D.person.name;
   [].concat(D.person.tagline).forEach(function (line, i) {
     if (i) $("#hero-tagline").appendChild(el("br"));
-    $("#hero-tagline").appendChild(document.createTextNode(line));
+    line.split(/(\{[^}]*\})/).forEach(function (part) {
+      if (!part) return;
+      $("#hero-tagline").appendChild(part[0] === "{" ? el("em", { text: part.slice(1, -1) }) : document.createTextNode(part));
+    });
   });
   [].concat(D.introduction).forEach(function (line, i) {
     if (i) $("#about-h").appendChild(el("br"));
