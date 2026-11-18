@@ -34,6 +34,30 @@
   }
   function pad2(n) { return (n < 10 ? "0" : "") + n; }
 
+  // A word that flips like a rolodex through several titles.
+  function roller(words) {
+    var box = el("span", { class: "roll", "aria-hidden": "true" });
+    var sr = el("span", { class: "sr", text: words.join(", ") });
+    var sizer = el("span", { class: "roll-size", text: words[0] });
+    box.appendChild(sizer);
+    var cur = el("span", { class: "roll-w in", text: words[0] });
+    box.appendChild(cur);
+    var i = 0;
+    if (!reduce) setInterval(function () {
+      if (document.hidden) return;
+      i = (i + 1) % words.length;
+      var next = el("span", { class: "roll-w", text: words[i] });
+      box.appendChild(next);
+      sizer.textContent = words[i];
+      cur.classList.remove("in"); cur.classList.add("out");
+      var old = cur; setTimeout(function () { old.remove(); }, 700);
+      requestAnimationFrame(function () { requestAnimationFrame(function () { next.classList.add("in"); }); });
+      cur = next;
+    }, 2400);
+    var wrap = el("span", { class: "roll-wrap" }, box, sr);
+    return wrap;
+  }
+
   /* ---------- text ---------- */
   $("#brand").textContent = D.person.name;
   $("#hero-name").textContent = D.person.name;
@@ -41,7 +65,10 @@
     if (i) $("#hero-tagline").appendChild(el("br"));
     line.split(/(\{[^}]*\})/).forEach(function (part) {
       if (!part) return;
-      $("#hero-tagline").appendChild(part[0] === "{" ? el("em", { text: part.slice(1, -1) }) : document.createTextNode(part));
+      if (part[0] !== "{") { $("#hero-tagline").appendChild(document.createTextNode(part)); return; }
+      var words = part.slice(1, -1).split("|");
+      if (words.length === 1) { $("#hero-tagline").appendChild(el("em", { text: words[0] })); return; }
+      $("#hero-tagline").appendChild(roller(words));
     });
   });
   [].concat(D.introduction).forEach(function (line, i) {
@@ -327,7 +354,7 @@
 
   /* cursor-follow live preview */
   var peek = $("#peek"), PW = 420, PH = 263;
-  var fine = window.matchMedia("(hover: hover) and (pointer: fine) and (min-width: 900px)");
+  var fine = window.matchMedia("(hover: hover) and (pointer: fine) and (min-width: 640px)");
   var px = 0, py = 0, tx = 0, ty = 0, showing = false, praf = 0, cur = null;
 
   function loadFrames() {

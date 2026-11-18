@@ -5,7 +5,8 @@
 window.SITE_DATA = {
   person: {
     name: "Philman Yeung",
-    tagline: ["a {Product Manager} & Designer", "who flows like water."],  // one string per line; {braces} = accent colour
+    // {A|B|C} flips through titles; a single {word} is just accented.
+    tagline: ["a {Product Manager} & {Designer|Founder|Artist|AI Native|Marketer|GTM Lead} that flows like water."],
   },
 
   // Shown in the About section. Placeholder until you write a longer introduction.
@@ -24,7 +25,7 @@ window.SITE_DATA = {
       items: [
         {
           id: "volta",
-          title: "VOLTA Physiotherapy Device",
+          title: "VOLTA Physiotherapy",
           tags: ["Connected Device", "Hardware"],
           status: "placeholder",
           summary: "Co-founded VOLTA Physiotech, a physiotherapy device startup.",
@@ -32,8 +33,8 @@ window.SITE_DATA = {
         },
         {
           id: "loreal",
-          title: "L’Oréal Funnel Optimization",
-          tags: ["Ecommerce", "Data"],
+          title: "L’Oréal Augmented Reality",
+          tags: ["Augmented Reality", "Ecommerce"],
           status: "placeholder",
           summary: "Digital Product Manager at L’Oréal.",
           preview: { type: "art", colors: ["#e8b25c", "#ff6581"] },
@@ -52,12 +53,12 @@ window.SITE_DATA = {
           preview: { type: "page", src: "pretzel.html#preview" },
         },
         {
-          id: "nwhacks",
-          title: "nwHacks Brand Identity",
-          tags: ["Brand Identity", "Product Design"],
+          id: "bandit",
+          title: "Bandit Labs",
+          tags: ["Product Design", "Dashboard"],
           status: "placeholder",
           summary: "",
-          preview: { type: "art", colors: ["#2bd18f", "#2b6cd6"] },
+          preview: { type: "art", colors: ["#2bd18f", "#ff8a3d"] },
         },
       ],
     },
@@ -79,6 +80,14 @@ window.SITE_DATA = {
           status: "complete",
           href: "https://pastelprimate.com",
           preview: { type: "image", src: "previews/pastelprimate.jpg" },
+        },
+        {
+          id: "nwhacks",
+          title: "nwHacks Brand Identity",
+          tags: ["Brand Identity", "Product Design"],
+          status: "placeholder",
+          summary: "",
+          preview: { type: "art", colors: ["#2bd18f", "#2b6cd6"] },
         },
       ],
     },
@@ -106,11 +115,11 @@ window.SITE_DATA = {
       { name: "Deer Lake", region: "Pacific Northwest", where: "British Columbia, Canada", activity: "kayaked", last: "2025-09",
         at: [0.81, 0.33], atNarrow: [0.83, 0.25], size: 150, label: "above", labelNarrow: "above" },
       { name: "Lachine Canal", region: "Elsewhere", where: "Qu\u00e9bec, Canada", activity: "kayaked", last: "2017-07",
-        at: [0.2, 0.68], atNarrow: [0.19, 0.71], size: 190, label: "below", labelNarrow: "above" },
+        at: [0.2, 0.68], atNarrow: [0.19, 0.71], size: 190, label: "above", labelNarrow: "above" },
       { name: "Mediterranean Sea", region: "Elsewhere", where: "C\u00f4te d\u2019Azur, France", activity: "skinny-dipped", last: "2025-10",
-        at: [0.5, 0.79], atNarrow: [0.5, 0.86], size: 280, label: "below", labelNarrow: "above" },
+        at: [0.5, 0.79], atNarrow: [0.5, 0.86], size: 280, label: "above", labelNarrow: "above" },
       { name: "Tai O (\u5927\u6fb3)", region: "Elsewhere", where: "Lantau Island, Hong Kong SAR, China", activity: "out on a fishing boat", last: "2025-12",
-        at: [0.8, 0.68], atNarrow: [0.81, 0.71], size: 150, label: "below", labelNarrow: "above" },
+        at: [0.8, 0.68], atNarrow: [0.81, 0.71], size: 150, label: "above", labelNarrow: "above" },
     ],
   },
 

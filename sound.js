@@ -1,10 +1,12 @@
 /*
-  Lake sound, made in the browser with Web Audio. No audio files.
+  Lake sound: slow waves lapping on a beach. Made in the browser with Web Audio,
+  no audio files.
 
-  - Surf: brown noise through a low-pass filter whose cutoff and level rise and
-    fall in slow, irregular swells, so each wave rolls in and draws back.
-  - Wash: a faint, low band of filtered noise for small waves (kept soft, so it reads as water, not wind).
-  - Lap: now and then a short, soft low thump, like water against a hull.
+  - Bed: a very quiet, deep rumble of brown noise (far-off water), well below
+    the waves so there is no constant hiss.
+  - Each wave, every 7 to 10 seconds: a low swell rises, then the lap itself,
+    a soft burst of water whose brightness falls quickly as it spreads up the
+    sand, then a gentle draw-back that fades away.
   - Starts muted (browsers only allow sound after a click). The speaker button
     turns it on and off; it fades in and out, and goes quiet when the tab is hidden.
 */
@@ -15,15 +17,17 @@
   var AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) { btn.hidden = true; return; }
 
-  var ac = null, master = null, on = false, timer = 0;
+  var ac = null, master = null, on = false, brown = null, pink = null;
+  var LEVEL = 0.375;
 
-  function noiseBuffer(seconds, brown) {
+  function noise(seconds, kind) {
     var len = Math.floor(ac.sampleRate * seconds), buf = ac.createBuffer(2, len, ac.sampleRate);
     for (var ch = 0; ch < 2; ch++) {
-      var d = buf.getChannelData(ch), last = 0;
+      var d = buf.getChannelData(ch), last = 0, b0 = 0, b1 = 0, b2 = 0;
       for (var i = 0; i < len; i++) {
         var w = Math.random() * 2 - 1;
-        if (brown) { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; } else d[i] = w;
+        if (kind === "brown") { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; }
+        else { b0 = 0.997 * b0 + w * 0.029591; b1 = 0.985 * b1 + w * 0.032534; b2 = 0.95 * b2 + w * 0.048056; d[i] = (b0 + b1 + b2 + w * 0.05) * 1.6; }
       }
     }
     return buf;
@@ -32,43 +36,52 @@
   function build() {
     ac = new AC();
     master = ac.createGain(); master.gain.value = 0; master.connect(ac.destination);
+    brown = noise(10, "brown"); pink = noise(6, "pink");
 
-    // surf
-    var surf = ac.createBufferSource(); surf.buffer = noiseBuffer(8, true); surf.loop = true;
-    var surfLP = ac.createBiquadFilter(); surfLP.type = "lowpass"; surfLP.frequency.value = 320; surfLP.Q.value = 0.3;
-    var surfG = ac.createGain(); surfG.gain.value = 0.5;
-    surf.connect(surfLP).connect(surfG).connect(master); surf.start();
+    var bed = ac.createBufferSource(); bed.buffer = brown; bed.loop = true;
+    var bedLP = ac.createBiquadFilter(); bedLP.type = "lowpass"; bedLP.frequency.value = 180;
+    var bedG = ac.createGain(); bedG.gain.value = 0.12;
+    bed.connect(bedLP).connect(bedG).connect(master); bed.start();
 
-    // wash
-    var wash = ac.createBufferSource(); wash.buffer = noiseBuffer(6, false); wash.loop = true;
-    var washBP = ac.createBiquadFilter(); washBP.type = "bandpass"; washBP.frequency.value = 700; washBP.Q.value = 0.9;
-    var washG = ac.createGain(); washG.gain.value = 0.012;
-    wash.connect(washBP).connect(washG).connect(master); wash.start();
+    function wave() {
+      var t = ac.currentTime + 0.05, size = 0.7 + Math.random() * 0.3;
+      var out = ac.createGain();
+      if (ac.createStereoPanner) { var pan = ac.createStereoPanner(); pan.pan.value = (Math.random() - 0.5) * 0.6; out.connect(pan).connect(master); }
+      else out.connect(master);
 
-    // irregular swells: each wave builds, peaks, and draws back
-    function swell() {
-      var now = ac.currentTime, len = 3.2 + Math.random() * 3.4, peak = 0.55 + Math.random() * 0.45;
-      surfG.gain.cancelScheduledValues(now);
-      surfG.gain.setTargetAtTime(peak, now, len * 0.22);
-      surfG.gain.setTargetAtTime(0.28, now + len * 0.55, len * 0.25);
-      surfLP.frequency.cancelScheduledValues(now);
-      surfLP.frequency.setTargetAtTime(380 + peak * 420, now, len * 0.25);
-      surfLP.frequency.setTargetAtTime(280, now + len * 0.5, len * 0.3);
-      washG.gain.setTargetAtTime(0.012 + peak * 0.025, now + len * 0.35, len * 0.25);
-      washG.gain.setTargetAtTime(0.01, now + len * 0.65, len * 0.3);
-      lap(now + len * (0.25 + Math.random() * 0.2));
-      if (Math.random() < 0.6) lap(now + len * (0.55 + Math.random() * 0.3));
-      timer = setTimeout(swell, len * 1000 * 0.82);
+      // swell: a low rise as the wave comes in
+      var sw = ac.createBufferSource(); sw.buffer = brown;
+      var swLP = ac.createBiquadFilter(); swLP.type = "lowpass"; swLP.frequency.value = 220;
+      var swG = ac.createGain();
+      swG.gain.setValueAtTime(0, t);
+      swG.gain.linearRampToValueAtTime(0.5 * size, t + 1.6);
+      swG.gain.setTargetAtTime(0, t + 1.9, 0.7);
+      sw.connect(swLP).connect(swG).connect(out); sw.start(t, Math.random() * 4); sw.stop(t + 6);
+
+      // lap: water spilling onto the sand, soft and rounded, darkening as it spreads
+      var lp = ac.createBufferSource(); lp.buffer = pink;
+      var lpF = ac.createBiquadFilter(); lpF.type = "lowpass"; lpF.Q.value = 0.2;
+      lpF.frequency.setValueAtTime(380, t + 1.4);
+      lpF.frequency.linearRampToValueAtTime(950 * size, t + 1.75);
+      lpF.frequency.exponentialRampToValueAtTime(260, t + 4.2);
+      var lpG = ac.createGain();
+      lpG.gain.setValueAtTime(0, t + 1.4);
+      lpG.gain.linearRampToValueAtTime(0.42 * size, t + 1.8);
+      lpG.gain.setTargetAtTime(0, t + 2.1, 0.9);
+      lp.connect(lpF).connect(lpG).connect(out); lp.start(t + 1.4, Math.random() * 3); lp.stop(t + 7);
+
+      // draw-back: a quieter, low wash pulling away
+      var db = ac.createBufferSource(); db.buffer = brown;
+      var dbF = ac.createBiquadFilter(); dbF.type = "bandpass"; dbF.frequency.value = 320; dbF.Q.value = 0.7;
+      var dbG = ac.createGain();
+      dbG.gain.setValueAtTime(0, t + 3.2);
+      dbG.gain.linearRampToValueAtTime(0.22 * size, t + 3.9);
+      dbG.gain.setTargetAtTime(0, t + 4.3, 0.8);
+      db.connect(dbF).connect(dbG).connect(out); db.start(t + 3.2, Math.random() * 4); db.stop(t + 8);
+
+      setTimeout(wave, (7 + Math.random() * 3) * 1000);
     }
-    function lap(at) {
-      var o = ac.createOscillator(), g = ac.createGain(), f = ac.createBiquadFilter();
-      o.type = "sine"; o.frequency.setValueAtTime(70 + Math.random() * 30, at);
-      o.frequency.exponentialRampToValueAtTime(45, at + 0.35);
-      f.type = "lowpass"; f.frequency.value = 200;
-      g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(0.16, at + 0.05); g.gain.exponentialRampToValueAtTime(0.001, at + 0.7);
-      o.connect(f).connect(g).connect(master); o.start(at); o.stop(at + 0.6);
-    }
-    swell();
+    wave();
   }
 
   function set(next) {
@@ -78,7 +91,7 @@
     if (on) {
       if (!ac) build();
       ac.resume();
-      master.gain.setTargetAtTime(0.375, ac.currentTime, 0.6);   // 75% of the earlier level
+      master.gain.setTargetAtTime(LEVEL, ac.currentTime, 0.8);
     } else if (ac) {
       master.gain.setTargetAtTime(0, ac.currentTime, 0.3);
     }
