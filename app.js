@@ -8,6 +8,7 @@
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   var ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg>';
+  var LINK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13.5a4.2 4.2 0 0 0 6 .4l2.6-2.6a4.2 4.2 0 0 0-6-6l-1.3 1.3"/><path d="M14 10.5a4.2 4.2 0 0 0-6-.4l-2.6 2.6a4.2 4.2 0 0 0 6 6l1.3-1.3"/></svg>';
   var PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
 
   function el(tag, attrs) {
@@ -83,7 +84,7 @@
     if (l.url) {
       var tab = /^https?:|\.pdf$/i.test(l.url);
       var a = el("a", { href: l.url, target: tab ? "_blank" : null, rel: tab ? "noopener" : null,
-        html: l.label + ' <span aria-hidden="true">\u2197</span>' });
+        html: l.label + ' <span class="li-ic" aria-hidden="true">' + (tab ? LINK : "\u2197") + "</span>" });
       li.appendChild(a);
       if (l.text) li.appendChild(el("small", { class: "addr", text: l.text }));
     } else {
@@ -270,10 +271,11 @@
         var tags = el("span", { class: "tags" });
         (it.tags || []).forEach(function (t) { tags.appendChild(el("span", { text: t })); });
         var kids = [
-          el("span", { class: "idx", text: pad2(num) }),
-          el("span", { class: "ttl", text: it.title }),
+          el("span", { class: "dot", "aria-hidden": "true" }),
+          el("span", { class: "ttl" }, document.createTextNode(it.title),
+            it.ai ? el("sup", { class: "ai", text: "AI" }) : null),
           tags,
-          el("span", { class: "ic " + (done ? "go" : "plus"), "aria-hidden": "true", html: done ? ARROW : PLUS }),
+          el("span", { class: "ic " + (ext ? "out" : done ? "go" : "plus"), "aria-hidden": "true", html: ext ? LINK : done ? ARROW : PLUS }),
         ];
         var link, panel = null;
         var li = el("li", { class: "row rv", "data-id": it.id });
@@ -334,6 +336,35 @@
   buildList(D.work, list, "Case study in progress");
   var playList = $("#play-list");
   if (playList && D.play) { num = 0; buildList(D.play, playList, "Coming soon"); }
+
+  // each row's dot takes a colour from the lake: teal down to tangerine
+  $$(".work-list").forEach(function (wl) {
+    var dots = $$(".dot", wl), A = [95, 211, 196], B = [255, 138, 61];
+    dots.forEach(function (d, i) {
+      var t = dots.length > 1 ? i / (dots.length - 1) : 0;
+      d.style.setProperty("--c", "rgb(" + A.map(function (v, k) { return Math.round(v + (B[k] - v) * t); }).join(",") + ")");
+    });
+  });
+
+  /* "new page" tooltip for every link that leaves the site */
+  var tip = el("div", { class: "tip", role: "tooltip", id: "tip", text: "This will send you to a new page" });
+  document.body.appendChild(tip);
+  function tipAt(a) {
+    var anchor = $(".ic", a) || $("img", a) || $(".li-ic", a) || a, r = anchor.getBoundingClientRect();
+    tip.classList.add("on");
+    var w = tip.offsetWidth, x = r.left + r.width / 2 - w / 2;
+    x = Math.max(12, Math.min(window.innerWidth - w - 12, x));
+    tip.style.transform = "translate(" + x.toFixed(0) + "px," + (r.top - tip.offsetHeight - 10).toFixed(0) + "px)";
+  }
+  function tipOff() { tip.classList.remove("on"); }
+  $$('a[target="_blank"]').forEach(function (a) {
+    a.setAttribute("aria-describedby", "tip");
+    a.addEventListener("pointerenter", function () { tipAt(a); });
+    a.addEventListener("focus", function () { tipAt(a); });
+    a.addEventListener("pointerleave", tipOff);
+    a.addEventListener("blur", tipOff);
+  });
+  window.addEventListener("scroll", tipOff, { passive: true });
 
   function hex(h) { h = h.replace("#", ""); return [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
   function paintThumb(c, cols) {

@@ -24,6 +24,14 @@ window.SITE_DATA = {
       group: "Product Management",
       items: [
         {
+          id: "msads",
+          title: "Microsoft Advertising",
+          tags: ["Monetization", "Content Safety", "LLM"],
+          status: "placeholder",
+          summary: "Product Manager for Monetization and Ad Content Safety at Microsoft.",
+          preview: { type: "art", colors: ["#2b6cd6", "#5fd3c4"] },
+        },
+        {
           id: "volta",
           title: "VOLTA Physiotherapy",
           tags: ["Connected Device", "Hardware"],
@@ -75,7 +83,7 @@ window.SITE_DATA = {
       items: [
         {
           id: "pastelprimate",
-          title: "Pastel Primate",
+          title: "Pastel Primate", ai: true,
           tags: ["Art", "Ecommerce"],
           status: "complete",
           href: "https://pastelprimate.com",
@@ -83,7 +91,7 @@ window.SITE_DATA = {
         },
         {
           id: "eatyourvegetables",
-          title: "Eat Your Vegetables",
+          title: "Eat Your Vegetables", ai: true,
           tags: ["Game", "Three.js", "WebRTC"],
           status: "complete",
           href: "https://philmany.github.io/eat-your-vegetables/",
