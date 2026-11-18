@@ -9,8 +9,7 @@ window.SITE_DATA = {
   },
 
   // Shown in the About section. Placeholder until you write a longer introduction.
-  // About heading, one string per line.
-  introduction: ["A Product Manager & Designer", "who flows like water."],
+  introduction: "Product Manager and Designer.",
 
   /*
     WORK
@@ -20,7 +19,7 @@ window.SITE_DATA = {
   */
   work: [
     {
-      group: "Product Management",
+      group: "Product management",
       items: [
         {
           id: "volta",
@@ -76,7 +75,7 @@ window.SITE_DATA = {
   */
   water: {
     title: "Water contains memories.",
-    subtitle: "Each memory sits in the pool at the top of the page.",
+    subtitle: "Bodies of water I love, and have memories in.",
     places: [
       { name: "Lake Washington", region: "Pacific Northwest", where: "Washington, USA", activity: "cold-plunged", last: "2025-09",
         at: [0.19, 0.33], atNarrow: [0.17, 0.25], size: 170, label: "above", labelNarrow: "above" },
@@ -108,7 +107,6 @@ window.SITE_DATA = {
       { name: "Yves Saint Laurent", logo: "logos/ysl.svg", url: "https://www.yslbeauty.ca", height: 28 },
       { name: "Armani", logo: "logos/armani.svg", url: "https://www.armani-beauty.ca", height: 26 },
       { name: "Lanc\u00f4me", logo: "logos/lancome.svg", url: "https://www.lancome.ca", height: 36 },
-      { name: "Hatch", logo: "logos/hatch.svg", url: "https://hatch.jobs", height: 30 },
     ],
   },
 

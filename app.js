@@ -38,10 +38,7 @@
   $("#brand").textContent = D.person.name;
   $("#hero-name").textContent = D.person.name;
   $("#hero-tagline").textContent = D.person.tagline;
-  [].concat(D.introduction).forEach(function (line, i) {
-    if (i) $("#about-h").appendChild(el("br"));
-    $("#about-h").appendChild(document.createTextNode(line));
-  });
+  $("#about-h").textContent = D.introduction;
   $("#about-h").setAttribute("data-split", "");
   $("#copy").textContent = "© " + new Date().getFullYear() + " " + D.person.name;
 
@@ -97,142 +94,92 @@
     return { d: d.join(""), w: w, h: h };
   }
 
-  // One lake with the six outlines on it. Used twice: the hero and the Play section.
-  // Hover shows the label in place (and, on the Play lake, lights up the water under it).
-  // A click focuses: the dots dim and the outline glides toward the centre and grows.
-  // Click it again, click the water, or press Escape to let it go.
-  function memoryLake(cfg) {
-    var host = cfg.host, art = null;
-    var mems = W.places.map(function (p, i) {
-      var o = outline(SH[p.name] || {}) || { d: "M50 50m-40 0a40 40 0 1 0 80 0a40 40 0 1 0 -80 0", w: 100, h: 100 };
-      var svg = document.createElementNS(NS, "svg");
-      svg.setAttribute("viewBox", "-3 -3 " + (o.w + 6).toFixed(2) + " " + (o.h + 6).toFixed(2));
-      svg.setAttribute("class", "shape");
-      svg.setAttribute("aria-hidden", "true");
-      var path = document.createElementNS(NS, "path");
-      path.setAttribute("d", o.d);
-      svg.appendChild(path);
-      var b = el("button", { class: "mem", type: "button", "aria-expanded": "false",
-                             "aria-label": p.name + ", " + p.where + ". " + lastLine(p) + ". Select to focus on it." },
-        el("span", { class: "mem-card", "aria-hidden": "true" },
-          el("b", { text: p.name }), el("span", { class: "where", text: p.where }), el("span", { class: "when", text: lastLine(p) })));
-      b.insertBefore(el("span", { class: "mem-fx", "aria-hidden": "true" }, svg), b.firstChild);
-      b._ar = o.w / o.h;
-      b.addEventListener("click", function (e) { e.stopPropagation(); setOn(b, !b.classList.contains("on")); });
-      if (cfg.highlight) {
-        var lit = function (on) { if (art && !mems.some(function (m) { return m.classList.contains("on"); })) art.setActive(on ? i : null); };
-        b.addEventListener("pointerenter", function () { lit(true); });
-        b.addEventListener("pointerleave", function () { lit(false); });
-        b.addEventListener("focus", function () { lit(true); });
-        b.addEventListener("blur", function () { lit(false); });
-      }
-      cfg.layer.appendChild(b);
-      return b;
-    });
-    function setOn(b, on) {
-      mems.forEach(function (m) {
-        var x = m === b && on;
-        m.classList.toggle("on", x);
-        m.setAttribute("aria-expanded", String(x));
-      });
-      host.classList.toggle("focus", !!on);
-      if (cfg.highlight && art) art.setActive(on ? mems.indexOf(b) : null);
-    }
-    host.addEventListener("click", function (e) { if (!e.target.closest(".mem, .ctl, a")) setOn(null, false); });
-    document.addEventListener("keydown", function (e) { if (e.key === "Escape") setOn(null, false); });
+  var mems = W.places.map(function (p, i) {
+    var o = outline(SH[p.name] || {}) || { d: "M50 50m-40 0a40 40 0 1 0 80 0a40 40 0 1 0 -80 0", w: 100, h: 100 };
+    var svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", (-3) + " " + (-3) + " " + (o.w + 6).toFixed(2) + " " + (o.h + 6).toFixed(2));
+    svg.setAttribute("class", "shape");
+    svg.setAttribute("aria-hidden", "true");
+    var path = document.createElementNS(NS, "path");
+    path.setAttribute("d", o.d);
+    svg.appendChild(path);
+    var b = el("button", { class: "mem", type: "button", "aria-expanded": "false",
+                           "aria-label": p.name + ", " + p.where + ". " + lastLine(p) + ". Select to focus on it." },
+      el("span", { class: "mem-card", "aria-hidden": "true" },
+        el("b", { text: p.name }), el("span", { class: "where", text: p.where }), el("span", { class: "when", text: lastLine(p) })));
+    b.insertBefore(el("span", { class: "mem-fx", "aria-hidden": "true" }, svg), b.firstChild);
+    b._ar = o.w / o.h;
+    b.addEventListener("click", function (e) { e.stopPropagation(); setOn(b, !b.classList.contains("on")); });
+    memLayer.appendChild(b);
+    return b;
+  });
 
-    function placeShapes(w, h) {
-      var narrow = w < 760;
-      return W.places.map(function (p, i) {
-        var b = mems[i], spot = cfg.position(p, i, w, h, narrow), size = spot.size;
-        var ar = b._ar, bw = ar >= 1 ? size : size * ar, bh = ar >= 1 ? size / ar : size;
-        var cx = spot.at[0] * w, cy = spot.at[1] * h;
-        cx = Math.max(bw / 2 + 12, Math.min(w - bw / 2 - 12, cx));
-        b.style.left = cx - bw / 2 + "px"; b.style.top = cy - bh / 2 + "px";
-        b.style.width = bw + "px"; b.style.height = bh + "px";
-        var up = spot.label === "above";
-        b.classList.toggle("up", up);
-        var big = Math.min(Math.max(bw, bh) * (narrow ? 2.2 : 1.9), w * (narrow ? 0.7 : 0.4), h * 0.42);
-        var sc = Math.max(1.15, big / Math.max(bw, bh));
-        b.style.setProperty("--tx", ((w / 2 - cx) * 0.5).toFixed(1) + "px");
-        b.style.setProperty("--ty", ((h * 0.52 - cy) * 0.5).toFixed(1) + "px");
-        b.style.setProperty("--sc", sc.toFixed(3));
-        b.style.setProperty("--cdy", ((sc - 1) * bh / 2 * (up ? -1 : 1)).toFixed(1) + "px");
-        return { x: cx, y: cy, r: Math.max(bw, bh) * 0.5 };
-      });
-    }
-    var opts = {
-      canvas: cfg.canvas, glow: cfg.glow, haze: cfg.haze, host: host, places: W.places, startPaused: reduce,
-      highlight: !!cfg.highlight,
-      getQuietRects: cfg.quiet || null,
-      getMarkers: placeShapes,
-      onLayout: function (w) {
-        mems.forEach(function (b) {
-          var card = b.querySelector(".mem-card"), cx = parseFloat(b.style.left) + parseFloat(b.style.width) / 2;
-          var cw = card.offsetWidth || 200, lo = 12 - (cx - cw / 2), hi = w - 12 - (cx + cw / 2);
-          card.style.setProperty("--shift", (lo > 0 ? lo : hi < 0 ? hi : 0) + "px");
-        });
-      },
-    };
-    for (var k in (cfg.water || {})) opts[k] = cfg.water[k];
-    art = window.WaterArt && window.WaterArt.create(opts);
-    if (art) host.classList.add("live");
-    return { mems: mems, art: art };
+  // Hover shows the label in place. A click focuses: the dots dim, and the
+  // outline glides toward the centre and grows. Click again, click the water,
+  // or press Escape to let it go.
+  function setOn(b, on) {
+    mems.forEach(function (m) {
+      var x = m === b && on;
+      m.classList.toggle("on", x);
+      m.setAttribute("aria-expanded", String(x));
+    });
+    hero.classList.toggle("focus", !!on);
+  }
+  hero.addEventListener("click", function (e) { if (!e.target.closest(".mem, .ctl, a")) setOn(null, false); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") setOn(null, false); });
+
+  // Size and place each outline on the lake; returns markers for the water engine.
+  function placeShapes(w, h) {
+    var narrow = w < 760;
+    return W.places.map(function (p, i) {
+      var b = mems[i], at = (narrow && p.atNarrow) || p.at, size = (p.size || 150) * (narrow ? 0.55 : 1);
+      if (w >= 760 && w < 1200) size *= 0.82;
+      var ar = b._ar, bw = ar >= 1 ? size : size * ar, bh = ar >= 1 ? size / ar : size;
+      var cx = at[0] * w, cy = at[1] * h;
+      cx = Math.max(bw / 2 + 12, Math.min(w - bw / 2 - 12, cx));
+      b.style.left = cx - bw / 2 + "px"; b.style.top = cy - bh / 2 + "px";
+      b.style.width = bw + "px"; b.style.height = bh + "px";
+      var up = ((narrow && p.labelNarrow) || p.label || (at[1] > 0.5 ? "above" : "below")) === "above";
+      b.classList.toggle("up", up);
+      // where it travels on hover: halfway to the centre, grown to a comfortable size
+      var big = Math.min(Math.max(bw, bh) * (narrow ? 2.2 : 1.9), w * (narrow ? 0.7 : 0.4), h * 0.42);
+      var sc = Math.max(1.15, big / Math.max(bw, bh));
+      var tx = (w / 2 - cx) * 0.5, ty = (h * 0.52 - cy) * 0.5;
+      b.style.setProperty("--tx", tx.toFixed(1) + "px");
+      b.style.setProperty("--ty", ty.toFixed(1) + "px");
+      b.style.setProperty("--sc", sc.toFixed(3));
+      b.style.setProperty("--cdy", ((sc - 1) * bh / 2 * (up ? -1 : 1)).toFixed(1) + "px");
+      return { x: cx, y: cy, r: Math.max(bw, bh) * 0.5 };
+    });
   }
 
-  function rel(node, pad, host) {
-    var a = node.getBoundingClientRect(), h = (host || hero).getBoundingClientRect();
+  function rel(node, pad) {
+    var a = node.getBoundingClientRect(), h = hero.getBoundingClientRect();
     return { x: a.left - h.left, y: a.top - h.top, w: a.width, h: a.height, pad: pad };
   }
 
-  // the hero: positions come from data.js
-  var heroLake = memoryLake({
-    host: hero, layer: memLayer, canvas: $("#water"), glow: $("#glow"), haze: $("#haze"),
-    quiet: function () { return [rel($("#hero-name"), 34), rel($("#hero-tagline"), 26)]; },
-    position: function (p, i, w, h, narrow) {
-      var size = (p.size || 150) * (narrow ? 0.55 : w < 1200 ? 0.82 : 1);
-      return { at: (narrow && p.atNarrow) || p.at, size: size,
-               label: (narrow && p.labelNarrow) || p.label || ((narrow && p.atNarrow || p.at)[1] > 0.5 ? "above" : "below") };
+  var art = window.WaterArt && window.WaterArt.create({
+    canvas: $("#water"), glow: $("#glow"), haze: $("#haze"), host: hero, places: W.places, startPaused: reduce,
+    getQuietRects: function () {
+      // the title, plus a soft dark feather around each outline
+      placeShapes(hero.clientWidth, hero.clientHeight);
+      var r = [rel($("#hero-name"), 34), rel($("#hero-tagline"), 26)];
+      mems.forEach(function (b) { var q = rel(b, 16); q.floor = 0.18; r.push(q); });
+      return r;
+    },
+    getMarkers: function (w, h) { return placeShapes(w, h); },
+    onLayout: function (w) {
+      mems.forEach(function (b) {
+        var card = b.querySelector(".mem-card"), cx = parseFloat(b.style.left) + parseFloat(b.style.width) / 2;
+        var cw = card.offsetWidth || 200, lo = 12 - (cx - cw / 2), hi = w - 12 - (cx + cw / 2);
+        card.style.setProperty("--shift", (lo > 0 ? lo : hi < 0 ? hi : 0) + "px");
+      });
     },
   });
-  var art = heroLake.art, mems = heroLake.mems;
-
-  // the Play lake: Pacific Northwest on the top row, everywhere else below
-  var playHost = $("#play-lake");
-  if (playHost) {
-    var regionsOrder = [];
-    W.places.forEach(function (p) { if (regionsOrder.indexOf(p.region) < 0) regionsOrder.push(p.region); });
-    var playLake = memoryLake({
-      host: playHost, layer: $("#play-layer"), canvas: $("#play-water"), glow: $("#play-glow"), highlight: true,
-      water: { top: 0.06, fadeTop: 90, fadeBottom: 110, pitchScale: 0.9 },
-      position: function (p, i, w, h, narrow) {
-        var row = regionsOrder.indexOf(p.region), inRow = W.places.filter(function (q) { return q.region === p.region; });
-        var col = inRow.indexOf(p), n = inRow.length;
-        var size = (p.size || 150) * (narrow ? 0.5 : w < 1200 ? 0.78 : 0.9);
-        if (narrow) {
-          var k = W.places.indexOf(p);
-          return { at: [k % 2 ? 0.72 : 0.28, 0.2 + Math.floor(k / 2) * 0.28], size: size, label: "above" };
-        }
-        return { at: [(col + 1) / (n + 1) * 0.92 + 0.04, row === 0 ? 0.36 : 0.74], size: size, label: row === 0 ? "above" : "below" };
-      },
-    });
-    // the same memories as text, for screen readers
-    var sr = $("#play-list");
-    W.places.forEach(function (p) { sr.appendChild(el("li", { text: p.name + ", " + p.where + ". " + lastLine(p) + "." })); });
-  }
-
-  // thin strips of the same lake: under the heron, and along the foot of the page
-  if (window.WaterArt) {
-    var band = $("#heron-band");
-    if (band) window.BandWater = window.WaterArt.create({ canvas: $("#band-water"), glow: $("#band-glow"), host: band, places: [],
-      startPaused: reduce, top: 0.66, fadeTop: 50, fadeBottom: 40, pitchScale: 0.8 });
-    var fw = $("#foot-water");
-    if (fw) window.WaterArt.create({ canvas: $("#foot-canvas"), host: fw, places: [], startPaused: reduce,
-      top: 0.12, fadeTop: 40, fadeBottom: 0, pitchScale: 0.7, far: 0.55 });
-  }
 
   var pauseBtn = $("#pause"), memBtn = $("#memories");
   if (art) {
+    hero.classList.add("live");
     var setPause = function (p) {
       art.setPaused(p);
       $(".pl", pauseBtn).textContent = p ? "Play motion" : "Pause motion";
@@ -278,7 +225,7 @@
 
   D.work.forEach(function (g) {
     var group = el("div", { class: "group" },
-      el("h3", { class: "group-h rv" }, el("span", { text: g.group })));
+      el("h3", { class: "group-h rv" }, el("span", { text: g.group }), el("span", { class: "count", text: pad2(g.items.length) })));
     var ul = el("ul", { class: "rows" });
     g.items.forEach(function (it) {
       num++;
@@ -430,6 +377,33 @@
 
   /* ---------- play ---------- */
   $("#play-sub").textContent = W.subtitle;
+  var regions = [];
+  W.places.forEach(function (p) { if (regions.indexOf(p.region) < 0) regions.push(p.region); });
+  regions.forEach(function (reg) {
+    var items = W.places.filter(function (p) { return p.region === reg; });
+    var ol = el("ol", { class: "places-list" });
+    items.forEach(function (p) {
+      var i = W.places.indexOf(p);
+      var btn = el("button", { type: "button", "aria-label": p.name + ", " + p.where + ". " + lastLine(p) + ". Show it in the water." },
+        el("span", { class: "pdot", style: "--a:" + (0.25 + 0.75 * recency(p.last)).toFixed(2), "aria-hidden": "true" }),
+        el("span", { class: "pname", text: p.name }),
+        el("span", { class: "pwhere", text: p.where }),
+        el("span", { class: "plast", text: lastLine(p) }),
+        el("span", { class: "parr", "aria-hidden": "true", text: "\u2191" }));
+      btn.addEventListener("click", function () { showMemory(i); });
+      ol.appendChild(el("li", { class: "place rv" }, btn));
+    });
+    $("#places").appendChild(el("div", { class: "region" },
+      el("h3", { class: "group-h rv" }, el("span", { text: reg || "Places" }), el("span", { class: "count", text: pad2(items.length) })), ol));
+  });
+  var memTimer = 0;
+  function showMemory(i) {
+    hero.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
+    clearTimeout(memTimer);
+    memTimer = setTimeout(function () {
+      setOn(mems[i], true);
+    }, reduce ? 0 : 750);
+  }
 
   /* ---------- reveal + split headings (same approach as the Pretzel page) ---------- */
   $$("[data-split]").forEach(function (h) {
@@ -455,7 +429,7 @@
     }, { threshold: 0.15, rootMargin: "0px 0px -6% 0px" });
     $$(".rv, .split").forEach(function (n) { io.observe(n); });
     // stagger rows inside each list
-    $$(".rows").forEach(function (l) { $$(".rv", l).forEach(function (n, i) { n.style.transitionDelay = i * 0.07 + "s"; }); });
+    $$(".rows, .places-list").forEach(function (l) { $$(".rv", l).forEach(function (n, i) { n.style.transitionDelay = i * 0.07 + "s"; }); });
   } else {
     $$(".rv, .split").forEach(function (n) { n.classList.add("in"); });
   }
