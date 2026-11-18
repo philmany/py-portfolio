@@ -38,7 +38,10 @@
   $("#brand").textContent = D.person.name;
   $("#hero-name").textContent = D.person.name;
   $("#hero-tagline").textContent = D.person.tagline;
-  $("#about-h").textContent = D.introduction;
+  [].concat(D.introduction).forEach(function (line, i) {
+    if (i) $("#about-h").appendChild(el("br"));
+    $("#about-h").appendChild(document.createTextNode(line));
+  });
   $("#about-h").setAttribute("data-split", "");
   $("#copy").textContent = "© " + new Date().getFullYear() + " " + D.person.name;
 
@@ -161,10 +164,8 @@
   var art = window.WaterArt && window.WaterArt.create({
     canvas: $("#water"), glow: $("#glow"), haze: $("#haze"), host: hero, places: W.places, startPaused: reduce,
     getQuietRects: function () {
-      // the title, plus a soft dark feather around each outline
-      placeShapes(hero.clientWidth, hero.clientHeight);
+      // the title; the outlines carry their own close feather (CSS drop-shadow)
       var r = [rel($("#hero-name"), 34), rel($("#hero-tagline"), 26)];
-      mems.forEach(function (b) { var q = rel(b, 16); q.floor = 0.18; r.push(q); });
       return r;
     },
     getMarkers: function (w, h) { return placeShapes(w, h); },
@@ -223,70 +224,82 @@
   /* ---------- work ---------- */
   var list = $("#work-list"), num = 0, layers = {}, peekIn = $("#peek-in");
 
-  D.work.forEach(function (g) {
-    var group = el("div", { class: "group" },
-      el("h3", { class: "group-h rv" }, el("span", { text: g.group }), el("span", { class: "count", text: pad2(g.items.length) })));
-    var ul = el("ul", { class: "rows" });
-    g.items.forEach(function (it) {
-      num++;
-      var done = it.status === "complete";
-      var tags = el("span", { class: "tags" });
-      it.tags.forEach(function (t) { tags.appendChild(el("span", { text: t })); });
-      var kids = [
-        el("span", { class: "idx", text: pad2(num) }),
-        el("span", { class: "ttl", text: it.title }),
-        tags,
-        el("span", { class: "ic " + (done ? "go" : "plus"), "aria-hidden": "true", html: done ? ARROW : PLUS }),
-      ];
-      var link, panel = null;
-      var li = el("li", { class: "row rv", "data-id": it.id });
-      if (done) {
-        link = el("a", { class: "row-link", href: it.href });
-        link.addEventListener("click", goTo);
-      } else {
-        link = el("button", { class: "row-link", type: "button", "aria-expanded": "false", "aria-controls": "p-" + it.id });
-        panel = el("div", { class: "panel", id: "p-" + it.id },
-          el("div", null, el("div", { class: "panel-in" },
-            el("p", { class: "soon", text: "Case study in progress" }),
-            it.summary ? el("p", { class: "sum", text: it.summary }) : null)));
-        panel.inert = true;
-        link.addEventListener("click", function () {
-          var open = !li.classList.contains("open");
-          li.classList.toggle("open", open);
-          link.setAttribute("aria-expanded", String(open));
-          panel.inert = !open;
+  // A list of rows (used by Work and Play). Finished items link out and show a
+  // preview on hover; unfinished ones expand in place.
+  function buildList(groups, container, soonText) {
+    groups.forEach(function (g) {
+      var group = el("div", { class: "group" });
+      if (g.group) group.appendChild(el("h3", { class: "group-h rv" }, el("span", { text: g.group })));
+      var ul = el("ul", { class: "rows" });
+      g.items.forEach(function (it) {
+        num++;
+        var done = it.status === "complete", ext = done && /^https?:/.test(it.href);
+        var tags = el("span", { class: "tags" });
+        (it.tags || []).forEach(function (t) { tags.appendChild(el("span", { text: t })); });
+        var kids = [
+          el("span", { class: "idx", text: pad2(num) }),
+          el("span", { class: "ttl", text: it.title }),
+          tags,
+          el("span", { class: "ic " + (done ? "go" : "plus"), "aria-hidden": "true", html: done ? ARROW : PLUS }),
+        ];
+        var link, panel = null;
+        var li = el("li", { class: "row rv", "data-id": it.id });
+        if (done) {
+          link = el("a", { class: "row-link", href: it.href, target: ext ? "_blank" : null, rel: ext ? "noopener" : null,
+                           "aria-label": ext ? it.title + " (opens in a new tab)" : null });
+          if (!ext) link.addEventListener("click", goTo);
+        } else {
+          link = el("button", { class: "row-link", type: "button", "aria-expanded": "false", "aria-controls": "p-" + it.id });
+          panel = el("div", { class: "panel", id: "p-" + it.id },
+            el("div", null, el("div", { class: "panel-in" },
+              el("p", { class: "soon", text: soonText }),
+              it.summary ? el("p", { class: "sum", text: it.summary }) : null)));
+          panel.inert = true;
+          link.addEventListener("click", function () {
+            var open = !li.classList.contains("open");
+            li.classList.toggle("open", open);
+            link.setAttribute("aria-expanded", String(open));
+            panel.inert = !open;
+          });
+        }
+        kids.forEach(function (k) { link.appendChild(k); });
+        li.appendChild(link);
+        if (panel) li.appendChild(panel);
+        ul.appendChild(li);
+
+        // preview layer: a live page, a screenshot, or a dot thumbnail
+        var layer = el("div", { class: "layer" }), pv = it.preview || {};
+        if (pv.type === "page") {
+          var f = el("iframe", { tabindex: "-1", "aria-hidden": "true", title: "Preview" });
+          f.dataset.src = pv.src;
+          layer.appendChild(f);
+        } else if (pv.type === "image") {
+          layer.appendChild(el("img", { class: "shot", src: pv.src, alt: "", loading: "lazy" }));
+        } else {
+          var c = el("canvas");
+          paintThumb(c, pv.colors || ["#2b6cd6", "#6fe0cf"]);
+          layer.appendChild(c);
+          layer.appendChild(el("span", { class: "wip", text: soonText }));
+        }
+        peekIn.appendChild(layer);
+        layers[it.id] = layer;
+
+        link.addEventListener("pointerenter", function (e) { showPeek(it.id, e.clientX, e.clientY); });
+        link.addEventListener("focus", function () {
+          var r = link.getBoundingClientRect();
+          showPeek(it.id, r.left + r.width * 0.42, r.top + r.height / 2, true);
         });
-      }
-      kids.forEach(function (k) { link.appendChild(k); });
-      li.appendChild(link);
-      if (panel) li.appendChild(panel);
-      ul.appendChild(li);
-
-      // preview layer
-      var layer = el("div", { class: "layer" });
-      if (it.preview && it.preview.type === "page") {
-        var f = el("iframe", { tabindex: "-1", "aria-hidden": "true", title: "Preview" });
-        f.dataset.src = it.preview.src;
-        layer.appendChild(f);
-      } else {
-        var c = el("canvas");
-        paintThumb(c, (it.preview && it.preview.colors) || ["#2b6cd6", "#6fe0cf"]);
-        layer.appendChild(c);
-        layer.appendChild(el("span", { class: "wip", text: "Case study in progress" }));
-      }
-      peekIn.appendChild(layer);
-      layers[it.id] = layer;
-
-      link.addEventListener("pointerenter", function (e) { showPeek(it.id, e.clientX, e.clientY); });
-      link.addEventListener("focus", function () {
-        var r = link.getBoundingClientRect();
-        showPeek(it.id, r.left + r.width * 0.42, r.top + r.height / 2, true);
+        link.addEventListener("blur", hidePeek);
       });
-      link.addEventListener("blur", hidePeek);
+      group.appendChild(ul);
+      container.appendChild(group);
     });
-    group.appendChild(ul);
-    list.appendChild(group);
-  });
+    container.addEventListener("pointermove", function (e) { if (showing) setTarget(e.clientX, e.clientY); });
+    container.addEventListener("pointerleave", hidePeek);
+  }
+  buildList(D.work, list, "Case study in progress");
+  var playList = $("#play-list");
+  if (playList && D.play) { num = 0; buildList(D.play, playList, "Coming soon"); }
 
   function hex(h) { h = h.replace("#", ""); return [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
   function paintThumb(c, cols) {
@@ -355,9 +368,7 @@
   function hidePeek() {
     showing = false; peek.classList.remove("on"); post(cur, false); cur = null;
   }
-  list.addEventListener("pointermove", function (e) { if (showing) setTarget(e.clientX, e.clientY); });
-  list.addEventListener("pointerleave", hidePeek);
-  window.addEventListener("scroll", function () { if (showing && !list.matches(":hover")) hidePeek(); }, { passive: true });
+  window.addEventListener("scroll", function () { if (showing && !document.querySelector(".work-list:hover")) hidePeek(); }, { passive: true });
 
   /* ripple page transition */
   var wipe = $("#wipe");
@@ -374,36 +385,6 @@
     setTimeout(function () { window.location.href = href; }, reduce ? 0 : 900);
   }
   window.addEventListener("pageshow", function () { wipe.classList.remove("go"); });
-
-  /* ---------- play ---------- */
-  $("#play-sub").textContent = W.subtitle;
-  var regions = [];
-  W.places.forEach(function (p) { if (regions.indexOf(p.region) < 0) regions.push(p.region); });
-  regions.forEach(function (reg) {
-    var items = W.places.filter(function (p) { return p.region === reg; });
-    var ol = el("ol", { class: "places-list" });
-    items.forEach(function (p) {
-      var i = W.places.indexOf(p);
-      var btn = el("button", { type: "button", "aria-label": p.name + ", " + p.where + ". " + lastLine(p) + ". Show it in the water." },
-        el("span", { class: "pdot", style: "--a:" + (0.25 + 0.75 * recency(p.last)).toFixed(2), "aria-hidden": "true" }),
-        el("span", { class: "pname", text: p.name }),
-        el("span", { class: "pwhere", text: p.where }),
-        el("span", { class: "plast", text: lastLine(p) }),
-        el("span", { class: "parr", "aria-hidden": "true", text: "\u2191" }));
-      btn.addEventListener("click", function () { showMemory(i); });
-      ol.appendChild(el("li", { class: "place rv" }, btn));
-    });
-    $("#places").appendChild(el("div", { class: "region" },
-      el("h3", { class: "group-h rv" }, el("span", { text: reg || "Places" }), el("span", { class: "count", text: pad2(items.length) })), ol));
-  });
-  var memTimer = 0;
-  function showMemory(i) {
-    hero.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
-    clearTimeout(memTimer);
-    memTimer = setTimeout(function () {
-      setOn(mems[i], true);
-    }, reduce ? 0 : 750);
-  }
 
   /* ---------- reveal + split headings (same approach as the Pretzel page) ---------- */
   $$("[data-split]").forEach(function (h) {
@@ -429,7 +410,7 @@
     }, { threshold: 0.15, rootMargin: "0px 0px -6% 0px" });
     $$(".rv, .split").forEach(function (n) { io.observe(n); });
     // stagger rows inside each list
-    $$(".rows, .places-list").forEach(function (l) { $$(".rv", l).forEach(function (n, i) { n.style.transitionDelay = i * 0.07 + "s"; }); });
+    $$(".rows").forEach(function (l) { $$(".rv", l).forEach(function (n, i) { n.style.transitionDelay = i * 0.07 + "s"; }); });
   } else {
     $$(".rv, .split").forEach(function (n) { n.classList.add("in"); });
   }

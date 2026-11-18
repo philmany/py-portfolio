@@ -29,7 +29,8 @@ Open http://localhost:8000. Use a local server rather than double-clicking the f
 | `app.js` | Builds the page from `data.js`: work list, live preview, page transition, Play list. |
 | `water.js` | The halftone lake (Canvas 2D). |
 | `shapes.js` | Outlines of each body of water: Natural Earth data for the Mediterranean and Lake Washington, hand-traced for the rest (see the note in the file). |
-| `heron.js` | The dot-drawn heron in About: swoops in, snatches a fish, flies off left. Click the section to replay. |
+| `heron.js` | The dot-drawn fish and heron in About. Hover the fish and the heron catches it; a new fish swims up 10 seconds later. |
+| `previews/` | Screenshots used as hover previews for sites that can't be embedded (e.g. Pastel Primate). |
 | `Resume_2027_PhilmanYeung.pdf` | Your resume, linked from About. |
 | `pretzel.html`, `img/` | The Pretzel 1.0 case study, grafted in unchanged except for two things listed below. |
 
@@ -38,6 +39,7 @@ Open http://localhost:8000. Use a local server rather than double-clicking the f
 - **Name and tagline**: `person`.
 - **About**: `introduction`.
 - **Links**: `links`. Give Resume a `url`. For Email use `url: "mailto:you@example.com"` and `text: "you@example.com"`.
+- **Play**: `play[].items`, same fields as Work. For an outside site, set `href` to its URL and `preview: { type: "image", src: "previews/....jpg" }`.
 - **Projects**: `work[].items`. Turn a placeholder into a case study by building its page (copy how `pretzel.html` is set up), then set `status: "complete"`, `href: "your-page.html"` and `preview: { type: "page", src: "your-page.html#preview" }`.
 - **Water memories**: `water.places` (grouped in Play by `region`, in list order). `last` ("YYYY-MM") sets how often rain falls there; `at`, `atNarrow`, `size`, `label` only place the outline. Outlines are in `shapes.js`, keyed by the same name.
 

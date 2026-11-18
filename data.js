@@ -9,7 +9,8 @@ window.SITE_DATA = {
   },
 
   // Shown in the About section. Placeholder until you write a longer introduction.
-  introduction: "Product Manager and Designer.",
+  // About heading, one string per line.
+  introduction: ["A Product Manager & Designer", "who flows like water."],
 
   /*
     WORK
@@ -19,7 +20,7 @@ window.SITE_DATA = {
   */
   work: [
     {
-      group: "Product management",
+      group: "Product Management",
       items: [
         {
           id: "volta",
@@ -57,6 +58,27 @@ window.SITE_DATA = {
           status: "placeholder",
           summary: "",
           preview: { type: "art", colors: ["#2bd18f", "#2b6cd6"] },
+        },
+      ],
+    },
+  ],
+
+  /*
+    PLAY: hobbies and fun projects, in the same rows as Work.
+    status "complete" with an https href opens that site in a new tab; hovering shows
+    preview.src (a screenshot in previews/). "placeholder" rows expand to "Coming soon".
+  */
+  play: [
+    {
+      group: "",
+      items: [
+        {
+          id: "pastelprimate",
+          title: "Pastel Primate",
+          tags: ["Art", "Prints", "Shop"],
+          status: "complete",
+          href: "https://pastelprimate.com",
+          preview: { type: "image", src: "previews/pastelprimate.jpg" },
         },
       ],
     },
@@ -107,6 +129,7 @@ window.SITE_DATA = {
       { name: "Yves Saint Laurent", logo: "logos/ysl.svg", url: "https://www.yslbeauty.ca", height: 28 },
       { name: "Armani", logo: "logos/armani.svg", url: "https://www.armani-beauty.ca", height: 26 },
       { name: "Lanc\u00f4me", logo: "logos/lancome.svg", url: "https://www.lancome.ca", height: 36 },
+      { name: "Hatch", logo: "logos/hatch.svg", url: "https://hatch.jobs", height: 30 },
     ],
   },
 

@@ -248,10 +248,10 @@
 
         // wind swells rolling toward the viewer (y grows into the distance)
         var grp = 0.6 + 0.4 * Math.sin(x * 0.025 - y * 0.035 + t * 0.16) * Math.cos(x * 0.011 + y * 0.019 - t * 0.09);
-        var a1 = x * 0.06 + y * 0.52 + t * 1.6, a2 = -x * 0.22 + y * 0.86 + t * 2.25;
-        var a3 = x * 0.4 + y * 1.3 + t * 3.1, a4 = x * 1.05 + y * 0.45 + t * 3.9;
-        var a5 = -x * 0.7 + y * 1.6 + t * 4.4, a6 = x * 0.17 - y * 0.12 + t * 0.7;
-        var chop = 0.7 + 0.3 * Math.sin(x * 0.05 + y * 0.09 - t * 0.33);
+        var a1 = x * 0.06 + y * 0.52 + t * 2.05, a2 = -x * 0.22 + y * 0.86 + t * 2.9;
+        var a3 = x * 0.4 + y * 1.3 + t * 4.0, a4 = x * 1.05 + y * 0.45 + t * 5.0;
+        var a5 = -x * 0.7 + y * 1.6 + t * 5.6, a6 = x * 0.17 - y * 0.12 + t * 0.9;
+        var chop = 0.85 + 0.45 * Math.sin(x * 0.05 + y * 0.09 - t * 0.42);
         var hs = grp * (0.5 * Math.sin(a1) + 0.3 * Math.sin(a2)) + chop * (0.2 * Math.sin(a3) + 0.1 * Math.sin(a4) + 0.08 * Math.sin(a5)) + 0.12 * Math.sin(a6);
         var dz = grp * (0.5 * 0.52 * Math.cos(a1) + 0.3 * 0.86 * Math.cos(a2)) + chop * (0.2 * 1.3 * Math.cos(a3) + 0.1 * 0.45 * Math.cos(a4) + 0.08 * 1.6 * Math.cos(a5)) - 0.12 * 0.12 * Math.cos(a6);
         var dxs = grp * (0.5 * 0.06 * Math.cos(a1) - 0.3 * 0.22 * Math.cos(a2)) + chop * (0.2 * 0.4 * Math.cos(a3) + 0.1 * 1.05 * Math.cos(a4) - 0.08 * 0.7 * Math.cos(a5)) + 0.12 * 0.17 * Math.cos(a6);

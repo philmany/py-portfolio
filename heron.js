@@ -1,22 +1,21 @@
 /*
-  A great blue heron, in the same dots as the lake. Canvas 2D, no libraries.
+  A great blue heron and a fish, in the same dots as the lake. Canvas 2D, no libraries.
 
-  - It swoops in from off the top right of the About section, dips to the
-    water, snatches a fish, then flies off to the left behind the heading
-    and off the screen. Click the section (or "Watch again") to replay.
-  - The bird is drawn each frame as a vector silhouette (wings, S-curved neck,
-    dagger beak, trailing legs) on a small hidden canvas, then sampled into
-    dots, so wingbeats and the strike animate smoothly.
-  - A strip of halftone water runs along the bottom; the strike sends out a
-    ring of ripples and a few drops.
-  - Plays once when the section first comes into view. With reduced motion it
-    waits for a click.
+  - A tangerine fish swims slowly about the lower part of the About section.
+  - Hover the fish (or focus it with the keyboard and press Enter) and the
+    heron comes down from off the top right in one continuous swoop: it dives,
+    snatches the fish without stopping, and carries on off the left of the
+    screen, passing behind the heading.
+  - Ten seconds later a new fish swims up, ready again.
+  - Bird and fish are drawn each frame as vector silhouettes on a small hidden
+    canvas, then sampled into dots.
+  - Reduced motion: the fish holds still; the swoop still plays when asked for.
 */
 (function () {
   "use strict";
   var canvas = document.getElementById("heron");
   var section = document.getElementById("about");
-  var replay = document.getElementById("heron-replay");
+  var bait = document.getElementById("fish");
   if (!canvas || !canvas.getContext || !section) return;
   var ctx = canvas.getContext("2d");
   var off = document.createElement("canvas"), OW = 460, OH = 340, OX = 230, OY = 170;
@@ -25,9 +24,11 @@
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var TAU = Math.PI * 2;
 
-  var W = 0, H = 0, waterTop = 0, scale = 1;
-  var t = 0, playing = false, played = false, visible = false, raf = 0, last = 0, clock = 0;
-  var splashAt = -1, splash = { x: 0, y: 0 }, drops = [];
+  var W = 0, H = 0, scale = 1;
+  var clock = 0, visible = false, raf = 0, last = 0;
+  var swoop = null;                 // { t0, strike: [x, y], p0, c1, c2, c3, c4, end }
+  var fishGone = -1, fishBorn = 0;  // clock times
+  var RESPAWN = 10;
 
   function size() {
     var r = section.getBoundingClientRect();
@@ -36,57 +37,88 @@
     W = r.width; H = r.height;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    waterTop = H - Math.min(170, Math.max(110, H * 0.2));
-    scale = Math.max(0.75, Math.min(1.55, W / 950));
+    scale = Math.max(0.7, Math.min(1.45, W / 980));
     return true;
   }
 
-  /* ---------- path ---------- */
+  function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
   function bez(p0, p1, p2, p3, u) {
     var v = 1 - u;
     return [v * v * v * p0[0] + 3 * v * v * u * p1[0] + 3 * v * u * u * p2[0] + u * u * u * p3[0],
             v * v * v * p0[1] + 3 * v * v * u * p1[1] + 3 * v * u * u * p2[1] + u * u * u * p3[1]];
   }
-  function ease(u) { return u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2; }
-  function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
 
-  var T_SWOOP = 2.0, T_STRIKE = 0.5, T_EXIT = 4.2, T_ALL = T_SWOOP + T_STRIKE + T_EXIT;
+  /* ---------- the fish's swim ---------- */
+  function fishPath(tt) {
+    var narrow = W < 700;
+    var cx = W * (narrow ? 0.5 : 0.66), cy = H * (narrow ? 0.8 : 0.76);
+    var ax = W * (narrow ? 0.28 : 0.18), ay = H * 0.05;
+    var s = reduce ? 0 : tt;
+    var x = cx + ax * Math.sin(s * 0.32) + ax * 0.25 * Math.sin(s * 0.71 + 1);
+    var y = cy + ay * Math.sin(s * 0.53 + 0.4);
+    var dx = ax * 0.32 * Math.cos(s * 0.32) + ax * 0.25 * 0.71 * Math.cos(s * 0.71 + 1);
+    var dy = ay * 0.53 * Math.cos(s * 0.53 + 0.4);
+    var tilt = clamp(Math.atan2(dy, Math.max(Math.abs(dx), ax * 0.25)) * 0.6, -0.3, 0.3);
+    return { x: x, y: y, dir: dx < 0 ? -1 : 1, tilt: tilt };
+  }
+  function fishNow() {
+    var p = fishPath(clock);
+    var age = clock - fishBorn;
+    if (age < 2.6) {                                      // a new fish swims up from the bottom
+      var e = 1 - Math.pow(1 - clamp(age / 2.6, 0, 1), 3);
+      p.y = p.y + (H - p.y + 40) * (1 - e);
+      p.tilt = -0.5 * (1 - e) * p.dir;
+      p.alpha = e;
+    } else p.alpha = 1;
+    return p;
+  }
 
-  // where the bird is at time s, its pose (0 flying, 1 striking) and wing position
-  function state(s) {
-    var sx = W * (W < 700 ? 0.7 : 0.68), sy = waterTop + 14;               // strike point
-    var dip = [sx + 70 * scale, sy - 92 * scale];                          // body position at the strike
+  /* ---------- the swoop ---------- */
+  var T_IN = 1.25, T_OUT = 3.2;
+  // where the fish sits relative to the heron's body, at the strike pose
+  function holdOffset(ang) {
+    var hx = -96, hy = 56, bdx = -0.42, bdy = 1, bl = Math.hypot(bdx, bdy);
+    var lx = hx + (bdx / bl) * 30, ly = hy + (bdy / bl) * 30;
+    var c = Math.cos(ang) * scale, s = Math.sin(ang) * scale;
+    return [c * lx - s * ly, s * lx + c * ly];
+  }
+  function startSwoop() {
+    if (swoop || fishGone >= 0 || clock - fishBorn < 2.6) return;
+    var f = fishPath(clock + T_IN);                       // where the fish will be
+    var drawAng = 0.32;                                   // the body is tipped nose-down as it strikes
+    var ho = holdOffset(drawAng);
+    var S = [f.x - ho[0], f.y - ho[1]];
+    var p0 = [W + 260, -220], end = [-360, H * 0.18];
+    var inDir = [-0.86, 0.5];                              // heading down-left at the strike
+    var k = 260 * scale;
+    swoop = {
+      t0: clock, S: S,
+      a: [p0, [W * 0.98, H * 0.02], [S[0] - inDir[0] * k, S[1] - inDir[1] * k], S],
+      b: [S, [S[0] + inDir[0] * k * 1.1, S[1] - 30 * scale], [W * 0.3, H * 0.1], end],
+    };
+    canvas.classList.add("live");
+    kick();
+  }
+
+  function heronState(s) {
     var st = { fish: false, pose: 0, flap: 0, x: 0, y: 0, ang: 0 };
-    if (s < T_SWOOP) {
-      var u = ease(s / T_SWOOP);
-      var p = bez([W + 220, -200], [W * 0.98, H * 0.06], [W * 0.86, waterTop - 260 * scale], dip, u);
-      var q = bez([W + 220, -200], [W * 0.98, H * 0.06], [W * 0.86, waterTop - 260 * scale], dip, Math.min(1, u + 0.01));
-      st.x = p[0]; st.y = p[1]; st.ang = Math.atan2(q[1] - p[1], q[0] - p[0]);
-      st.pose = clamp((s - 1.25) / 0.6, 0, 1);
-      // a few beats coming in, then a glide with the wings held high
-      st.flap = s < 0.9 ? Math.sin(s * TAU * 2.2) : 0.55 + 0.25 * clamp((s - 0.9) / 0.8, 0, 1);
-    } else if (s < T_SWOOP + T_STRIKE) {
-      var k = (s - T_SWOOP) / T_STRIKE, d = Math.sin(k * Math.PI);
-      st.x = dip[0] - 10 * k * scale; st.y = dip[1] + 16 * d * scale;
-      st.ang = Math.PI + 0.25 - 0.4 * k;
-      st.pose = 1 - clamp((k - 0.55) / 0.45, 0, 1) * 0.6;
-      st.flap = 0.85 - 1.2 * clamp((k - 0.4) / 0.6, 0, 1);
-      st.fish = k > 0.42;
+    var A = swoop.a, B = swoop.b, p, q;
+    if (s < T_IN) {
+      var u = Math.pow(s / T_IN, 1.6);                   // accelerate into the dive
+      p = bez(A[0], A[1], A[2], A[3], u); q = bez(A[0], A[1], A[2], A[3], Math.min(1, u + 0.01));
+      st.pose = clamp((s - T_IN * 0.45) / (T_IN * 0.5), 0, 1);
+      st.flap = s < T_IN * 0.4 ? Math.sin(s * TAU * 2.4) : 0.7 - 0.5 * clamp((s - T_IN * 0.7) / (T_IN * 0.3), 0, 1);
     } else {
-      var e = clamp((s - T_SWOOP - T_STRIKE) / T_EXIT, 0, 1), ue = e * e * (3 - 2 * e) * 0.35 + e * 0.65;
-      var a = [dip[0] - 10 * scale, dip[1]];
-      var p2 = bez(a, [W * 0.56, waterTop - 40], [W * 0.38, H * 0.2], [-320, H * 0.26], ue);
-      var q2 = bez(a, [W * 0.56, waterTop - 40], [W * 0.38, H * 0.2], [-320, H * 0.26], Math.min(1, ue + 0.01));
-      st.x = p2[0]; st.y = p2[1]; st.ang = Math.atan2(q2[1] - p2[1], q2[0] - p2[0]);
-      st.pose = Math.max(0, 0.4 - e * 2);
-      st.flap = Math.sin((s - T_SWOOP - T_STRIKE) * TAU * 1.7 + 1.2);
+      var v = (s - T_IN) / T_OUT, w = 1 - Math.pow(1 - v, 1.4);
+      p = bez(B[0], B[1], B[2], B[3], w); q = bez(B[0], B[1], B[2], B[3], Math.min(1, w + 0.01));
+      st.pose = 1 - clamp((s - T_IN) / 0.55, 0, 1);
+      st.flap = Math.sin((s - T_IN) * TAU * 1.8 - 0.6);
       st.fish = true;
     }
+    st.x = p[0]; st.y = p[1]; st.ang = Math.atan2(q[1] - p[1], q[0] - p[0]);
     return st;
   }
 
-  /* ---------- the bird, as a silhouette on the hidden canvas ---------- */
-  // facing left (toward -x); alpha carries the shading; red marks the fish
   function lerp(a, b, u) { return a + (b - a) * u; }
   function wing(g, f, alpha, dy) {
     // f: -1 (fully down) .. 1 (fully up). A long arm, a broad hand and five
@@ -168,30 +200,36 @@
     g.restore();
   }
 
-  /* ---------- drawing ---------- */
-  var HER = [[112, 160, 168], [236, 244, 240]], FISH = [255, 138, 61];
-  function col(c, a) { return "rgb(" + c[0] + "," + c[1] + "," + c[2] + ")"; }
-  function mix(a, b, u) { return [Math.round(a[0] + (b[0] - a[0]) * u), Math.round(a[1] + (b[1] - a[1]) * u), Math.round(a[2] + (b[2] - a[2]) * u)]; }
+  function fishShape(g, wig) {
+    g.clearRect(0, 0, OW, OH);
+    g.save(); g.translate(OX, OY);
+    g.fillStyle = "rgba(255,0,0,1)";
+    g.beginPath(); g.ellipse(0, 0, 26, 9.5, 0, 0, TAU); g.fill();
+    g.save(); g.translate(22, 0); g.rotate(wig);
+    g.beginPath(); g.moveTo(0, 0); g.lineTo(17, -10); g.lineTo(14, 0); g.lineTo(17, 10); g.closePath(); g.fill();
+    g.restore();
+    g.beginPath(); g.moveTo(-4, -8); g.lineTo(6, -15); g.lineTo(10, -8); g.closePath(); g.fill();
+    g.restore();
+  }
 
-  function drawBird(st, s) {
-    bird(st, s);
+  /* ---------- sampling a silhouette into dots ---------- */
+  var HER = [[112, 160, 168], [236, 244, 240]], FISH = [255, 138, 61];
+  function col(c) { return "rgb(" + c[0] + "," + c[1] + "," + c[2] + ")"; }
+  function mix(a, b, u) { return [Math.round(a[0] + (b[0] - a[0]) * u), Math.round(a[1] + (b[1] - a[1]) * u), Math.round(a[2] + (b[2] - a[2]) * u)]; }
+  function stamp(x0, y0, ang, flipX, sc, alpha) {
     var img = octx.getImageData(0, 0, OW, OH).data, P = 3;
-    var ang = st.ang + Math.PI;                                     // the bird faces -x
-    if (ang > Math.PI) ang -= TAU;
-    ang = clamp(ang, -0.7, 0.7);
-    var ca = Math.cos(ang) * scale, sa = Math.sin(ang) * scale;
+    var ca = Math.cos(ang) * sc, sa = Math.sin(ang) * sc;
     var buckets = [[], [], [], [], [], []];
     for (var y = 0; y < OH; y += P) for (var x = 0; x < OW; x += P) {
       var i = (y * OW + x) * 4, a = img[i + 3];
       if (a < 14) continue;
       var lum = a / 255, fish = img[i] > img[i + 2];
-      var r = P * 0.55 * Math.sqrt(lum) * scale;
+      var r = P * 0.55 * Math.sqrt(lum) * sc;
       if (r < 0.4) continue;
-      var lx = x - OX, ly = y - OY;
-      var X = st.x + ca * lx - sa * ly, Y = st.y + sa * lx + ca * ly;
-      var b = fish ? 5 : Math.min(4, (lum * 5) | 0);
-      buckets[b].push(X, Y, r);
+      var lx = (x - OX) * flipX, ly = y - OY;
+      buckets[fish ? 5 : Math.min(4, (lum * 5) | 0)].push(x0 + ca * lx - sa * ly, y0 + sa * lx + ca * ly, r);
     }
+    ctx.globalAlpha = alpha == null ? 1 : alpha;
     for (var k = 0; k < 6; k++) {
       var bk = buckets[k];
       if (!bk.length) continue;
@@ -200,51 +238,30 @@
       for (var j = 0; j < bk.length; j += 3) { ctx.moveTo(bk[j] + bk[j + 2], bk[j + 1]); ctx.arc(bk[j], bk[j + 1], bk[j + 2], 0, TAU); }
       ctx.fill();
     }
+    ctx.globalAlpha = 1;
   }
 
-  var WATER = [[10, 40, 52], [26, 112, 118], [104, 190, 176], [236, 160, 104]];
-  function drawWater(time) {
-    var rows = 12, buckets = [[], [], [], []];
-    for (var k = 0; k < rows; k++) {
-      var f = k / (rows - 1), y = waterTop + (H - waterTop) * Math.pow(f, 1.3) * 0.92 + 8;
-      var pitch = (5 + 9 * f) * Math.max(0.8, scale), rmax = pitch * 0.42;
-      var fade = Math.min(1, 0.35 + f);
-      for (var x = pitch / 2; x < W; x += pitch) {
-        var w = Math.sin(x * 0.018 - time * 1.4 + k * 0.7) * 0.5 + Math.sin(x * 0.041 + time * 2.1 - k * 1.3) * 0.3;
-        var rip = 0;
-        if (splashAt >= 0) {
-          var dt = time - splashAt, dx = x - splash.x, dy = (y - splash.y) * 3.2, d = Math.sqrt(dx * dx + dy * dy);
-          if (dt > 0 && dt < 3.2) rip = Math.sin(d * 0.07 - dt * 9) * Math.exp(-dt * 1.1) * Math.exp(-d / 260) * 1.6 * (d < dt * 150 ? 1 : 0);
-        }
-        var L = (0.42 + 0.22 * w + rip * 0.5) * fade;
-        if (L < 0.08) continue;
-        var r = rmax * Math.min(1, L);
-        var c = L > 0.78 ? 3 : L > 0.56 ? 2 : L > 0.32 ? 1 : 0;
-        buckets[c].push(x, y - (w * 3 + rip * 6) * (0.4 + f), r, r * (0.45 + 0.4 * f));
-      }
-    }
-    for (var c2 = 0; c2 < 4; c2++) {
-      var bk = buckets[c2];
-      if (!bk.length) continue;
-      ctx.fillStyle = col(WATER[c2]);
-      ctx.beginPath();
-      for (var j = 0; j < bk.length; j += 4) { ctx.moveTo(bk[j] + bk[j + 2], bk[j + 1]); ctx.ellipse(bk[j], bk[j + 1], bk[j + 2], bk[j + 3], 0, 0, TAU); }
-      ctx.fill();
-    }
-    // drops thrown up by the strike
-    if (drops.length) {
-      ctx.fillStyle = col(WATER[2]);
-      ctx.beginPath();
-      drops.forEach(function (p) { ctx.moveTo(p.x + p.r, p.y); ctx.arc(p.x, p.y, p.r, 0, TAU); });
-      ctx.fill();
-    }
-  }
-
+  /* ---------- frame ---------- */
   function render() {
     ctx.clearRect(0, 0, W, H);
-    drawWater(clock);
-    if (playing) drawBird(state(t), t);
-    else if (reduce && !played) drawBird({ x: W * 0.72, y: H * 0.36, ang: Math.PI - 0.1, pose: 0, flap: 0.4, fish: false }, 0);
+    var free = fishGone < 0;
+    if (free) {
+      var f = fishNow();
+      fishShape(octx, Math.sin(clock * (reduce ? 0 : 7)) * 0.35);
+      // the shape points left (head at -x); flip it when swimming right
+      stamp(f.x, f.y, f.tilt * -f.dir, f.dir > 0 ? -1 : 1, scale * 0.95, f.alpha);
+      if (bait) {
+        bait.style.transform = "translate(" + (f.x - 40).toFixed(1) + "px," + (f.y - 28).toFixed(1) + "px)";
+        bait.hidden = false;
+      }
+    } else if (bait) bait.hidden = true;
+    if (swoop) {
+      var s = clock - swoop.t0, st = heronState(s);
+      bird(st, clock);
+      var ang = st.ang + Math.PI;
+      if (ang > Math.PI) ang -= TAU;
+      stamp(st.x, st.y, clamp(ang, -0.7, 0.7), 1, scale, 1);
+    }
   }
 
   function frame(ts) {
@@ -252,47 +269,30 @@
     if (!visible) return;
     var dt = Math.min(0.05, (ts - (last || ts)) / 1000);
     last = ts; clock += dt;
-    if (playing) {
-      var before = t;
-      t += dt;
-      if (before < T_SWOOP + T_STRIKE * 0.42 && t >= T_SWOOP + T_STRIKE * 0.42) {
-        var st = state(t);
-        splashAt = clock;
-        splash = { x: W * (W < 700 ? 0.7 : 0.68), y: waterTop + 14 };
-        for (var n = 0; n < 16; n++) {
-          var a = -Math.PI / 2 + (Math.random() - 0.5) * 1.6, v = 120 + Math.random() * 160;
-          drops.push({ x: splash.x + (Math.random() - 0.5) * 20, y: splash.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 1.4 + Math.random() * 1.8 });
-        }
-      }
-      if (t > T_ALL) { playing = false; played = true; }
+    if (swoop) {
+      var s = clock - swoop.t0;
+      if (fishGone < 0 && s >= T_IN) fishGone = clock;            // snatched
+      if (s > T_IN + T_OUT) { swoop = null; canvas.classList.remove("live"); }
     }
-    drops = drops.filter(function (p) {
-      p.vy += 520 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
-      return p.y < waterTop + 20;
-    });
+    if (fishGone >= 0 && !swoop && clock - fishGone > RESPAWN) { fishGone = -1; fishBorn = clock; }
     render();
-    if (!reduce || playing || drops.length) raf = requestAnimationFrame(frame);
+    raf = requestAnimationFrame(frame);
   }
   function kick() { if (!raf && visible) { last = 0; raf = requestAnimationFrame(frame); } }
 
-  function play() { t = 0; playing = true; drops = []; kick(); }
-
-  section.addEventListener("click", function (e) { if (!e.target.closest("a")) play(); });
-  if (replay) replay.addEventListener("click", function (e) { e.stopPropagation(); play(); });
-
+  if (bait) {
+    bait.addEventListener("pointerenter", startSwoop);
+    bait.addEventListener("click", startSwoop);
+    bait.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); startSwoop(); } });
+  }
   if ("IntersectionObserver" in window) {
-    new IntersectionObserver(function (es) {
-      visible = es[0].isIntersecting && !document.hidden;
-      if (visible && !played && !playing && !reduce && es[0].intersectionRatio > 0.45) play();
-      kick();
-    }, { threshold: [0, 0.45] }).observe(section);
+    new IntersectionObserver(function (es) { visible = es[0].isIntersecting && !document.hidden; kick(); }).observe(section);
   } else { visible = true; }
-  document.addEventListener("visibilitychange", function () { visible = !document.hidden; kick(); });
+  document.addEventListener("visibilitychange", function () { visible = !document.hidden && visible; kick(); });
   var rt = 0;
   window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (size()) render(); }, 120); });
 
+  fishBorn = -10;                                                    // first fish is already swimming
   if (size()) render();
   kick();
-
-  window.HeronArt = { play: play };
 })();
