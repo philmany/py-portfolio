@@ -161,6 +161,7 @@ window.SITE_DATA = {
       { name: "Armani", logo: "logos/armani.svg", url: "https://www.armani-beauty.ca", height: 26 },
       { name: "Lanc\u00f4me", logo: "logos/lancome.svg", url: "https://www.lancome.ca", height: 36 },
       { name: "Hatch", logo: "logos/hatch.svg", url: "https://hatch.jobs", height: 30 },
+      { name: "nwPlus", logo: "logos/nwplus.svg", url: "https://nwplus.io/", height: 48 },
     ],
   },
 
