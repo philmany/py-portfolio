@@ -7,15 +7,15 @@
   - The bird is drawn each frame as a vector silhouette (wings, S-curved neck,
     dagger beak, trailing legs) on a small hidden canvas, then sampled into
     dots, so wingbeats and the strike animate smoothly.
-  - A strip of halftone water runs along the bottom; the strike sends out a
-    ring of ripples and a few drops.
+  - It fishes from the strip of lake along the bottom of the band (the same
+    water as the top of the page); the strike splashes it and throws a few drops.
   - Plays once when the section first comes into view. With reduced motion it
     waits for a click.
 */
 (function () {
   "use strict";
   var canvas = document.getElementById("heron");
-  var section = document.getElementById("about");
+  var section = document.getElementById("heron-band");
   var replay = document.getElementById("heron-replay");
   if (!canvas || !canvas.getContext || !section) return;
   var ctx = canvas.getContext("2d");
@@ -27,7 +27,7 @@
 
   var W = 0, H = 0, waterTop = 0, scale = 1;
   var t = 0, playing = false, played = false, visible = false, raf = 0, last = 0, clock = 0;
-  var splashAt = -1, splash = { x: 0, y: 0 }, drops = [];
+  var splash = { x: 0, y: 0 }, drops = [];
 
   function size() {
     var r = section.getBoundingClientRect();
@@ -36,7 +36,7 @@
     W = r.width; H = r.height;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    waterTop = H - Math.min(170, Math.max(110, H * 0.2));
+    waterTop = H * 0.7;
     scale = Math.max(0.75, Math.min(1.55, W / 950));
     return true;
   }
@@ -202,47 +202,18 @@
     }
   }
 
-  var WATER = [[10, 40, 52], [26, 112, 118], [104, 190, 176], [236, 160, 104]];
-  function drawWater(time) {
-    var rows = 12, buckets = [[], [], [], []];
-    for (var k = 0; k < rows; k++) {
-      var f = k / (rows - 1), y = waterTop + (H - waterTop) * Math.pow(f, 1.3) * 0.92 + 8;
-      var pitch = (5 + 9 * f) * Math.max(0.8, scale), rmax = pitch * 0.42;
-      var fade = Math.min(1, 0.35 + f);
-      for (var x = pitch / 2; x < W; x += pitch) {
-        var w = Math.sin(x * 0.018 - time * 1.4 + k * 0.7) * 0.5 + Math.sin(x * 0.041 + time * 2.1 - k * 1.3) * 0.3;
-        var rip = 0;
-        if (splashAt >= 0) {
-          var dt = time - splashAt, dx = x - splash.x, dy = (y - splash.y) * 3.2, d = Math.sqrt(dx * dx + dy * dy);
-          if (dt > 0 && dt < 3.2) rip = Math.sin(d * 0.07 - dt * 9) * Math.exp(-dt * 1.1) * Math.exp(-d / 260) * 1.6 * (d < dt * 150 ? 1 : 0);
-        }
-        var L = (0.42 + 0.22 * w + rip * 0.5) * fade;
-        if (L < 0.08) continue;
-        var r = rmax * Math.min(1, L);
-        var c = L > 0.78 ? 3 : L > 0.56 ? 2 : L > 0.32 ? 1 : 0;
-        buckets[c].push(x, y - (w * 3 + rip * 6) * (0.4 + f), r, r * (0.45 + 0.4 * f));
-      }
-    }
-    for (var c2 = 0; c2 < 4; c2++) {
-      var bk = buckets[c2];
-      if (!bk.length) continue;
-      ctx.fillStyle = col(WATER[c2]);
-      ctx.beginPath();
-      for (var j = 0; j < bk.length; j += 4) { ctx.moveTo(bk[j] + bk[j + 2], bk[j + 1]); ctx.ellipse(bk[j], bk[j + 1], bk[j + 2], bk[j + 3], 0, 0, TAU); }
-      ctx.fill();
-    }
-    // drops thrown up by the strike
-    if (drops.length) {
-      ctx.fillStyle = col(WATER[2]);
-      ctx.beginPath();
-      drops.forEach(function (p) { ctx.moveTo(p.x + p.r, p.y); ctx.arc(p.x, p.y, p.r, 0, TAU); });
-      ctx.fill();
-    }
+  var DROP = [104, 190, 176];
+  function drawDrops() {
+    if (!drops.length) return;
+    ctx.fillStyle = col(DROP);
+    ctx.beginPath();
+    drops.forEach(function (p) { ctx.moveTo(p.x + p.r, p.y); ctx.arc(p.x, p.y, p.r, 0, TAU); });
+    ctx.fill();
   }
 
   function render() {
     ctx.clearRect(0, 0, W, H);
-    drawWater(clock);
+    drawDrops();
     if (playing) drawBird(state(t), t);
     else if (reduce && !played) drawBird({ x: W * 0.72, y: H * 0.36, ang: Math.PI - 0.1, pose: 0, flap: 0.4, fish: false }, 0);
   }
@@ -257,8 +228,8 @@
       t += dt;
       if (before < T_SWOOP + T_STRIKE * 0.42 && t >= T_SWOOP + T_STRIKE * 0.42) {
         var st = state(t);
-        splashAt = clock;
         splash = { x: W * (W < 700 ? 0.7 : 0.68), y: waterTop + 14 };
+        if (window.BandWater) window.BandWater.splash(splash.x, splash.y + 6, 3.2);
         for (var n = 0; n < 16; n++) {
           var a = -Math.PI / 2 + (Math.random() - 0.5) * 1.6, v = 120 + Math.random() * 160;
           drops.push({ x: splash.x + (Math.random() - 0.5) * 20, y: splash.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 1.4 + Math.random() * 1.8 });
@@ -271,13 +242,14 @@
       return p.y < waterTop + 20;
     });
     render();
-    if (!reduce || playing || drops.length) raf = requestAnimationFrame(frame);
+    if (playing || drops.length) raf = requestAnimationFrame(frame);
   }
   function kick() { if (!raf && visible) { last = 0; raf = requestAnimationFrame(frame); } }
 
   function play() { t = 0; playing = true; drops = []; kick(); }
 
   section.addEventListener("click", function (e) { if (!e.target.closest("a")) play(); });
+  section.style.cursor = "pointer";
   if (replay) replay.addEventListener("click", function (e) { e.stopPropagation(); play(); });
 
   if ("IntersectionObserver" in window) {

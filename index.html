@@ -54,26 +54,31 @@
     </div>
   </section>
 
-  <section class="section" id="play" aria-labelledby="play-h">
+  <section class="section play" id="play" aria-labelledby="play-h">
     <div class="wrap">
       <h2 class="sec" id="play-h" data-split>Water contains <em>memories.</em></h2>
-      <div class="play-grid">
-        <div class="play-side rv">
-          <p class="lede" id="play-sub"></p>
-          <p class="note">Each memory sits somewhere in the pool at the top of this page. Recently visited water gets more rain. The pool is stylised, not a map.</p>
-        </div>
-        <div class="places" id="places"></div>
-      </div>
+      <p class="lede rv" id="play-sub"></p>
     </div>
+    <div class="play-lake" id="play-lake">
+      <canvas class="glow" id="play-glow" aria-hidden="true"></canvas>
+      <canvas class="water" id="play-water" aria-hidden="true"></canvas>
+      <div class="mem-layer" id="play-layer" role="group" aria-label="Memories in the water"></div>
+    </div>
+    <ul class="sr" id="play-list"></ul>
   </section>
 
-  <section class="section about" id="about" aria-labelledby="about-h">
-    <canvas class="heron" id="heron" role="img" aria-label="Animation: a great blue heron, drawn in dots, swoops down from the top right, snatches a fish from the water and flies off to the left behind the heading."></canvas>
+  <section class="heron-band" id="heron-band" aria-label="A heron fishing">
+    <canvas class="glow" id="band-glow" aria-hidden="true"></canvas>
+    <canvas class="water" id="band-water" aria-hidden="true"></canvas>
+    <canvas class="heron" id="heron" role="img" aria-label="Animation: a great blue heron, drawn in dots, swoops down from the top right, snatches a fish from the water and flies off to the left."></canvas>
+    <button type="button" class="ctl heron-replay" id="heron-replay"><span aria-hidden="true">&#8634;</span> Watch again</button>
+  </section>
+
+  <section class="about" id="about" aria-labelledby="about-h">
     <div class="wrap">
       <h2 class="sec" id="about-h"></h2>
       <ul class="links" id="links"></ul>
     </div>
-    <button type="button" class="ctl heron-replay" id="heron-replay"><span aria-hidden="true">&#8634;</span> Watch the heron again</button>
   </section>
 </main>
 
@@ -81,6 +86,10 @@
   <span id="copy"></span>
   <a href="#top">Back to top <span aria-hidden="true">&uarr;</span></a>
 </footer>
+<div class="foot-water" id="foot-water">
+  <canvas class="water" id="foot-canvas" aria-hidden="true"></canvas>
+</div>
+
 
 <div class="peek" id="peek" aria-hidden="true">
   <div class="peek-in" id="peek-in"></div>

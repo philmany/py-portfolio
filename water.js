@@ -119,9 +119,9 @@
       if (hctx) { haze.width = Math.ceil(W / 2); haze.height = Math.ceil(H / 2); }
 
       var narrow = W < 760;
-      pNear = narrow ? 15 : W < 1200 ? 19 : 22;
+      pNear = (narrow ? 15 : W < 1200 ? 19 : 22) * (o.pitchScale || 1);
       tilt = 0.74;
-      var yTop = Math.max(64, H * 0.1), sEnd = 0.4;
+      var yTop = o.top != null ? o.top * H : Math.max(64, H * 0.1), sEnd = o.far || 0.4;
       var Dn = (H + pNear - yTop) / (pNear * tilt * (1 - sEnd));
       // rows from near (k = 0, just below the screen) to far (top)
       var ys = [], ss = [], y = H + pNear * 0.6, k = 0;
@@ -157,7 +157,8 @@
           var fl = Q.floor || 0;
           q = Math.min(q, fl + (1 - fl) * smooth(0.45, 1.3, Math.sqrt(nx * nx + ny * ny)));
         }
-        q *= smooth(yTop, yTop + H * 0.16, py) * smooth(20, 200, H - py);
+        var fT = o.fadeTop != null ? o.fadeTop : H * 0.16, fB = o.fadeBottom != null ? o.fadeBottom : 200;
+        q *= smooth(yTop, yTop + fT, py) * (fB > 0 ? smooth(fB * 0.1, fB, H - py) : 1);
         if (q < 0.02) continue;
         fade[i] = 0.04 + 0.96 * q;
         depth[i] = 0.5 + 0.3 * Math.sin(c * 0.021 + 1.3) * Math.cos(k * 0.05 - 0.4) + 0.2 * Math.sin((c + k) * 0.013 + 2.1);
@@ -248,10 +249,10 @@
 
         // wind swells rolling toward the viewer (y grows into the distance)
         var grp = 0.6 + 0.4 * Math.sin(x * 0.025 - y * 0.035 + t * 0.16) * Math.cos(x * 0.011 + y * 0.019 - t * 0.09);
-        var a1 = x * 0.06 + y * 0.52 + t * 1.6, a2 = -x * 0.22 + y * 0.86 + t * 2.25;
-        var a3 = x * 0.4 + y * 1.3 + t * 3.1, a4 = x * 1.05 + y * 0.45 + t * 3.9;
-        var a5 = -x * 0.7 + y * 1.6 + t * 4.4, a6 = x * 0.17 - y * 0.12 + t * 0.7;
-        var chop = 0.7 + 0.3 * Math.sin(x * 0.05 + y * 0.09 - t * 0.33);
+        var a1 = x * 0.06 + y * 0.52 + t * 2.05, a2 = -x * 0.22 + y * 0.86 + t * 2.9;
+        var a3 = x * 0.4 + y * 1.3 + t * 4.0, a4 = x * 1.05 + y * 0.45 + t * 5.0;
+        var a5 = -x * 0.7 + y * 1.6 + t * 5.6, a6 = x * 0.17 - y * 0.12 + t * 0.9;
+        var chop = 0.85 + 0.45 * Math.sin(x * 0.05 + y * 0.09 - t * 0.42);
         var hs = grp * (0.5 * Math.sin(a1) + 0.3 * Math.sin(a2)) + chop * (0.2 * Math.sin(a3) + 0.1 * Math.sin(a4) + 0.08 * Math.sin(a5)) + 0.12 * Math.sin(a6);
         var dz = grp * (0.5 * 0.52 * Math.cos(a1) + 0.3 * 0.86 * Math.cos(a2)) + chop * (0.2 * 1.3 * Math.cos(a3) + 0.1 * 0.45 * Math.cos(a4) + 0.08 * 1.6 * Math.cos(a5)) - 0.12 * 0.12 * Math.cos(a6);
         var dxs = grp * (0.5 * 0.06 * Math.cos(a1) - 0.3 * 0.22 * Math.cos(a2)) + chop * (0.2 * 0.4 * Math.cos(a3) + 0.1 * 1.05 * Math.cos(a4) - 0.08 * 0.7 * Math.cos(a5)) + 0.12 * 0.17 * Math.cos(a6);
@@ -264,6 +265,13 @@
         var caus = lap < 0 ? Math.min(-lap * 2, 0.6) : 0;
         var Lm = 0.25 + 0.27 * far + 0.06 * (1 - dp) + spec * 0.66 + caus * 0.45;
         var hl = 0;
+        if (anyAct && o.highlight) for (p = 0; p < markers.length; p++) {
+          if (act[p] <= 0.01) continue;
+          var mk = markers[p], ddx = x - mk.gx, ddy = (y - mk.gy) * 1.6, rr = mk.gr * mk.gr;
+          var dd = ddx * ddx + ddy * ddy;
+          if (dd < rr * 4) hl += act[p] * Math.exp(-dd / (rr * 1.1));
+        }
+        Lm += hl * 0.9;
         var py0 = rowY[y];
         if (py0 > revealY) Lm *= smooth(revealY + 80, revealY, py0);
         Lm *= q;
@@ -277,7 +285,7 @@
         if (r < 0.45) continue;
         var sunx = (xs[i] - sunX) / (W * (0.16 + 0.22 * far));
         var sun = Math.exp(-sunx * sunx) * (0.35 + 0.65 * far);
-        var ct = 0.06 + 0.18 * far + 0.16 * dp * (1 - far) + 0.4 * Lm + spec * 0.26 * (0.6 + sun) + sun * 0.16 + 0.05 * (mo - 0.5);
+        var ct = hl * 0.45 + 0.06 + 0.18 * far + 0.16 * dp * (1 - far) + 0.4 * Lm + spec * 0.26 * (0.6 + sun) + sun * 0.16 + 0.05 * (mo - 0.5);
         var b = ct <= 0 ? 0 : ct >= 1 ? NB - 1 : (ct * (NB - 1)) | 0;
         bOf[i] = b; rad[i] = r;
         rady[i] = r * Math.min(1, tilt * s * 1.35);
@@ -376,6 +384,7 @@
 
     return {
       relayout: function () { relayout(true); },
+      splash: function (x, y, amp) { if (!cellList) return; var g = toGrid(x, y); drop(g[0], g[1], amp || 2.4, 2.2); kick(); },
       setPaused: function (b) { paused = !!b; if (paused) draw(); else kick(); },
       isPaused: function () { return paused; },
       setActive: function (i) {
