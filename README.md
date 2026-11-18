@@ -30,6 +30,7 @@ Open http://localhost:8000. Use a local server rather than double-clicking the f
 | `water.js` | The halftone lake (Canvas 2D). |
 | `shapes.js` | Outlines of each body of water: Natural Earth data for the Mediterranean and Lake Washington, hand-traced for the rest (see the note in the file). |
 | `heron.js` | The dot-drawn fish and heron in About. Hover the fish and the heron catches it; a new fish swims up 10 seconds later. |
+| `sound.js` | The wave sound (generated in the browser, starts muted; speaker button bottom right). |
 | `previews/` | Screenshots used as hover previews for sites that can't be embedded (e.g. Pastel Primate). |
 | `Resume_2027_PhilmanYeung.pdf` | Your resume, linked from About. |
 | `pretzel.html`, `img/` | The Pretzel 1.0 case study, grafted in unchanged except for two things listed below. |

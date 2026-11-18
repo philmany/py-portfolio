@@ -54,7 +54,7 @@ window.SITE_DATA = {
         {
           id: "nwhacks",
           title: "nwHacks Brand Identity",
-          tags: ["Brand Identity", "Hackathon"],
+          tags: ["Brand Identity", "Product Design"],
           status: "placeholder",
           summary: "",
           preview: { type: "art", colors: ["#2bd18f", "#2b6cd6"] },
@@ -75,7 +75,7 @@ window.SITE_DATA = {
         {
           id: "pastelprimate",
           title: "Pastel Primate",
-          tags: ["Art", "Prints", "Shop"],
+          tags: ["Art", "Ecommerce"],
           status: "complete",
           href: "https://pastelprimate.com",
           preview: { type: "image", src: "previews/pastelprimate.jpg" },
