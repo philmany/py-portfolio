@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pretzel 1.0 | Snack Design System Case Study · Philman Yeung</title>
+<script>try{if(window===top&&sessionStorage.getItem("flow")){document.documentElement.className+=" flow-in";document.write('<style id="flow-cover">html.flow-in body>*:not(.flow-cv){filter:blur(16px);transform:scale(.94)}html.flow-in body::before{content:"";position:fixed;inset:0;z-index:299;background:#140a18}</style>')}else if(window===top)sessionStorage.removeItem("flow")}catch(e){}</script>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -974,5 +975,7 @@ requestAnimationFrame(frame);
   }
 })();
 </script>
+<script src="flow.js"></script>
+<script>document.querySelectorAll('a[href^="index.html"]').forEach(function(a){a.addEventListener("click",function(e){if(e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();window.flowTo(a.href,e.clientX,e.clientY)})});</script>
 </body>
 </html>

@@ -363,16 +363,6 @@ h2.sec em { font-style: italic; color: var(--accent-2); }
   .portrait { position: relative; top: 0; max-width: 420px; }
 }
 
-/* Page transition: a ripple that floods the screen */
-.wipe { position: fixed; inset: 0; z-index: 300; pointer-events: none; }
-.wipe::before, .wipe::after {
-  content: ""; position: absolute; inset: 0;
-  clip-path: circle(0px at var(--x, 50%) var(--y, 50%)); transition: clip-path 0.95s var(--ease-io);
-}
-.wipe::before { background: var(--accent-2); }
-.wipe::after { background: #fbfaf7; transition-delay: 0.12s; }
-.wipe.go { pointer-events: auto; }
-.wipe.go::before, .wipe.go::after { clip-path: circle(170vmax at var(--x, 50%) var(--y, 50%)); }
 
 /* Play */
 .play-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr); gap: 40px 72px; margin-top: clamp(48px, 6vw, 80px); align-items: start; }

@@ -82,21 +82,17 @@
   }
 
   /* ripple page transition for links within the site */
-  var wipe = $("#wipe");
   $$("a[href]").forEach(function (a) {
     var h = a.getAttribute("href");
     if (a.target === "_blank" || /^(https?:|mailto:|#)/.test(h)) return;
     a.addEventListener("click", function (e) {
-      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !window.flowTo) return;
       e.preventDefault();
       var x = e.clientX, y = e.clientY;
       if (!x && !y) { var r = a.getBoundingClientRect(); x = r.left + r.width / 2; y = r.top + r.height / 2; }
-      wipe.style.setProperty("--x", x + "px"); wipe.style.setProperty("--y", y + "px");
-      wipe.classList.add("go");
-      setTimeout(function () { window.location.href = a.href; }, reduce ? 0 : 900);
+      window.flowTo(a.href, x, y);
     });
   });
-  window.addEventListener("pageshow", function () { wipe.classList.remove("go"); });
 
   /* "new page" tooltip for links that leave the site */
   var tip = el("div", { class: "tip", role: "tooltip", id: "tip", text: "This will send you to a new page" });

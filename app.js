@@ -449,20 +449,15 @@
   window.addEventListener("scroll", function () { if (showing && !document.querySelector(".work-list:hover")) hidePeek(); }, { passive: true });
 
   /* ripple page transition */
-  var wipe = $("#wipe");
   function goTo(e) {
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
     var href = this.href, x = e.clientX, y = e.clientY;
     if (showing) { x = px + PW / 2; y = py + PH / 2; }
     else if (!x && !y) { var r = this.getBoundingClientRect(); x = r.left + r.width / 2; y = r.top + r.height / 2; }
-    wipe.style.setProperty("--x", x + "px");
-    wipe.style.setProperty("--y", y + "px");
     hidePeek();
-    wipe.classList.add("go");
-    setTimeout(function () { window.location.href = href; }, reduce ? 0 : 900);
+    if (window.flowTo) window.flowTo(href, x, y); else window.location.href = href;
   }
-  window.addEventListener("pageshow", function () { wipe.classList.remove("go"); });
   $$('.nav a[href$=".html"]').forEach(function (a) { a.addEventListener("click", goTo); });
 
   /* ---------- reveal + split headings (same approach as the Pretzel page) ---------- */
