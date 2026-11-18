@@ -145,6 +145,13 @@
       el("span", { class: "mem-card", "aria-hidden": "true" },
         el("b", { text: p.name }), el("span", { class: "where", text: p.where }), el("span", { class: "when", text: lastLine(p) })));
     b.insertBefore(el("span", { class: "mem-fx", "aria-hidden": "true" }, svg), b.firstChild);
+    if (p.photo) {
+      b.classList.add("has-snap");
+      var img = el("img", { src: p.photo, alt: "", loading: "lazy", decoding: "async" });
+      img.addEventListener("load", function () { if (img.naturalWidth > img.naturalHeight) snap.classList.add("wide"); });
+      var snap = el("span", { class: "mem-snap", "aria-hidden": "true", style: "--i:" + i }, img);
+      b.appendChild(snap);
+    }
     b._ar = o.w / o.h;
     b.addEventListener("click", function (e) { e.stopPropagation(); setOn(b, !b.classList.contains("on")); });
     memLayer.appendChild(b);
@@ -186,6 +193,12 @@
       b.style.setProperty("--ty", ty.toFixed(1) + "px");
       b.style.setProperty("--sc", sc.toFixed(3));
       b.style.setProperty("--cdy", ((sc - 1) * bh / 2 * (up ? -1 : 1)).toFixed(1) + "px");
+      // the snapshot rides along beside the grown outline
+      var side = (narrow && p.photoSideNarrow) || p.photoSide || "right";
+      ["left", "right", "below"].forEach(function (s) { b.classList.toggle("snap-" + s, p.photo && s === side); });
+      var sideSign = side === "left" ? -1 : side === "below" ? 0 : 1;
+      b.style.setProperty("--sdx", (sideSign * (sc - 1) * bw / 2).toFixed(1) + "px");
+      b.style.setProperty("--sdy", ((sc - 1) * bh / 2).toFixed(1) + "px");
       return { x: cx, y: cy, r: Math.max(bw, bh) * 0.5 };
     });
   }
@@ -273,7 +286,7 @@
         var kids = [
           el("span", { class: "dot", "aria-hidden": "true" }),
           el("span", { class: "ttl" }, document.createTextNode(it.title),
-            it.ai ? el("sup", { class: "ai", text: "AI" }) : null),
+            it.ai ? el("sup", { class: "ai", text: "Vibe-Coded" }) : null),
           tags,
           el("span", { class: "ic " + (ext ? "out" : done ? "go" : "plus"), "aria-hidden": "true", html: ext ? LINK : done ? ARROW : PLUS }),
         ];
@@ -450,6 +463,7 @@
     setTimeout(function () { window.location.href = href; }, reduce ? 0 : 900);
   }
   window.addEventListener("pageshow", function () { wipe.classList.remove("go"); });
+  $$('.nav a[href$=".html"]').forEach(function (a) { a.addEventListener("click", goTo); });
 
   /* ---------- reveal + split headings (same approach as the Pretzel page) ---------- */
   $$("[data-split]").forEach(function (h) {

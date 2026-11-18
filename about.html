@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#140a18">
+<title>About · Philman Yeung</title>
+<meta name="description" content="Philman Yeung, product manager and designer. I nurture ideas and people.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="page-about">
+<a class="skip" href="#story">Skip to the story</a>
+<div id="progress" aria-hidden="true"></div>
+
+<header class="nav">
+  <a class="brand" href="index.html">Philman Yeung</a>
+  <nav aria-label="Sections">
+    <a href="index.html#work">Work</a>
+    <a href="index.html#play">Play</a>
+    <a href="about.html" aria-current="page">About</a>
+  </nav>
+</header>
+
+<main>
+  <section class="ab-head wrap" aria-labelledby="ab-name">
+    <h1 class="ab-name" id="ab-name" data-split>Philman Yeung</h1>
+    <p class="ab-role rv">Product manager and designer.</p>
+    <p class="ab-claim" data-split><em>I nurture ideas and people.</em></p>
+  </section>
+
+  <section class="ab-body wrap" id="story" aria-label="About Philman">
+    <!-- Portrait: drop a photo at about/portrait.jpg and set data-src="about/portrait.jpg" -->
+    <figure class="portrait rv" id="portrait" data-src="">
+      <canvas id="portrait-dots" aria-hidden="true"></canvas>
+      <figcaption class="portrait-note">Portrait coming soon</figcaption>
+    </figure>
+
+    <div class="ab-text">
+      <p class="rv">My work lives between systems and the humans inside them. At Microsoft, that meant AI and advertising safety for almost every country on the globe. At startups, it means finding the shape of something before it has one.</p>
+      <p class="rv">I learned to build at sixteen, restoring discarded computers at FreeGeek in East Vancouver for families who couldn’t afford new ones. <span class="flow">Nothing is ever truly thrown away. It flows somewhere, to someone.</span></p>
+      <p class="rv">That belief still guides me. Technology should be made with care, and measured by who it reaches and what it asks of them.</p>
+      <p class="rv">I find my clarity on the water. <span class="ab-place">Deer Lake</span> (Burnaby). <span class="ab-place">Lake Union</span> (Seattle). <span class="ab-place">Victoria Harbour</span> (Hong Kong). Places that hold memory, and give it back.</p>
+      <p class="ab-close rv">Good products work the same way. They channel what people need clearly, and leave the world gentler than they found it.</p>
+    </div>
+  </section>
+
+  <section class="section about ab-end" id="about" aria-labelledby="about-h">
+    <canvas class="heron" id="heron" aria-hidden="true"></canvas>
+    <button type="button" class="fish-bait" id="fish" aria-label="A fish swimming. Hover it, or press Enter, and a heron swoops down to catch it."></button>
+    <div class="wrap">
+      <h2 class="sec" id="about-h" data-split><em>Say hello.</em></h2>
+      <ul class="links" id="links"></ul>
+    </div>
+  </section>
+</main>
+
+<footer class="foot wrap">
+  <span id="copy"></span>
+  <a href="index.html">Back to the lake <span aria-hidden="true">&larr;</span></a>
+</footer>
+
+<div class="wipe" id="wipe" aria-hidden="true"></div>
+
+<noscript><p class="wrap"><a href="index.html">Home</a> · <a href="https://www.linkedin.com/in/philmanyeung/">LinkedIn</a> · <a href="mailto:philmanyeung@gmail.com">philmanyeung@gmail.com</a></p></noscript>
+
+<script src="data.js"></script>
+<script src="about.js"></script>
+<script src="heron.js"></script>
+</body>
+</html>
