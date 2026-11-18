@@ -37,7 +37,10 @@
   /* ---------- text ---------- */
   $("#brand").textContent = D.person.name;
   $("#hero-name").textContent = D.person.name;
-  $("#hero-tagline").textContent = D.person.tagline;
+  [].concat(D.person.tagline).forEach(function (line, i) {
+    if (i) $("#hero-tagline").appendChild(el("br"));
+    $("#hero-tagline").appendChild(document.createTextNode(line));
+  });
   [].concat(D.introduction).forEach(function (line, i) {
     if (i) $("#about-h").appendChild(el("br"));
     $("#about-h").appendChild(document.createTextNode(line));

@@ -5,12 +5,12 @@
 window.SITE_DATA = {
   person: {
     name: "Philman Yeung",
-    tagline: "a product manager and designer that nurtures ideas and people",
+    tagline: ["a Product Manager & Designer", "who flows like water."],  // one string per line
   },
 
   // Shown in the About section. Placeholder until you write a longer introduction.
   // About heading, one string per line.
-  introduction: ["A Product Manager & Designer", "who flows like water."],
+  introduction: ["Product Manager", "& Designer."],
 
   /*
     WORK

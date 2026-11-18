@@ -51,7 +51,7 @@
   /* ---------- the fish's swim ---------- */
   function fishPath(tt) {
     var narrow = W < 700;
-    var cx = W * (narrow ? 0.5 : 0.66), cy = H * (narrow ? 0.8 : 0.76);
+    var cx = W * (narrow ? 0.5 : 0.72), cy = H * (narrow ? 0.88 : 0.74);
     var ax = W * (narrow ? 0.28 : 0.18), ay = H * 0.05;
     var s = reduce ? 0 : tt;
     var x = cx + ax * Math.sin(s * 0.32) + ax * 0.25 * Math.sin(s * 0.71 + 1);
