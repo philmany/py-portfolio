@@ -17,7 +17,9 @@
     water reflects more sky (brighter, hazier), near water is darker.
   - Depth of field: a blurred copy of the lake is faded in over the distant
     rows and the sharp lake faded out, so the far water goes soft.
-  - Texture: two fine line screens woven over the dots (moiré), as before.
+  - Texture: printed like a two-colour risograph. Teal and fluorescent orange
+    are separate ink layers, the orange sitting 2px above the teal (off
+    register), and the moiré line screens are woven into each layer.
   - Dots fade under the text, under the navigation and into the page below.
   - Ambient motion and pausing never change any data value.
 */
@@ -84,6 +86,35 @@
     return c;
   }
 
+
+  // Riso grain: fine speckle where the ink skipped, plus soft mottled patches
+  // where the drum laid ink unevenly. Drawn once, tiled.
+  function grainTile() {
+    var s = 384, c = document.createElement("canvas");
+    c.width = c.height = s;
+    var g = c.getContext("2d");
+    if (!g) return null;
+    var img = g.createImageData(s, s), d = img.data, seed = 7;
+    function r() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+    var blobs = [];
+    for (var b = 0; b < 26; b++) blobs.push([r() * s, r() * s, 20 + r() * 70, r()]);
+    for (var y = 0; y < s; y++) for (var x = 0; x < s; x++) {
+      var m = 0;
+      for (b = 0; b < blobs.length; b++) {
+        var B = blobs[b];
+        var dx = Math.min(Math.abs(x - B[0]), s - Math.abs(x - B[0])), dy = Math.min(Math.abs(y - B[1]), s - Math.abs(y - B[1]));
+        m += B[3] * Math.exp(-(dx * dx + dy * dy) / (B[2] * B[2]));
+      }
+      var n = r(), a = 0;
+      if (n > 0.86) a = 0.55 + 0.45 * r();      // skipped specks
+      else a = Math.min(0.5, m * 0.32) + n * 0.12;  // mottling + tooth of the paper
+      var p = (y * s + x) * 4;
+      d[p] = d[p + 1] = d[p + 2] = 0; d[p + 3] = Math.round(a * 255);
+    }
+    g.putImageData(img, 0, 0);
+    return c;
+  }
+
   function create(o) {
     var canvas = o.canvas, glow = o.glow, host = o.host, places = o.places || [];
     var ctx = canvas.getContext && canvas.getContext("2d");
@@ -103,6 +134,8 @@
     var u, v, fade, depth, xs, cellList, drawList, vis, order, bOf, rad, rady, sx, sy, counts, starts;
     var markers = [];
     var act = new Float32Array(n), target = new Float32Array(n);
+    var mode = o.mode || "riso", paper = !!o.paper;
+    var inkA, inkB, actxA, actxB, grainPat, dprR = 1;
     var active = -1, all = false, paused = !!o.startPaused, visible = true;
     var raf = 0, last = 0, acc = 0, time = 0, intro = o.startPaused ? 1 : 0;
     var ptr = { on: false, x: 0, y: 0, lx: 0, ly: 0, moved: false };
@@ -115,6 +148,12 @@
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      dprR = dpr;
+      inkA = inkA || document.createElement("canvas"); inkB = inkB || document.createElement("canvas");
+      inkA.width = inkB.width = canvas.width; inkA.height = inkB.height = canvas.height;
+      actxA = inkA.getContext("2d"); actxB = inkB.getContext("2d");
+      actxA.setTransform(dpr, 0, 0, dpr, 0, 0); actxB.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (!grainPat) { var gt = grainTile(); grainPat = gt && ctx.createPattern(gt, "repeat"); }
       if (gctx) { glow.width = Math.ceil(W / 4); glow.height = Math.ceil(H / 4); }
       if (hctx) { haze.width = Math.ceil(W / 2); haze.height = Math.ceil(H / 2); }
 
@@ -271,7 +310,7 @@
         if (Lm > 1) Lm = 1;
 
         var dx2 = x - ccx, dy2 = y - ccy;
-        var mo = 0.5 + 0.25 * Math.cos(f1 * (x * ca + y * sa) + ph1) +
+        var mo = mode === "none" ? 0.62 : 0.5 + 0.25 * Math.cos(f1 * (x * ca + y * sa) + ph1) +
                  0.25 * Math.cos(f2 * Math.sqrt(dx2 * dx2 + dy2 * dy2) - ph2);
         var r = pch * 0.62 * Math.pow(Lm, 0.7) * (0.5 + 0.5 * Math.pow(mo, 1.2));
         if (r < 0.45) continue;
@@ -288,6 +327,7 @@
       var s0 = 0;
       for (var b2 = 0; b2 < NB; b2++) { starts[b2] = s0; s0 += counts[b2]; }
       for (k = 0; k < nv; k++) { var ii = vis[k]; order[starts[bOf[ii]]++] = ii; }
+      if (mode === "riso") { drawRiso(nv); afterDraw(); return; }
       var c0 = 0;
       for (b2 = 0; b2 < NB; b2++) {
         var c1 = c0 + counts[b2];
@@ -303,7 +343,7 @@
         }
         c0 = c1;
       }
-      if (cutPat && canTurn) {
+      if (mode === "moire" && cutPat && canTurn) {
         var a1 = 0.09 + 0.05 * Math.sin(t * 0.05), a2 = -0.19 + 0.05 * Math.cos(t * 0.043);
         cutPat.setTransform(new DOMMatrix().translate(t * 3.1, t * 1.3).rotate(a1 * 57.2958).scale(1, 1 + 0.06 * Math.sin(t * 0.09)));
         threadPat.setTransform(new DOMMatrix().translate(-t * 2.2, t * 0.8).rotate(a2 * 57.2958));
@@ -316,6 +356,10 @@
         ctx.fillStyle = threadPat; ctx.fillRect(0, 0, W, H);
         ctx.restore();
       }
+      afterDraw();
+    }
+
+    function afterDraw() {
       if (gctx) {
         gctx.clearRect(0, 0, glow.width, glow.height);
         gctx.drawImage(canvas, 0, 0, glow.width, glow.height);
@@ -324,6 +368,59 @@
         hctx.clearRect(0, 0, haze.width, haze.height);
         hctx.drawImage(canvas, 0, 0, haze.width, haze.height);
       }
+    }
+
+
+    // Risograph: two spot-ink drums printed separately, each its own solid ink
+    // with halftone dots, slightly out of register, with ink grain and mottling.
+    function hash(i) { var x = Math.sin(i * 12.9898) * 43758.5453; return x - Math.floor(x); }
+    function drawRiso(nv) {
+      var inks = paper
+        ? { a: "#0f8a8c", b: "#ff6a4d", op: "multiply" }    // Riso Teal + Fluorescent Orange on cream stock
+        : { a: "#1aa39d", b: "#ff6436", op: "screen" };     // the same inks, lifted for the dark page
+      var layers = [[actxA, inks.a, 0], [actxB, inks.b, 1]];
+      for (var L = 0; L < 2; L++) {
+        var g = layers[L][0], which = layers[L][2];
+        g.clearRect(0, 0, W, H);
+        g.fillStyle = layers[L][1];
+        g.beginPath();
+        for (var k = 0; k < nv; k++) {
+          var j = vis[k], t = bOf[j] / (NB - 1), d;
+          if (which === 0) d = smooth(-0.05, 0.5, t) * (1 - (paper ? 0.92 : 0.7) * smooth(0.66, 0.88, t));
+          else d = Math.min(1, 1.15 * smooth(0.6, 0.86, t));
+          if (d < 0.04) continue;
+          var sp = 0.9 + 0.2 * hash(j * 3 + which);           // ink spread varies dot to dot
+          var rr = rad[j] * Math.sqrt(d) * sp * (which ? 1.05 : 1.12), ry = rr * rady[j] / rad[j];
+          if (rr < 0.4) continue;
+          g.moveTo(sx[j] + rr, sy[j]);
+          g.ellipse(sx[j], sy[j], rr, ry, 0, 0, TAU);
+        }
+        g.fill();
+        if (cutPat && canTurn) {
+          // the moiré line screens, woven into each ink drum before it is printed,
+          // so the screens ride along with the 2px misregistration
+          var t = time, a1 = 0.09 + 0.05 * Math.sin(t * 0.05), a2 = -0.19 + 0.05 * Math.cos(t * 0.043);
+          cutPat.setTransform(new DOMMatrix().translate(t * 3.1, t * 1.3).rotate(a1 * 57.2958).scale(1, 1 + 0.06 * Math.sin(t * 0.09)));
+          threadPat.setTransform(new DOMMatrix().translate(-t * 2.2, t * 0.8).rotate(a2 * 57.2958));
+          g.save();
+          g.globalCompositeOperation = "destination-out";
+          g.globalAlpha = 0.66;
+          g.fillStyle = cutPat; g.fillRect(0, 0, W, H);
+          if (!paper) {
+            g.globalCompositeOperation = "source-atop";
+            g.globalAlpha = 0.3;
+            g.fillStyle = threadPat; g.fillRect(0, 0, W, H);
+          }
+          g.restore();
+        }
+      }
+      ctx.clearRect(0, 0, W, H);
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(inkA, 0, 0);
+      ctx.globalCompositeOperation = inks.op;
+      ctx.drawImage(inkB, 0, -2 * dprR);                     // the orange drum sits 2px above the teal
+      ctx.restore();
     }
 
     function frame(ts) {
@@ -378,6 +475,8 @@
       relayout: function () { relayout(true); },
       setPaused: function (b) { paused = !!b; if (paused) draw(); else kick(); },
       isPaused: function () { return paused; },
+      setMode: function (m) { mode = m; draw(); },
+      setPaper: function (b) { paper = !!b; draw(); },
       setActive: function (i) {
         active = i == null ? -1 : i;
         setTargets();
@@ -391,3 +490,4 @@
 
   window.WaterArt = { create: create };
 })();
+
