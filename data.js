@@ -87,6 +87,7 @@ window.SITE_DATA = {
           tags: ["Art", "Ecommerce"],
           status: "complete",
           href: "https://pastelprimate.com",
+          summary: "A lightweight ecommerce site built with my nuBrut Design System. Hosted on Cloudflare, with Stripe, Resend and Cloudflare CAPTCHA integrations.",
           preview: { type: "image", src: "previews/pastelprimate.jpg" },
         },
         {

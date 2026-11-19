@@ -1,9 +1,9 @@
 /*
-  Page transition: the tide.
-  Seen from above, a wave washes in over the page in the lake's riso print:
-  a lacy foam line leads, the swells roll in behind it, and the page underneath
-  stays sharp until the water covers it. The next page opens as the backwash
-  drains away, leaving a few wet specks that dry out.
+  Page transition: one wave.
+  Seen from above, a single wave washes down the screen in the lake's riso
+  print: a lacy foam line leads, the swells roll behind it, and the page
+  underneath stays sharp until the water covers it. On the next page the same
+  wave carries on down and off the bottom, leaving a few wet specks that dry.
 
   The water is printed exactly like the hero lake: two spot-ink drums (teal and
   fluorescent orange) of halftone dots, orange sitting 2px above the teal, with
@@ -84,29 +84,31 @@
   }
 
   // the shoreline of the wave: long and short undulations, plus a tongue of
-  // water that runs ahead toward the point you clicked
-  function shore(x, F, T, amp, bx, bulge) {
+  // water that runs ahead toward the point you clicked. dir is the side the
+  // water lies on: -1 above the line (washing down), +1 below it (passing on).
+  function shore(x, F, T, amp, bx, bulge, dir) {
     var y = F + amp * (0.55 * Math.sin(x * 0.0062 + T * 1.3 + 0.7) + 0.3 * Math.sin(x * 0.017 - T * 2.1 + 2.0) + 0.15 * Math.sin(x * 0.041 + T * 3.3));
-    if (bulge) { var q = (x - bx) / (W * 0.3); y -= bulge * Math.exp(-q * q); }
+    if (bulge) { var q = (x - bx) / (W * 0.3); y -= dir * bulge * Math.exp(-q * q); }
     return y;
   }
 
   function render(mode, F, amp, foamW, T, bx, bulge, fade) {
     ctx.clearRect(0, 0, W, H);
-    var i, k;
+    var i, k, dir = mode === "out" ? -1 : 1;
 
     // the water's body: a wet sheen running ahead, then the dark lake itself
     var step = 12, n = Math.ceil(W / step) + 2, fs = new Float32Array(n);
-    for (i = 0; i < n; i++) fs[i] = shore(i * step - step, F, T, amp, bx, bulge);
+    for (i = 0; i < n; i++) fs[i] = shore(i * step - step, F, T, amp, bx, bulge, dir);
     // drawn small and scaled up, so every edge is a true soft gradient: a damp
     // sheen running ahead of the water, then the body of the lake
     var poly = function (off, alpha, sc) {
       var sw = Math.ceil(W / sc) + 2, sh = Math.ceil(H / sc) + 2;
       if (soft.width !== sw || soft.height !== sh) { soft.width = sw; soft.height = sh; }
       sg.setTransform(1, 0, 0, 1, 0, 0); sg.clearRect(0, 0, sw, sh);
-      sg.beginPath(); sg.moveTo(-1, sh + 1);
-      for (var m = 0; m < n; m++) sg.lineTo((m * step - step) / sc, (fs[m] + off) / sc);
-      sg.lineTo(sw + 1, sh + 1); sg.closePath(); sg.fillStyle = BG; sg.fill();
+      var edge = dir > 0 ? sh + 1 : -1;
+      sg.beginPath(); sg.moveTo(-1, edge);
+      for (var m = 0; m < n; m++) sg.lineTo((m * step - step) / sc, (fs[m] + dir * off) / sc);
+      sg.lineTo(sw + 1, edge); sg.closePath(); sg.fillStyle = BG; sg.fill();
       ctx.save(); ctx.globalAlpha = alpha; ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
       ctx.drawImage(soft, 0, 0, sw * sc, sh * sc); ctx.restore();
     };
@@ -114,8 +116,8 @@
     poly(foamW * 0.62, 1, 7);
 
     for (i = 0; i < cols; i++) {
-      FR[i * 2] = shore((i - 0.5) * P, F, T, amp, bx, bulge);
-      FR[i * 2 + 1] = shore(i * P, F, T, amp, bx, bulge);
+      FR[i * 2] = shore((i - 0.5) * P, F, T, amp, bx, bulge, dir);
+      FR[i * 2 + 1] = shore(i * P, F, T, amp, bx, bulge, dir);
     }
 
     // the lake's moiré, on this grid
@@ -123,14 +125,14 @@
     var f1 = TAU * 1.09, f2 = TAU * 0.945, ph1 = T * 0.5, ph2 = T * 0.7;
     var ccx = cols * (0.5 + 0.2 * Math.sin(T * 0.045)), ccy = rows * (0.5 + 0.16 * Math.cos(T * 0.037));
     var deepL = 0.32 * H + 120, ahead = mode === "out" ? foamW * 0.75 : H * 0.5;
-    var foamK = mode === "out" ? 1 : 0.72;
+    var foamK = mode === "out" ? 1 : 0.6;
 
     ga.clearRect(0, 0, W, H); gb.clearRect(0, 0, W, H);
     ga.fillStyle = INK_A; gb.fillStyle = INK_B;
     ga.beginPath(); gb.beginPath();
     for (k = 0; k < N; k++) {
       var x = X[k], y = Y[k], col = (k % cols), row = (k / cols) | 0;
-      var d = y - FR[col * 2 + (row % 2)];
+      var d = dir * (y - FR[col * 2 + (row % 2)]);
       if (d < -ahead || y < -P || y > H + P) continue;
       var h = SP[k], Lm, c;
 
@@ -141,7 +143,7 @@
           var sf = 1 + d / ahead;
           Lm = 0.12 + 0.34 * sf; c = 0.62 + 0.3 * sf;
         } else {
-          // wet sand the backwash leaves behind, drying out
+          // wet specks the wave leaves behind as it passes, drying out
           if (h < 0.78) continue;
           var wf = Math.exp(d / (H * 0.085)) * fade;
           Lm = 0.1 + 0.32 * wf; c = 0.3 + 0.4 * wf;
@@ -200,27 +202,31 @@
     ctx.restore();
   }
 
-  /* mode "out": the wave washes in and covers the page. mode "in": the backwash drains away. */
+  /* One wave, washing down from the top, once. mode "out": its leading edge
+     covers this page. mode "in": on the next page the same wave keeps going,
+     its trailing edge carrying on down and off the bottom. The two halves meet
+     at the same speed, so it reads as a single pass. */
   function run(mode, bx, done) {
     mount();
-    var t0 = performance.now(), D = mode === "out" ? 0.92 : 0.98;
+    var t0 = performance.now(), D = mode === "out" ? 0.56 : 0.62;
     var m = Math.min(W, H), amp = 10 + m * 0.035, foamW = 44 + m * 0.04;
     var reach = H * 0.13;
-    var top = -(foamW * 1.5 + amp + 16), bottom = H + foamW * 0.8 + amp + reach + 24;
     if (bx == null) bx = W / 2;
     cancelAnimationFrame(raf);
     (function frame(now) {
       var p = Math.min(1, (now - t0) / 1000 / D), F, bulge = 0, fade = 1;
       if (mode === "out") {
-        // a surge that comes in quickly, then slows as it runs up the beach
-        var e = 0.5 * p * p * (3 - 2 * p) + 0.5 * (1 - (1 - p) * (1 - p));
-        F = bottom + (top - bottom) * e;
+        // the leading edge: in from the top, gathering speed
+        var a = -(foamW * 0.8 + amp + reach + 24), b = H + foamW * 1.5 + amp + 16;
+        var e = 0.7 * p + 0.3 * p * p;
+        F = a + (b - a) * e;
         bulge = reach * (1 - e * 0.85);
       } else {
-        // the backwash: it starts to drain at once, then runs off faster and faster
-        var e2 = 0.35 * p + 0.65 * Math.pow(p, 1.8);
-        F = top + (bottom - top) * e2;
-        fade = 1 - smooth(0.6, 1, p);
+        // the trailing edge: already moving, easing out past the bottom
+        var a2 = -(foamW * 1.5 + amp + 16), b2 = H + foamW * 0.8 + amp + 24;
+        var e2 = 1 - Math.pow(1 - p, 1.5);
+        F = a2 + (b2 - a2) * e2;
+        fade = 1 - smooth(0.55, 1, p);
       }
       render(mode, F, amp, foamW, clock(), bx, bulge, fade);
       if (p < 1) raf = requestAnimationFrame(frame);
@@ -234,7 +240,7 @@
     root.classList.add("flowing");
     var went = false, go = function () { if (!went) { went = true; window.location.href = url; } };
     run("out", x, go);
-    setTimeout(go, 1200);   // in case frames are throttled
+    setTimeout(go, 800);   // in case frames are throttled
   };
 
   /* arriving: the water that covered the last page drains off this one */
