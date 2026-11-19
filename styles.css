@@ -247,7 +247,7 @@ h2.sec em { font-style: italic; color: var(--accent-2); }
 .logo-item:hover img, .logo-item:hover .wordmark, .logo-item a:focus-visible img { opacity: 1; }
 
 /* Work */
-.work-list { margin-top: clamp(28px, 3.2vw, 44px); }
+.work-list { margin-top: clamp(56px, 7vw, 96px); }
 .group + .group { margin-top: 72px; }
 .group-h { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); padding-bottom: 14px; letter-spacing: 0.02em; }
 .group-h .count { font-variant-numeric: tabular-nums; }
@@ -275,8 +275,9 @@ h2.sec em { font-style: italic; color: var(--accent-2); }
 .row-link:hover .dot::before, .row-link:focus-visible .dot::before { animation: ring 1.8s var(--ease) infinite; }
 .row-link:hover .dot::after, .row-link:focus-visible .dot::after { animation: ring 1.8s var(--ease) 0.6s infinite; }
 @keyframes ring { 0% { opacity: 0.8; transform: scale(0.4); } 100% { opacity: 0; transform: scale(2.4); } }
-.ai { white-space: nowrap; display: inline-block; vertical-align: super; margin-left: 8px; font-size: max(11px, 0.24em); font-weight: 500;
+.ai { white-space: nowrap; display: inline-block; vertical-align: 2.1em; margin-left: 8px; font-size: max(10px, 0.2em);  font-weight: 500;
   letter-spacing: 0.06em; line-height: 1; color: var(--accent-2); border: 1px solid currentColor; border-radius: 999px; padding: 0.3em 0.6em; }
+@media (max-width: 760px) { .ai { vertical-align: 1.2em; } }
 .ic.out svg { width: 17px; height: 17px; }
 .row-link:hover .ic.out svg { transform: scale(1.15); }
 .li-ic { display: inline-block; vertical-align: -0.05em; }
