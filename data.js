@@ -100,6 +100,15 @@ window.SITE_DATA = {
           preview: { type: "image", src: "previews/eatyourvegetables.jpg" },
         },
         {
+          id: "photography",
+          title: "Portrait Photography",
+          tags: ["Photography", "Portraits"],
+          status: "complete",
+          href: "https://philmanyeung.mypixieset.com/",
+          summary: "Helping people see themselves in a new light.",
+          preview: { type: "image", src: "previews/pixieset.jpg" },
+        },
+        {
           id: "nwhacks",
           title: "nwHacks Brand Identity",
           tags: ["Brand Identity", "Product Design"],

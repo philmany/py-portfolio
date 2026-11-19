@@ -247,7 +247,7 @@ h2.sec em { font-style: italic; color: var(--accent-2); }
 .logo-item:hover img, .logo-item:hover .wordmark, .logo-item a:focus-visible img { opacity: 1; }
 
 /* Work */
-.work-list { margin-top: clamp(56px, 7vw, 96px); }
+.work-list { margin-top: clamp(28px, 3.2vw, 44px); }
 .group + .group { margin-top: 72px; }
 .group-h { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); padding-bottom: 14px; letter-spacing: 0.02em; }
 .group-h .count { font-variant-numeric: tabular-nums; }
