@@ -7,6 +7,17 @@ window.SITE_DATA = {
     name: "Philman Yeung",
     // {A|B|C} flips through titles; a single {word} is just accented.
     tagline: ["a {Product Manager} & {Designer|Founder|Artist|AI Native|Marketer|GTM Lead} that flows like water."],
+    taglineSpeed: 2400,   // milliseconds each title stays before the next flips in
+  },
+
+  /*
+    FOOTER, shown at the bottom of every page except the Pretzel case study.
+    Same syntax as the tagline: {A|B|C} flips through A, B and C like a rolodex,
+    {year} becomes the current year. Add, remove or reorder words between the bars.
+  */
+  footer: {
+    text: "© {year} Philman Yeung | {Product Manager|Designer|Founder|Artist|AI Native|Marketer|GTM Lead}",
+    speed: 4000,          // slower than the hero
   },
 
   // Shown in the About section. Placeholder until you write a longer introduction.

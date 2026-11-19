@@ -35,49 +35,19 @@
   }
   function pad2(n) { return (n < 10 ? "0" : "") + n; }
 
-  // A word that flips like a rolodex through several titles.
-  function roller(words) {
-    var box = el("span", { class: "roll", "aria-hidden": "true" });
-    var sr = el("span", { class: "sr", text: words.join(", ") });
-    var sizer = el("span", { class: "roll-size", text: words[0] });
-    box.appendChild(sizer);
-    var cur = el("span", { class: "roll-w in", text: words[0] });
-    box.appendChild(cur);
-    var i = 0;
-    if (!reduce) setInterval(function () {
-      if (document.hidden) return;
-      i = (i + 1) % words.length;
-      var next = el("span", { class: "roll-w", text: words[i] });
-      box.appendChild(next);
-      sizer.textContent = words[i];
-      cur.classList.remove("in"); cur.classList.add("out");
-      var old = cur; setTimeout(function () { old.remove(); }, 700);
-      requestAnimationFrame(function () { requestAnimationFrame(function () { next.classList.add("in"); }); });
-      cur = next;
-    }, 2400);
-    var wrap = el("span", { class: "roll-wrap" }, box, sr);
-    return wrap;
-  }
-
   /* ---------- text ---------- */
   $("#brand").textContent = D.person.name;
   $("#hero-name").textContent = D.person.name;
   [].concat(D.person.tagline).forEach(function (line, i) {
     if (i) $("#hero-tagline").appendChild(el("br"));
-    line.split(/(\{[^}]*\})/).forEach(function (part) {
-      if (!part) return;
-      if (part[0] !== "{") { $("#hero-tagline").appendChild(document.createTextNode(part)); return; }
-      var words = part.slice(1, -1).split("|");
-      if (words.length === 1) { $("#hero-tagline").appendChild(el("em", { text: words[0] })); return; }
-      $("#hero-tagline").appendChild(roller(words));
-    });
+    window.Rolodex.fill($("#hero-tagline"), line, D.person.taglineSpeed);
   });
   [].concat(D.introduction).forEach(function (line, i) {
     if (i) $("#about-h").appendChild(el("br"));
     $("#about-h").appendChild(document.createTextNode(line));
   });
   $("#about-h").setAttribute("data-split", "");
-  $("#copy").textContent = "© " + new Date().getFullYear() + " " + D.person.name;
+  window.Rolodex.fill($("#copy"), D.footer.text, D.footer.speed);
 
   D.links.forEach(function (l) {
     var li = el("li");
