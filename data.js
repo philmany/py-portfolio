@@ -101,8 +101,8 @@ window.SITE_DATA = {
         },
         {
           id: "photography",
-          title: "Portrait Photography",
-          tags: ["Photography", "Portraits"],
+          title: "Philman Photography",
+          tags: ["Portraits"],
           status: "complete",
           href: "https://philmanyeung.mypixieset.com/",
           summary: "Helping people see themselves in a new light.",
