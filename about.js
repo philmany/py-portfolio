@@ -27,7 +27,7 @@
     if (l.text) li.appendChild(el("small", { class: "addr", text: l.text }));
     $("#links").appendChild(li);
   });
-  window.Rolodex.fill($("#copy"), D.footer.text, D.footer.speed);
+  $("#copy").textContent = "© " + new Date().getFullYear() + " " + ((D.person && D.person.name) || "Philman Yeung");
 
   /* portrait: a photo if one is set, otherwise a field of dots from the lake */
   var fig = $("#portrait"), cv = $("#portrait-dots");

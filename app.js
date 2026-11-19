@@ -44,10 +44,10 @@
   });
   [].concat(D.introduction).forEach(function (line, i) {
     if (i) $("#about-h").appendChild(el("br"));
-    $("#about-h").appendChild(document.createTextNode(line));
+    window.Rolodex.fill($("#about-h"), line, D.introductionSpeed);
   });
   $("#about-h").setAttribute("data-split", "");
-  window.Rolodex.fill($("#copy"), D.footer.text, D.footer.speed);
+  $("#copy").textContent = "© " + new Date().getFullYear() + " " + D.person.name;
 
   D.links.forEach(function (l) {
     var li = el("li");
@@ -442,6 +442,10 @@
             f.appendChild(el("span", { class: "w" }, el("span", { text: t })));
           });
           c.parentNode.replaceChild(f, c);
+        } else if (c.nodeType === 1 && c.classList.contains("roll-wrap")) {
+          // a rolodex word rises in with the rest, then keeps flipping on its own
+          var w = el("span", { class: "w" }), inner = el("span");
+          c.parentNode.replaceChild(w, c); inner.appendChild(c); w.appendChild(inner);
         } else if (c.nodeType === 1) walk(c);
       });
     })(h);

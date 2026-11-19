@@ -38,8 +38,7 @@ Open http://localhost:8000. Use a local server rather than double-clicking the f
 ## Updating content (`data.js`)
 
 - **Name and tagline**: `person`. In `tagline`, `{A|B|C}` flips through A, B and C like a rolodex; `taglineSpeed` is how long each stays (ms).
-- **Footer**: `footer.text` uses the same `{A|B|C}` rolodex syntax, plus `{year}` for the current year; `footer.speed` sets its pace (ms). The flip itself lives in `rolodex.js`.
-- **About**: `introduction`.
+- **Closing heading**: `introduction` is the big "Product Manager & Designer." heading; it uses the same `{A|B|C}` rolodex syntax, and `introductionSpeed` sets its pace (ms). The flip itself lives in `rolodex.js`.
 - **Links**: `links`. Give Resume a `url`. For Email use `url: "mailto:you@example.com"` and `text: "you@example.com"`.
 - **Play**: `play[].items`, same fields as Work. For an outside site, set `href` to its URL and `preview: { type: "image", src: "previews/....jpg" }`.
 - **Projects**: `work[].items`. Turn a placeholder into a case study by building its page (copy how `pretzel.html` is set up), then set `status: "complete"`, `href: "your-page.html"` and `preview: { type: "page", src: "your-page.html#preview" }`.

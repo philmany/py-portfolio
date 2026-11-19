@@ -10,19 +10,10 @@ window.SITE_DATA = {
     taglineSpeed: 2400,   // milliseconds each title stays before the next flips in
   },
 
-  /*
-    FOOTER, shown at the bottom of every page except the Pretzel case study.
-    Same syntax as the tagline: {A|B|C} flips through A, B and C like a rolodex,
-    {year} becomes the current year. Add, remove or reorder words between the bars.
-  */
-  footer: {
-    text: "© {year} Philman Yeung | {Product Manager|Designer|Founder|Artist|AI Native|Marketer|GTM Lead}",
-    speed: 4000,          // slower than the hero
-  },
-
-  // Shown in the About section. Placeholder until you write a longer introduction.
-  // About heading, one string per line.
-  introduction: ["Product Manager", "& Designer."],
+  // The big closing heading on the home page, one string per line. Same syntax as the
+  // tagline: {A|B|C} flips through A, B and C like a rolodex.
+  introduction: ["Product Manager", "& {Designer|Founder|Artist|AI Native|Marketer|GTM Lead}."],
+  introductionSpeed: 4000,  // milliseconds per word, slower than the hero
 
   /*
     WORK
