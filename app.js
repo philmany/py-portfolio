@@ -428,7 +428,7 @@
     hidePeek();
     if (window.flowTo) window.flowTo(href, x, y); else window.location.href = href;
   }
-  $$('.nav a[href$=".html"]').forEach(function (a) { a.addEventListener("click", goTo); });
+  $$('.nav a[href$=".html"], .nav a[href^="/"]').forEach(function (a) { a.addEventListener("click", goTo); });
 
   /* ---------- reveal + split headings (same approach as the Pretzel page) ---------- */
   $$("[data-split]").forEach(function (h) {

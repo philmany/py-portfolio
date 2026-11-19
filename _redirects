@@ -1,0 +1,3 @@
+# Cloudflare Pages redirects. Pretzel moved to /work/pretzel.
+/pretzel        /work/pretzel  301
+/pretzel.html   /work/pretzel  301

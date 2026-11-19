@@ -4,20 +4,22 @@ Plain HTML, CSS and JavaScript. No build step, no dependencies.
 
 ## Run it
 
+Links use clean URLs (`/about`, `/work/pretzel`), which a plain static server can't resolve. Preview with Cloudflare's local server so links, `_redirects` and `404.html` behave like production:
+
 ```
-cd portfolio
-python3 -m http.server 8000
+cd py-portfolio
+npx wrangler pages dev .
 ```
 
-Open http://localhost:8000. Use a local server rather than double-clicking the file: the live Pretzel preview loads `pretzel.html` in a frame, and browsers block that from `file://`.
+## Deploy (Cloudflare Pages)
 
-## Deploy on Vercel
+Production is philmanyeung.com on Cloudflare Pages, built from `main` (no build command, output directory `/`). Any other branch gets a private preview deployment on pages.dev.
 
-1. In Vercel, choose **Add New → Project** and import this GitHub repository.
-2. Framework preset: **Other**. Leave the build command and output directory empty (it's a static site).
-3. Deploy. Every push to `main` redeploys.
-
-`vercel.json` turns on clean URLs, so the case study lives at `/pretzel`. `pretzel.html` and `img/` are the Pretzel case study, now a page of this site.
+- Clean URLs: `about.html` is served at `/about`, `work/pretzel.html` at `/work/pretzel`.
+- `_redirects`: old Pretzel URLs (`/pretzel`, `/pretzel.html`) 301 to `/work/pretzel`.
+- `404.html`: served for any missing URL.
+- `sitemap.xml`, `robots.txt`, `llms.txt`: for search engines and AI crawlers. Add each new case study to `sitemap.xml`.
+- In the Cloudflare dashboard, SSL/TLS > Edge Certificates > Always Use HTTPS should be on (http to https 301).
 
 ## Files
 
@@ -33,7 +35,7 @@ Open http://localhost:8000. Use a local server rather than double-clicking the f
 | `sound.js` | The wave sound (generated in the browser, starts muted; speaker button bottom right). |
 | `previews/` | Screenshots used as hover previews for sites that can't be embedded (e.g. Pastel Primate). |
 | `Resume_2027_PhilmanYeung.pdf` | Your resume, linked from About. |
-| `pretzel.html`, `img/` | The Pretzel 1.0 case study, grafted in unchanged except for two things listed below. |
+| `work/pretzel.html`, `img/` | The Pretzel 1.0 case study at /work/pretzel, grafted in unchanged except for the things listed below. |
 
 ## Updating content (`data.js`)
 
@@ -41,13 +43,14 @@ Open http://localhost:8000. Use a local server rather than double-clicking the f
 - **Closing heading**: `introduction` is the big "Product Manager & Designer." heading; it uses the same `{A|B|C}` rolodex syntax, and `introductionSpeed` sets its pace (ms). The flip itself lives in `rolodex.js`.
 - **Links**: `links`. Give Resume a `url`. For Email use `url: "mailto:you@example.com"` and `text: "you@example.com"`.
 - **Play**: `play[].items`, same fields as Work. For an outside site, set `href` to its URL and `preview: { type: "image", src: "previews/....jpg" }`.
-- **Projects**: `work[].items`. Turn a placeholder into a case study by building its page (copy how `pretzel.html` is set up), then set `status: "complete"`, `href: "your-page.html"` and `preview: { type: "page", src: "your-page.html#preview" }`.
+- **Projects**: `work[].items`. Turn a placeholder into a case study by building its page (copy how `pretzel.html` is set up), as `work/<slug>.html` (copy how `work/pretzel.html` is set up, root-relative paths), then set `status: "complete"`, `href: "/work/<slug>"` and `preview: { type: "page", src: "/work/<slug>#preview" }`, and add the URL to `sitemap.xml`. Each item already has its reserved `slug`.
 - **Water memories**: `water.places` (grouped in Play by `region`, in list order). `last` ("YYYY-MM") sets how often rain falls there; `at`, `atNarrow`, `size`, `label` only place the outline. Outlines are in `shapes.js`, keyed by the same name.
 
 ## Changes made to the Pretzel page
 
-1. The top-left "Philman Yeung" link now goes back to `index.html#work`.
-2. A short script at the end adds a preview mode (`pretzel.html#preview`): navigation hidden, slow auto-scroll while the hover preview is showing. Without `#preview` the page behaves exactly as before.
+1. The top-left "Philman Yeung" link now goes back to `/#work`.
+3. Moved to `work/` with root-relative asset paths (`/img/...`, `/flow.js`) so it works at `/work/pretzel`.
+2. A short script at the end adds a preview mode (`/work/pretzel#preview`): navigation hidden, slow auto-scroll while the hover preview is showing. Without `#preview` the page behaves exactly as before.
 
 ## How the water works
 

@@ -19,6 +19,9 @@ window.SITE_DATA = {
     WORK
     status "complete": the row links to `href` and hovering shows a live preview of that page.
     status "placeholder": the row expands in place and says "Case study in progress".
+    slug: the case study's reserved URL, /work/<slug>. Build work/<slug>.html (copy
+          work/pretzel.html), then set status "complete" and href "/work/<slug>",
+          and add the URL to sitemap.xml. Not read by any code until then.
     preview.colors: the two colours used for a placeholder's dot thumbnail.
   */
   work: [
@@ -26,7 +29,7 @@ window.SITE_DATA = {
       group: "Product Management",
       items: [
         {
-          id: "msads",
+          id: "msads", slug: "msftadvertising",
           title: "Microsoft Advertising",
           tags: ["Monetization", "Content Safety", "LLM"],
           status: "placeholder",
@@ -34,7 +37,7 @@ window.SITE_DATA = {
           preview: { type: "art", colors: ["#2b6cd6", "#5fd3c4"] },
         },
         {
-          id: "volta",
+          id: "volta", slug: "volta",
           title: "VOLTA Physiotherapy",
           tags: ["Connected Device", "Hardware"],
           status: "placeholder",
@@ -42,7 +45,7 @@ window.SITE_DATA = {
           preview: { type: "art", colors: ["#7b5cff", "#ff8f62"] },
         },
         {
-          id: "loreal",
+          id: "loreal", slug: "loreal",
           title: "L’Oréal AR Funnel Optimization",
           tags: ["Augmented Reality", "Ecommerce"],
           status: "placeholder",
@@ -55,15 +58,15 @@ window.SITE_DATA = {
       group: "Design",
       items: [
         {
-          id: "pretzel",
+          id: "pretzel", slug: "pretzel",
           title: "Pretzel 1.0 Design System",
           tags: ["Design System", "iOS", "Figma"],
           status: "complete",
-          href: "pretzel.html",
-          preview: { type: "page", src: "pretzel.html#preview" },
+          href: "/work/pretzel",
+          preview: { type: "page", src: "/work/pretzel#preview" },
         },
         {
-          id: "bandit",
+          id: "bandit", slug: "bandit-labs",
           title: "Bandit Labs Redesign",
           tags: ["Product Design", "Dashboard"],
           status: "placeholder",
@@ -111,7 +114,7 @@ window.SITE_DATA = {
           preview: { type: "image", src: "previews/pixieset.jpg" },
         },
         {
-          id: "nwhacks",
+          id: "nwhacks", slug: "nwhacks",
           title: "nwHacks Brand Identity",
           tags: ["Brand Identity", "Product Design"],
           status: "placeholder",
@@ -178,7 +181,7 @@ window.SITE_DATA = {
   },
 
   links: [
-    { label: "Resume", url: "Resume_2027_PhilmanYeung.pdf" },
+    { label: "Resume", url: "/Resume_2027_PhilmanYeung.pdf" },
     { label: "LinkedIn", url: "https://www.linkedin.com/in/philmanyeung/" },
     { label: "Email", url: "mailto:philmanyeung@gmail.com", text: "philmanyeung@gmail.com" },
   ],

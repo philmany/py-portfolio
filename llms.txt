@@ -1,0 +1,15 @@
+# Philman Yeung
+
+> Product manager and designer based in Toronto, Ontario, Canada. Former Microsoft Advertising PM for monetization and AI ad content safety across 70+ markets; previously Digital Product Manager at L'Oréal and co-founder of VOLTA Physiotech, a physiotherapy device startup.
+
+Strongest in monetization, experimentation, UX and design systems. Open to Product Manager, Product Analyst, Business Analyst and Go-To-Market Product Manager roles in downtown Toronto or remote across Canada and the US.
+
+## Pages
+
+- [Pretzel 1.0 Design System case study](https://philmanyeung.com/work/pretzel): building an iOS design system in Figma for the Snack app
+- [About](https://philmanyeung.com/about): background, story and contact links
+- [Resume (PDF)](https://philmanyeung.com/Resume_2027_PhilmanYeung.pdf)
+
+## Elsewhere
+
+- [LinkedIn](https://www.linkedin.com/in/philmanyeung/)
