@@ -1,0 +1,13 @@
+{
+  // Cloudflare Worker serving this static site at philmanyeung.com.
+  // The name must match the existing Worker, or a deploy creates a second one.
+  "name": "py-portfolio",
+  "compatibility_date": "2025-11-01",
+  "assets": {
+    "directory": ".",
+    // Clean URLs: about.html is served at /about, work/pretzel.html at /work/pretzel.
+    "html_handling": "auto-trailing-slash",
+    // Missing URLs get 404.html with a real 404 status.
+    "not_found_handling": "404-page"
+  }
+}

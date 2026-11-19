@@ -1,0 +1,7 @@
+# Repo files that should not be served on philmanyeung.com
+.git
+wrangler.jsonc
+.assetsignore
+README.md
+.gitignore
+.nojekyll

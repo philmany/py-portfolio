@@ -11,13 +11,13 @@ cd py-portfolio
 npx wrangler pages dev .
 ```
 
-## Deploy (Cloudflare Pages)
+## Deploy (Cloudflare Workers)
 
-Production is philmanyeung.com on Cloudflare Pages, built from `main` (no build command, output directory `/`). Any other branch gets a private preview deployment on pages.dev.
+Production is philmanyeung.com, served by the Cloudflare Worker `py-portfolio` (static assets only), deployed from `main`. `wrangler.jsonc` holds its settings; `.assetsignore` keeps repo files like this README off the site.
 
 - Clean URLs: `about.html` is served at `/about`, `work/pretzel.html` at `/work/pretzel`.
 - `_redirects`: old Pretzel URLs (`/pretzel`, `/pretzel.html`) 301 to `/work/pretzel`.
-- `404.html`: served for any missing URL.
+- `404.html`: served for any missing URL (`not_found_handling: "404-page"` in `wrangler.jsonc`).
 - `sitemap.xml`, `robots.txt`, `llms.txt`: for search engines and AI crawlers. Add each new case study to `sitemap.xml`.
 - In the Cloudflare dashboard, SSL/TLS > Edge Certificates > Always Use HTTPS should be on (http to https 301).
 
