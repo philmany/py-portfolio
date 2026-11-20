@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
 Sitemap: https://philmanyeung.com/sitemap.xml
+# Plain-text summary for AI assistants: https://philmanyeung.com/llms.txt
