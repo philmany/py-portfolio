@@ -8,6 +8,8 @@ window.SITE_DATA = {
     // {A|B|C} flips through titles; a single {word} is just accented.
     tagline: ["a {Product Manager} & {Designer|Founder|Artist|AI Native|Marketer|GTM Lead} that flows like water."],
     taglineSpeed: 2400,   // milliseconds each title stays before the next flips in
+    // "Book a Meeting" button in the hero. Opens in a new tab.
+    bookingUrl: "https://calendly.com/philmanyeung/30min",
   },
 
   // The big closing heading on the home page, one string per line. Same syntax as the

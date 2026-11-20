@@ -41,6 +41,7 @@ Production is the Cloudflare Worker `py-portfolio` (static assets only), deploye
 
 ## Editing `data.js`
 
+- **Booking** (`person.bookingUrl`): the hero's Book a Meeting button (Calendly, new tab). Remove the field to hide the button.
 - **Rolodex text** (`person.tagline`, `introduction`): `{A|B|C}` flips through options, `{word}` accents, `{year}` is the current year. Speed is set by `taglineSpeed` / `introductionSpeed` (ms).
 - **Work and Play**: `work[].items`, `play[].items`. Outside sites use `href` plus `preview: { type: "image", src: "previews/..." }`.
 - **New case study**: build `work/<slug>.html` like Pretzel (root-relative paths), then set `status: "complete"`, `href: "/work/<slug>"`, `preview: { type: "page", src: "/work/<slug>#preview" }`, and add it to `sitemap.xml`.

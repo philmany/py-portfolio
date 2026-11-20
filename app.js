@@ -38,6 +38,7 @@
   /* ---------- text ---------- */
   $("#brand").textContent = D.person.name;
   $("#hero-name").textContent = D.person.name;
+  if (D.person.bookingUrl) $("#book").href = D.person.bookingUrl; else $("#book").remove();
   [].concat(D.person.tagline).forEach(function (line, i) {
     if (i) $("#hero-tagline").appendChild(el("br"));
     window.Rolodex.fill($("#hero-tagline"), line, D.person.taglineSpeed);
@@ -139,7 +140,7 @@
     });
     hero.classList.toggle("focus", !!on);
   }
-  hero.addEventListener("click", function (e) { if (!e.target.closest(".mem, .ctl, a")) setOn(null, false); });
+  hero.addEventListener("click", function (e) { if (!e.target.closest(".mem, .ctl, .ctl-r, .cue-wrap, a")) setOn(null, false); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") setOn(null, false); });
 
   // Size and place each outline on the lake; returns markers for the water engine.
@@ -182,7 +183,11 @@
     canvas: $("#water"), glow: $("#glow"), haze: $("#haze"), host: hero, places: W.places, startPaused: reduce,
     getQuietRects: function () {
       // the title; the outlines carry their own close feather (CSS drop-shadow)
+      // ~30% more black water around the headline and the booking button
       var r = [rel($("#hero-name"), 34), rel($("#hero-tagline"), 26)];
+      var bk = $("#book"); if (bk) r.push(rel(bk, 34));
+      var cv = $("#cv"); if (cv) r.push(rel(cv, 30));
+      r.forEach(function (q) { var g = 1.3; q.padY = (q.h / 2 + q.pad) * g - q.h / 2; q.pad = (q.w / 2 + q.pad) * g - q.w / 2; });
       return r;
     },
     getMarkers: function (w, h) { return placeShapes(w, h); },
@@ -330,14 +335,17 @@
   });
 
   /* "new page" tooltip for every link that leaves the site */
-  var tip = el("div", { class: "tip", role: "tooltip", id: "tip", text: "This will send you to a new page" });
+  var tip = el("div", { class: "tip", role: "tooltip", id: "tip", text: "" });
   document.body.appendChild(tip);
+  var TIP = "Clicking will send you to a new page";
   function tipAt(a) {
+    tip.textContent = a.getAttribute("data-tip") || TIP;
     var anchor = $(".ic", a) || $("img", a) || $(".li-ic", a) || a, r = anchor.getBoundingClientRect();
     tip.classList.add("on");
     var w = tip.offsetWidth, x = r.left + r.width / 2 - w / 2;
     x = Math.max(12, Math.min(window.innerWidth - w - 12, x));
-    tip.style.transform = "translate(" + x.toFixed(0) + "px," + (r.top - tip.offsetHeight - 10).toFixed(0) + "px)";
+    var below = a.id === "book" || a.id === "cv";  // the hero button: keep the tagline visible
+    tip.style.transform = "translate(" + x.toFixed(0) + "px," + (below ? r.bottom + 12 : r.top - tip.offsetHeight - 10).toFixed(0) + "px)";
   }
   function tipOff() { tip.classList.remove("on"); }
   $$('a[target="_blank"]').forEach(function (a) {
@@ -474,4 +482,60 @@
   var nav = $(".nav");
   window.addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
   onScroll();
+
+  /* ---------- demo cursor: an orange pointer hovers Microsoft Advertising to show rows preview ----------
+     Plays when "View my Work" is clicked, or when the list has been in view for 1s without the visitor hovering it. */
+  (function () {
+    var row = $('#work-list .row[data-id="msads"]');
+    if (!row || reduce || !fine.matches || !("IntersectionObserver" in window)) return;
+    var ttl = $(".ttl", row), wl = $("#work-list"), autoPlays = 0, timer = 0, waitT = 0, live = false, hovered = false;
+    var cursor = el("div", { class: "demo-cursor", "aria-hidden": "true",
+      html: '<svg viewBox="0 0 28 28"><path d="M5 3l17 9.6-7.6 1.9 4.4 8.3-3.4 1.8-4.4-8.3L5.6 21.6z" fill="#ff8a3d" stroke="#140a18" stroke-width="1.6" stroke-linejoin="round"/></svg>' });
+    document.body.appendChild(cursor);
+    function at(x, y, ms) {
+      cursor.style.transition = "opacity 0.4s" + (ms ? ", transform " + ms + "ms cubic-bezier(0.45, 0, 0.2, 1)" : "");
+      cursor.style.transform = "translate(" + x.toFixed(0) + "px," + y.toFixed(0) + "px)";
+    }
+    function clear() {
+      clearTimeout(timer); live = false;
+      cursor.classList.remove("on", "press"); row.classList.remove("demo"); wl.classList.remove("demo-on");
+      if (cur === "msads") hidePeek();
+    }
+    function later(fn, ms) { clearTimeout(timer); timer = setTimeout(fn, ms); }
+    function inView() { var t = ttl.getBoundingClientRect(); return t.top > 70 && t.bottom < window.innerHeight - 40; }
+    function play(tries) {
+      tries = tries || 0;
+      if (!inView()) { if (tries < 8) later(function () { play(tries + 1); }, 400); return; }
+      var t = ttl.getBoundingClientRect();
+      live = true;
+      var ex = t.left + Math.min(t.width * 0.55, 320), ey = t.top + t.height * 0.5;
+      at(ex + 170, ey + 120, 0);
+      cursor.offsetWidth;
+      cursor.classList.add("on");
+      at(ex, ey, 1200);
+      later(function () {
+        row.classList.add("demo"); wl.classList.add("demo-on"); showPeek("msads", ex, ey);
+        cursor.classList.add("press");
+        setTimeout(function () { cursor.classList.remove("press"); }, 220);
+        later(function () {
+          row.classList.remove("demo"); wl.classList.remove("demo-on"); if (cur === "msads") hidePeek();
+          at(ex + 120, ey + 90, 900); cursor.classList.remove("on"); live = false;
+        }, 2200);
+      }, 1250);
+    }
+    // a real hover on the list (the mouse actually moving) means they get it
+    wl.addEventListener("pointermove", function (e) { if (!live && (e.movementX || e.movementY)) { hovered = true; clearTimeout(waitT); } });
+    window.addEventListener("scroll", function () { if (live) clear(); }, { passive: true });
+    // 1s in view without a hover: show them
+    var io = new IntersectionObserver(function (es) {
+      clearTimeout(waitT);
+      if (es[0].isIntersecting && !hovered && !live && autoPlays < 2) {
+        waitT = setTimeout(function () { if (!hovered && !live) { autoPlays++; play(); } }, 1000);
+      }
+    }, { threshold: 0.6 });
+    io.observe(row);
+    // "View my Work": always show it once the scroll lands
+    var cue = $("#cue");
+    if (cue) cue.addEventListener("click", function () { clearTimeout(waitT); clear(); later(function () { play(); }, 1000); });
+  })();
 })();

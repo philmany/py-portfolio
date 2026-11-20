@@ -46,18 +46,28 @@
     <div class="hero-text" id="hero-text">
       <h1 id="hero-name"></h1>
       <p id="hero-tagline"></p>
+      <a class="book" id="book" target="_blank" rel="noopener" data-tip="Clicking will open a new tab for Philman’s Calend.ly">Book a Meeting
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg>
+      </a>
+      <a class="cv" id="cv" href="/Resume_2027_PhilmanYeung.pdf" target="_blank" rel="noopener">Here’s my resume.</a>
     </div>
     <div class="mem-layer" id="mem-layer" role="group" aria-label="Memories in the water. The same list is in the Play section."></div>
     <div class="hero-ctl">
       <button type="button" class="ctl" id="memories" aria-pressed="false"><span class="sw" aria-hidden="true"><i></i></span>Water contains memories.</button>
-      <button type="button" class="ctl sound" id="sound" aria-pressed="false" aria-label="Play the sound of the waves">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/>
-          <path class="wv" d="M15.5 9a4.2 4.2 0 0 1 0 6"/><path class="wv" d="M18 6.5a7.6 7.6 0 0 1 0 11"/>
-          <path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/>
-        </svg>
-      </button>
-      <button type="button" class="ctl" id="pause" aria-pressed="false"><span class="pz" aria-hidden="true"></span><span class="pl">Pause motion</span></button>
+      <div class="cue-wrap">
+        <a class="cue" id="cue" href="#work"><img class="ava" src="/img/avatar.jpg" width="34" height="34" alt="">View my Work
+          <svg class="caret" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg></a>
+      </div>
+      <div class="ctl-r">
+        <button type="button" class="ctl sound" id="sound" aria-pressed="false" aria-label="Play the sound of the waves">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/>
+            <path class="wv" d="M15.5 9a4.2 4.2 0 0 1 0 6"/><path class="wv" d="M18 6.5a7.6 7.6 0 0 1 0 11"/>
+            <path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/>
+          </svg>
+        </button>
+        <button type="button" class="ctl" id="pause" aria-pressed="false"><span class="pz" aria-hidden="true"></span><span class="pl">Pause motion</span></button>
+      </div>
     </div>
   </section>
 
@@ -71,7 +81,7 @@
   <section class="section" id="work" aria-labelledby="work-h">
     <div class="wrap">
       <h2 class="sec" id="work-h" data-split><em>Work.</em></h2>
-      <p class="sec-sub lead wide rv">Data is water, it’s where creation begins.<br><span class="nowrap">Pipeline, experiment or user-flow, I channel where it needs to go.</span></p>
+      <p class="sec-sub lead wide rv">Data is water. Pipeline, experiment or userflow, I channel where it needs to go.</p>
       <div class="work-list" id="work-list"></div>
     </div>
   </section>

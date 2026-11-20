@@ -192,7 +192,7 @@
         var q = 1;
         for (var r = 0; r < rects.length; r++) {
           var Q = rects[r];
-          var nx = (px - (Q.x + Q.w / 2)) / (Q.w / 2 + Q.pad), ny = (py - (Q.y + Q.h / 2)) / (Q.h / 2 + Q.pad);
+          var nx = (px - (Q.x + Q.w / 2)) / (Q.w / 2 + Q.pad), ny = (py - (Q.y + Q.h / 2)) / (Q.h / 2 + (Q.padY != null ? Q.padY : Q.pad));
           var fl = Q.floor || 0;
           q = Math.min(q, fl + (1 - fl) * smooth(0.45, 1.3, Math.sqrt(nx * nx + ny * ny)));
         }
