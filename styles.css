@@ -1,6 +1,9 @@
 /* One dark world. Centred halftone pool, then a single editorial column. */
-/* Type. Both families are self-hosted from fonts/ as WOFF2.
-   ZT Nature: body and UI (Regular, Italic, Bold, Bold Italic). ZT Formom: display serif (Regular, Italic). */
+/* Type. All type is self-hosted from fonts/ as WOFF2.
+   ZT Nature: body and UI (Regular, Italic, Bold, Bold Italic). FT Mythoria: display script for headings. It has one style, already slanted, so the italic face
+   points at the same file (no fake extra slant). ZT Formom sits behind it for any character Mythoria lacks. */
+@font-face { font-family: "FT Mythoria"; src: url("fonts/FTMythoria-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "FT Mythoria"; src: url("fonts/FTMythoria-Regular.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
 @font-face { font-family: "ZT Nature"; src: url("fonts/ZTNature-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: "ZT Nature"; src: url("fonts/ZTNature-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
 @font-face { font-family: "ZT Nature"; src: url("fonts/ZTNature-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
@@ -18,7 +21,7 @@
   --accent: #5fd3c4;
   --accent-2: #ff8a3d;
   --sans: "ZT Nature", "Helvetica Neue", Arial, sans-serif;
-  --serif: "ZT Formom", "Iowan Old Style", Georgia, serif;
+  --serif: "FT Mythoria", "ZT Formom", "Iowan Old Style", Georgia, serif;
   --gutter: clamp(20px, 4vw, 56px);
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-io: cubic-bezier(0.77, 0, 0.18, 1);
