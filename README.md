@@ -16,7 +16,7 @@ Production is the Cloudflare Worker `py-portfolio` (static assets only), deploye
 - Clean URLs: `about.html` serves at `/about`, `work/pretzel.html` at `/work/pretzel`.
 - `_redirects`: old `/pretzel` and `/pretzel.html` 301 to `/work/pretzel`.
 - `404.html` serves any missing URL with a real 404.
-- SEO: `sitemap.xml`, `robots.txt`, `llms.txt`, Person schema. Add each new case study to `sitemap.xml`.
+- SEO: `sitemap.xml`, `robots.txt`, `llms.txt`, Person schema. `llms.txt` is listed in the sitemap, noted in `robots.txt` and linked from each page's `<head>`. Add each new case study to `sitemap.xml` and `llms.txt`.
 - Keep Cloudflare SSL/TLS > Always Use HTTPS on.
 - Old trial copy: philmany.github.io/py-portfolio (retire via Settings > Pages > Unpublish).
 
@@ -27,6 +27,7 @@ Production is the Cloudflare Worker `py-portfolio` (static assets only), deploye
 | `data.js` | All content: tagline, work, play, brands, links, water memories. The file you edit. |
 | `index.html`, `about.html` | Home and About pages. |
 | `styles.css` | Look and layout; tokens in `:root`. |
+| `fonts/` | Self-hosted WOFF2: ZT Nature (body) and PP Editorial New (headings). |
 | `app.js`, `about.js` | Build each page from `data.js`: work list, hover previews, Play list, reveals. |
 | `water.js` | The hero lake: 2.5D halftone dots printed as a two-ink riso (teal + orange) with moiré line screens. Palette in `STOPS`. |
 | `flow.js` | Page transition: one riso wave washes down the screen and carries on into the next page. |
@@ -48,4 +49,4 @@ Production is the Cloudflare Worker `py-portfolio` (static assets only), deploye
 
 ## Pretzel page changes
 
-Resynced from `philmany/pretzel-case-study` on request. Local edits: the name link returns to `/#work`, assets use root-relative paths, and `#preview` hides navigation and slowly auto-scrolls for the hover preview.
+Resynced from `philmany/pretzel-case-study` on request. Local edits: the name link returns to `/#work`, assets use root-relative paths, and `#preview` hides navigation and slowly auto-scrolls for the hover preview. Also keep the no-cut-off fixes on resync: wider `.split .w` reveal windows, and narrow-phone fixes for the Atomic cards, button grid and flywheel labels.
