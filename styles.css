@@ -1,6 +1,7 @@
 /* One dark world. Centred halftone pool, then a single editorial column. */
 /* Type. All type is self-hosted from fonts/ as WOFF2.
-   ZT Nature: body and UI (Regular, Italic, Bold, Bold Italic). PP Editorial New: headings (Regular, Italic, Ultrabold). */
+   ZT Nature: body and UI (Regular, Italic, Bold, Bold Italic). PP Lettra Mono: headings (Medium; Ultralight declared but unused). PP Editorial New: the alternative heading face.
+   To switch headings back, set --serif to "PP Editorial New" in :root. */
 @font-face { font-family: "ZT Nature"; src: url("fonts/ZTNature-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: "ZT Nature"; src: url("fonts/ZTNature-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
 @font-face { font-family: "ZT Nature"; src: url("fonts/ZTNature-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
@@ -8,6 +9,10 @@
 @font-face { font-family: "PP Editorial New"; src: url("fonts/PPEditorialNew-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: "PP Editorial New"; src: url("fonts/PPEditorialNew-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
 @font-face { font-family: "PP Editorial New"; src: url("fonts/PPEditorialNew-Ultrabold.woff2") format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "PP Lettra Mono"; src: url("fonts/PPLettraMono-Ultralight.woff2") format("woff2"); font-weight: 200; font-style: normal; font-display: swap; }
+@font-face { font-family: "PP Lettra Mono"; src: url("fonts/PPLettraMono-UltralightItalic.woff2") format("woff2"); font-weight: 200; font-style: italic; font-display: swap; }
+@font-face { font-family: "PP Lettra Mono"; src: url("fonts/PPLettraMono-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "PP Lettra Mono"; src: url("fonts/PPLettraMono-MediumItalic.woff2") format("woff2"); font-weight: 500; font-style: italic; font-display: swap; }
 
 :root {
   --bg: #140a18;
@@ -19,7 +24,7 @@
   --accent: #5fd3c4;
   --accent-2: #ff8a3d;
   --sans: "ZT Nature", "Helvetica Neue", Arial, sans-serif;
-  --serif: "PP Editorial New", "Iowan Old Style", Georgia, serif;
+  --serif: "PP Lettra Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --gutter: clamp(20px, 4vw, 56px);
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-io: cubic-bezier(0.77, 0, 0.18, 1);
@@ -353,7 +358,7 @@ h2.sec em { font-style: italic; color: var(--accent-2); }
 .ab-head { padding-top: clamp(150px, 18vw, 240px); }
 .ab-name { font: italic 400 clamp(64px, 10.5vw, 168px)/0.92 var(--serif); letter-spacing: -0.02em; margin: 0; }
 .ab-role { margin-top: clamp(14px, 1.6vw, 22px); font-size: clamp(20px, 2vw, 28px); color: var(--muted); }
-.ab-claim { margin-top: clamp(40px, 6vw, 80px); font: 400 clamp(40px, 5.4vw, 84px)/1 var(--serif); letter-spacing: -0.015em; }
+.ab-claim { text-wrap: balance; margin-top: clamp(40px, 6vw, 80px); font: 400 clamp(40px, 5.4vw, 84px)/1 var(--serif); letter-spacing: -0.015em; }
 .ab-claim em { font-style: italic; color: var(--accent-2); }
 .ab-body { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr); gap: clamp(40px, 7vw, 120px);
   align-items: start; padding-top: clamp(72px, 10vw, 150px); }
