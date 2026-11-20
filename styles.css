@@ -1,12 +1,13 @@
 /* One dark world. Centred halftone pool, then a single editorial column. */
 /* Type. All type is self-hosted from fonts/ as WOFF2.
-   ZT Nature: body and UI (Regular, Italic, Bold, Bold Italic). Baskervville: headings (Regular, Italic; SIL Open Font Licence). */
+   ZT Nature: body and UI (Regular, Italic, Bold, Bold Italic). PP Editorial New: headings (Regular, Italic, Ultrabold). */
 @font-face { font-family: "ZT Nature"; src: url("fonts/ZTNature-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: "ZT Nature"; src: url("fonts/ZTNature-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
 @font-face { font-family: "ZT Nature"; src: url("fonts/ZTNature-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
 @font-face { font-family: "ZT Nature"; src: url("fonts/ZTNature-BoldItalic.woff2") format("woff2"); font-weight: 700; font-style: italic; font-display: swap; }
-@font-face { font-family: "Baskervville"; src: url("fonts/Baskervville-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "Baskervville"; src: url("fonts/Baskervville-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "PP Editorial New"; src: url("fonts/PPEditorialNew-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "PP Editorial New"; src: url("fonts/PPEditorialNew-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "PP Editorial New"; src: url("fonts/PPEditorialNew-Ultrabold.woff2") format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
 
 :root {
   --bg: #140a18;
@@ -18,7 +19,7 @@
   --accent: #5fd3c4;
   --accent-2: #ff8a3d;
   --sans: "ZT Nature", "Helvetica Neue", Arial, sans-serif;
-  --serif: "Baskervville", "Iowan Old Style", Georgia, serif;
+  --serif: "PP Editorial New", "Iowan Old Style", Georgia, serif;
   --gutter: clamp(20px, 4vw, 56px);
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-io: cubic-bezier(0.77, 0, 0.18, 1);
