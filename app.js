@@ -325,6 +325,17 @@
   var playList = $("#play-list");
   if (playList && D.play) { num = 0; buildList(D.play, playList, "Coming soon"); }
 
+  // the "Hover on Title to Preview" hint sits on the first group's label line (or an empty one, for Play)
+  [["#work-h", "#work-list"], ["#play-h", "#play-list"]].forEach(function (pr) {
+    var h = $(pr[0]), wl = $(pr[1]), hint = h && h.parentNode.querySelector(".hint");
+    if (!hint || !wl || !wl.firstElementChild) return;
+    // kept outside the <h3> so the heading's name stays just the group label
+    var g0 = wl.firstElementChild, gh = $(".group-h", g0), top = el("div", { class: "group-top" });
+    g0.insertBefore(top, g0.firstChild);
+    if (gh) top.appendChild(gh);
+    top.appendChild(hint);
+  });
+
   // each row's dot takes a colour from the lake: teal down to tangerine
   $$(".work-list").forEach(function (wl) {
     var dots = $$(".dot", wl), A = [95, 211, 196], B = [255, 138, 61];
@@ -483,50 +494,103 @@
   window.addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
   onScroll();
 
-  /* ---------- demo cursor: an orange pointer hovers Microsoft Advertising to show rows preview ----------
-     Plays when "View my Work" is clicked, or when the list has been in view for 1s without the visitor hovering it. */
+  /* ---------- demo fish: a dotted tangerine fish (like the one in About) swims up to Microsoft Advertising,
+     noses the title so its preview opens, then turns and swims off.
+     Plays when "View my Work" is clicked, or when the list has been in view for 1s without a hover. ---------- */
   (function () {
     var row = $('#work-list .row[data-id="msads"]');
     if (!row || reduce || !fine.matches || !("IntersectionObserver" in window)) return;
-    var ttl = $(".ttl", row), wl = $("#work-list"), autoPlays = 0, timer = 0, waitT = 0, live = false, hovered = false;
-    var cursor = el("div", { class: "demo-cursor", "aria-hidden": "true",
-      html: '<svg viewBox="0 0 28 28"><path d="M5 3l17 9.6-7.6 1.9 4.4 8.3-3.4 1.8-4.4-8.3L5.6 21.6z" fill="#ff8a3d" stroke="#140a18" stroke-width="1.6" stroke-linejoin="round"/></svg>' });
-    document.body.appendChild(cursor);
-    function at(x, y, ms) {
-      cursor.style.transition = "opacity 0.4s" + (ms ? ", transform " + ms + "ms cubic-bezier(0.45, 0, 0.2, 1)" : "");
-      cursor.style.transform = "translate(" + x.toFixed(0) + "px," + y.toFixed(0) + "px)";
+    var ttl = $(".ttl", row), wl = $("#work-list"), autoPlays = 0, waitT = 0, raf = 0, live = false, hovered = false;
+    var CW = 72, CH = 36, dpr = Math.min(2, window.devicePixelRatio || 1);
+    var fish = el("canvas", { class: "demo-fish", "aria-hidden": "true" });
+    fish.width = CW * dpr; fish.height = CH * dpr;
+    wl.appendChild(fish);
+    var fx = fish.getContext("2d"), off = document.createElement("canvas");
+    off.width = CW; off.height = CH;
+    var ox = off.getContext("2d", { willReadFrequently: true }), TAU = Math.PI * 2;
+
+    // same silhouette as the About fish, head pointing left, sampled into dots
+    // same dot recipe as the About fish (3px grid on the unit silhouette, radius 0.55 of the pitch),
+    // scaled with the fish so it keeps the same number of dots, on a grid centred on the body
+    function draw(wig) {
+      var P = 3 * 0.75, r0 = P * 0.55;
+      ox.clearRect(0, 0, CW, CH);
+      ox.save(); ox.translate(CW / 2 - 4, CH / 2); ox.scale(0.75, 0.75); ox.fillStyle = "#000";
+      ox.beginPath(); ox.ellipse(0, 0, 26, 9.5, 0, 0, TAU); ox.fill();
+      ox.save(); ox.translate(22, 0); ox.rotate(wig);
+      ox.beginPath(); ox.moveTo(0, 0); ox.lineTo(17, -10); ox.lineTo(14, 0); ox.lineTo(17, 10); ox.closePath(); ox.fill();
+      ox.restore();
+      ox.beginPath(); ox.moveTo(-4, -8); ox.lineTo(6, -15); ox.lineTo(10, -8); ox.closePath(); ox.fill();
+      ox.restore();
+      var img = ox.getImageData(0, 0, CW, CH).data;
+      function cov(x, y) {   // average coverage over the dot's cell, so edges don't sparkle
+        var sum = 0, n = 0, h = P / 2;
+        for (var yy = Math.max(0, Math.round(y - h)); yy <= Math.min(CH - 1, Math.round(y + h)); yy++)
+          for (var xx = Math.max(0, Math.round(x - h)); xx <= Math.min(CW - 1, Math.round(x + h)); xx++) { sum += img[(yy * CW + xx) * 4 + 3]; n++; }
+        return n ? sum / n / 255 : 0;
+      }
+      fx.setTransform(dpr, 0, 0, dpr, 0, 0); fx.clearRect(0, 0, CW, CH);
+      fx.fillStyle = "#ff8a3d"; fx.beginPath();
+      var cx = CW / 2 - 4, cy = CH / 2;
+      for (var y = cy - Math.floor(cy / P) * P; y < CH; y += P) for (var x = cx - Math.floor(cx / P) * P; x < CW; x += P) {
+        var a = cov(x, y);
+        if (a < 0.3) continue;
+        var r = r0 * Math.sqrt(a);
+        fx.moveTo(x + r, y); fx.arc(x, y, r, 0, TAU);
+      }
+      fx.fill();
     }
-    function clear() {
-      clearTimeout(timer); live = false;
-      cursor.classList.remove("on", "press"); row.classList.remove("demo"); wl.classList.remove("demo-on");
+    function bez(p, t) {
+      var u = 1 - t;
+      return [u * u * u * p[0][0] + 3 * u * u * t * p[1][0] + 3 * u * t * t * p[2][0] + t * t * t * p[3][0],
+              u * u * u * p[0][1] + 3 * u * u * t * p[1][1] + 3 * u * t * t * p[2][1] + t * t * t * p[3][1]];
+    }
+    function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+    function stopFish() {
+      cancelAnimationFrame(raf); live = false; fish.style.opacity = 0;
+      row.classList.remove("demo"); wl.classList.remove("demo-on");
       if (cur === "msads") hidePeek();
     }
-    function later(fn, ms) { clearTimeout(timer); timer = setTimeout(fn, ms); }
     function inView() { var t = ttl.getBoundingClientRect(); return t.top > 70 && t.bottom < window.innerHeight - 40; }
     function play(tries) {
       tries = tries || 0;
-      if (!inView()) { if (tries < 8) later(function () { play(tries + 1); }, 400); return; }
-      var t = ttl.getBoundingClientRect();
+      if (live) return;
+      if (!inView()) { if (tries < 8) setTimeout(function () { play(tries + 1); }, 400); return; }
       live = true;
-      var ex = t.left + Math.min(t.width * 0.55, 320), ey = t.top + t.height * 0.5;
-      at(ex + 170, ey + 120, 0);
-      cursor.offsetWidth;
-      cursor.classList.add("on");
-      at(ex, ey, 1200);
-      later(function () {
-        row.classList.add("demo"); wl.classList.add("demo-on"); showPeek("msads", ex, ey);
-        cursor.classList.add("press");
-        setTimeout(function () { cursor.classList.remove("press"); }, 220);
-        later(function () {
-          row.classList.remove("demo"); wl.classList.remove("demo-on"); if (cur === "msads") hidePeek();
-          at(ex + 120, ey + 90, 900); cursor.classList.remove("on"); live = false;
-        }, 2200);
-      }, 1250);
+      // the title's end, in list coordinates (the fish lives inside the list, so it scrolls with it)
+      var L = wl.getBoundingClientRect(), rg = document.createRange(); rg.selectNodeContents(ttl.firstChild); var T = rg.getBoundingClientRect();  // the text itself, not the grid cell
+      var tx = T.left - L.left + T.width + 50, /* clears the 14px hover slide */ ty = T.top - L.top + T.height * 0.55;
+      var IN = [[tx + 360, ty + 150], [tx + 260, ty + 160], [tx + 120, ty + 10], [tx, ty]];
+      var OUT = [[tx, ty], [tx - 70, ty - 6], [tx + 10, ty + 130], [tx + 420, ty + 110]];
+      var D_IN = 2200, D_HOLD = 2000, D_OUT = 2200, t0 = performance.now(), prev = IN[0], sx = 1, peeked = false;
+      function frame(now) {
+        var e = now - t0, pos, op = 1, k;
+        if (e < D_IN) { k = ease(e / D_IN); pos = bez(IN, k); op = Math.min(1, e / 500); }
+        else if (e < D_IN + D_HOLD) {
+          pos = [tx + Math.sin((e - D_IN) / 300) * 3, ty + Math.sin((e - D_IN) / 520) * 2];
+          if (!peeked) {
+            peeked = true; row.classList.add("demo"); wl.classList.add("demo-on");
+            var Lc = wl.getBoundingClientRect(); showPeek("msads", Lc.left + tx + 26, Lc.top + ty);
+          }
+        } else if (e < D_IN + D_HOLD + D_OUT) {
+          if (peeked) { peeked = false; row.classList.remove("demo"); wl.classList.remove("demo-on"); if (cur === "msads") hidePeek(); }
+          k = (e - D_IN - D_HOLD) / D_OUT; pos = bez(OUT, k * k * (3 - 2 * k)); op = Math.min(1, (1 - k) / 0.45);
+        } else { stopFish(); return; }
+        var dx = pos[0] - prev[0], dy = pos[1] - prev[1];
+        var moving = Math.abs(dx) + Math.abs(dy) > 0.4;
+        sx += ((moving ? (dx > 0 ? -1 : 1) : sx > 0 ? 1 : -1) - sx) * 0.12;   // turning squashes through 0
+        var tilt = moving ? Math.max(-0.5, Math.min(0.5, Math.atan2(dy, Math.abs(dx)))) : 0;
+        if (dx > 0) tilt = -tilt;
+        draw(Math.sin(now / (moving ? 90 : 220)) * 0.35);
+        fish.style.opacity = op;
+        fish.style.transform = "translate(" + pos[0].toFixed(1) + "px," + pos[1].toFixed(1) + "px) rotate(" + tilt.toFixed(3) + "rad) scaleX(" + sx.toFixed(3) + ")";
+        prev = pos;
+        raf = requestAnimationFrame(frame);
+      }
+      raf = requestAnimationFrame(frame);
     }
     // a real hover on the list (the mouse actually moving) means they get it
     wl.addEventListener("pointermove", function (e) { if (!live && (e.movementX || e.movementY)) { hovered = true; clearTimeout(waitT); } });
-    window.addEventListener("scroll", function () { if (live) clear(); }, { passive: true });
-    // 1s in view without a hover: show them
     var io = new IntersectionObserver(function (es) {
       clearTimeout(waitT);
       if (es[0].isIntersecting && !hovered && !live && autoPlays < 2) {
@@ -534,8 +598,7 @@
       }
     }, { threshold: 0.6 });
     io.observe(row);
-    // "View my Work": always show it once the scroll lands
     var cue = $("#cue");
-    if (cue) cue.addEventListener("click", function () { clearTimeout(waitT); clear(); later(function () { play(); }, 1000); });
+    if (cue) cue.addEventListener("click", function () { clearTimeout(waitT); stopFish(); setTimeout(function () { play(); }, 1000); });
   })();
 })();

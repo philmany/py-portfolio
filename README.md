@@ -28,7 +28,7 @@ Production is the Cloudflare Worker `py-portfolio` (static assets only), deploye
 | `index.html`, `about.html` | Home and About pages. |
 | `styles.css` | Look and layout; tokens in `:root`. |
 | `fonts/` | Self-hosted WOFF2: ZT Nature (body) and PP Editorial New (headings). |
-| `app.js`, `about.js` | Build each page from `data.js`: work list, hover previews, Play list, reveals. |
+| `app.js`, `about.js` | Build each page from `data.js`: work list, hover previews, Play list, reveals. `app.js` also runs the demo fish that swims up to Microsoft Advertising to show the hover preview (on "View my Work", or after 1s in view with no hover). |
 | `water.js` | The hero lake: 2.5D halftone dots printed as a two-ink riso (teal + orange) with moiré line screens. Palette in `STOPS`. |
 | `flow.js` | Page transition: one riso wave washes down the screen and carries on into the next page. |
 | `rolodex.js` | Flipping text in the hero tagline and closing heading. |
