@@ -488,9 +488,16 @@
     ticking = false;
     var h = document.documentElement.scrollHeight - window.innerHeight;
     prog.style.transform = "scaleX(" + (h > 0 ? window.scrollY / h : 0) + ")";
-    nav.classList.toggle("solid", window.scrollY > 40);
+    var y = window.scrollY, dy = y - lastY;
+    nav.classList.toggle("solid", y > 40);
+    // tuck the nav away while scrolling down (so anchors like #work land clear), bring it back on any scroll up
+    if (y < 120 || nav.contains(document.activeElement)) nav.classList.remove("hide");
+    else if (dy > 4) nav.classList.add("hide");
+    else if (dy < -4) nav.classList.remove("hide");
+    lastY = y;
   }
-  var nav = $(".nav");
+  var nav = $(".nav"), lastY = window.scrollY;
+  nav.addEventListener("focusin", function () { nav.classList.remove("hide"); });
   window.addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
   onScroll();
 
