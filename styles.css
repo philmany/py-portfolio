@@ -1,7 +1,6 @@
 /* One dark world. Centred halftone pool, then a single editorial column. */
 /* Type. All type is self-hosted from fonts/ as WOFF2.
-   ZT Nature: body and UI (Regular, Italic, Bold, Bold Italic). PP Lettra Mono: headings (Medium; Ultralight declared but unused). PP Editorial New: the alternative heading face.
-   To switch headings back, set --serif to "PP Editorial New" in :root. */
+   ZT Nature: body and UI (Regular, Italic, Bold, Bold Italic). PP Editorial New: headings (Regular, Italic, Ultrabold). */
 @font-face { font-family: "ZT Nature"; src: url("fonts/ZTNature-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: "ZT Nature"; src: url("fonts/ZTNature-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
 @font-face { font-family: "ZT Nature"; src: url("fonts/ZTNature-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
@@ -9,10 +8,6 @@
 @font-face { font-family: "PP Editorial New"; src: url("fonts/PPEditorialNew-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: "PP Editorial New"; src: url("fonts/PPEditorialNew-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
 @font-face { font-family: "PP Editorial New"; src: url("fonts/PPEditorialNew-Ultrabold.woff2") format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
-@font-face { font-family: "PP Lettra Mono"; src: url("fonts/PPLettraMono-Ultralight.woff2") format("woff2"); font-weight: 200; font-style: normal; font-display: swap; }
-@font-face { font-family: "PP Lettra Mono"; src: url("fonts/PPLettraMono-UltralightItalic.woff2") format("woff2"); font-weight: 200; font-style: italic; font-display: swap; }
-@font-face { font-family: "PP Lettra Mono"; src: url("fonts/PPLettraMono-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
-@font-face { font-family: "PP Lettra Mono"; src: url("fonts/PPLettraMono-MediumItalic.woff2") format("woff2"); font-weight: 500; font-style: italic; font-display: swap; }
 
 :root {
   --bg: #140a18;
@@ -24,7 +19,7 @@
   --accent: #5fd3c4;
   --accent-2: #ff8a3d;
   --sans: "ZT Nature", "Helvetica Neue", Arial, sans-serif;
-  --serif: "PP Lettra Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --serif: "PP Editorial New", "Iowan Old Style", Georgia, serif;
   --gutter: clamp(20px, 4vw, 56px);
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-io: cubic-bezier(0.77, 0, 0.18, 1);
@@ -239,8 +234,10 @@ h2.sec em { font-style: italic; color: var(--accent-2); }
 /* reveal (as in the Pretzel case study) */
 .rv { opacity: 0; transform: translateY(36px); transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); }
 .rv.in { opacity: 1; transform: none; }
-.split .w { display: inline-block; overflow: hidden; vertical-align: top; padding: 0 0.12em 0.12em 0; margin: 0 -0.12em -0.12em 0; }
-.split .w > span { display: inline-block; transform: translateY(105%); transition: transform 1s var(--ease); }
+/* Each word is a clip window for the reveal. Padding (cancelled by negative margin, so layout is unchanged)
+   gives tall capitals, descenders and italic overhang room so no glyph is cut. */
+.split .w { display: inline-block; overflow: hidden; vertical-align: top; padding: 0.22em 0.16em 0.24em 0.16em; margin: -0.22em -0.16em -0.24em -0.16em; }
+.split .w > span { display: inline-block; transform: translateY(135%); transition: transform 1s var(--ease); }
 .split.in .w > span { transform: none; }
 
 /* Brands marquee */
