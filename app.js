@@ -36,7 +36,7 @@
   function pad2(n) { return (n < 10 ? "0" : "") + n; }
 
   /* ---------- text ---------- */
-  $("#brand").textContent = D.person.name;
+  var brandImg = $("#brand img"); if (brandImg) brandImg.alt = D.person.name; else $("#brand").textContent = D.person.name;
   $("#hero-name").textContent = D.person.name;
   if (D.person.bookingUrl) $("#book").href = D.person.bookingUrl; else $("#book").remove();
   [].concat(D.person.tagline).forEach(function (line, i) {
@@ -176,6 +176,8 @@
 
   function rel(node, pad) {
     var a = node.getBoundingClientRect(), h = hero.getBoundingClientRect();
+    // the text column was widened (460 to 680px) for the bigger name; keep the water's quiet zone at the original 460px
+    if (/^(H1|P)$/.test(node.tagName) && a.width > 460) a = { left: a.left + (a.width - 460) / 2, top: a.top, width: 460, height: a.height };
     return { x: a.left - h.left, y: a.top - h.top, w: a.width, h: a.height, pad: pad };
   }
 
@@ -214,7 +216,44 @@
   } else {
     pauseBtn.hidden = true;
   }
+  // With every memory showing, nudge the snapshots apart so no two photos overlap.
+  // Boxes are measured untransformed (beside their outline), padded for the tilt, then pushed apart along the shorter overlap.
+  function spreadSnaps() {
+    var hw = hero.clientWidth, hh = hero.clientHeight, gap = 20, bottom = hh - 76, boxes = [];
+    mems.forEach(function (b) {
+      var sn = b.querySelector(".mem-snap"); if (!sn) return;
+      sn.style.setProperty("--ax", "0px"); sn.style.setProperty("--ay", "0px");
+      var x = b.offsetLeft + sn.offsetLeft, y = b.offsetTop + sn.offsetTop, w = sn.offsetWidth, h = sn.offsetHeight;
+      if (!w) return;
+      boxes.push({ el: sn, x: x, y: y, w: w, h: h, dx: 0, dy: 0 });
+    });
+    for (var it = 0; it < 60; it++) {
+      var moved = false;
+      for (var i = 0; i < boxes.length; i++) for (var j = i + 1; j < boxes.length; j++) {
+        var A = boxes[i], B = boxes[j];
+        var ox = Math.min(A.x + A.dx + A.w, B.x + B.dx + B.w) - Math.max(A.x + A.dx, B.x + B.dx) + gap;
+        var oy = Math.min(A.y + A.dy + A.h, B.y + B.dy + B.h) - Math.max(A.y + A.dy, B.y + B.dy) + gap;
+        if (ox <= 0 || oy <= 0) continue;
+        moved = true;
+        if (ox < oy) { var sx = (A.x + A.dx + A.w / 2 < B.x + B.dx + B.w / 2 ? -1 : 1) * ox / 2; A.dx += sx; B.dx -= sx; }
+        else { var sy = (A.y + A.dy + A.h / 2 < B.y + B.dy + B.h / 2 ? -1 : 1) * oy / 2; A.dy += sy; B.dy -= sy; }
+      }
+      boxes.forEach(function (q) {  // stay on the lake, clear of the controls along the bottom
+        q.dx = Math.max(12 - q.x, Math.min(hw - 12 - q.w - q.x, q.dx));
+        q.dy = Math.max(70 - q.y, Math.min(bottom - q.h - q.y, q.dy));
+      });
+      if (!moved) break;
+    }
+    boxes.forEach(function (q) { q.el.style.setProperty("--ax", q.dx.toFixed(1) + "px"); q.el.style.setProperty("--ay", q.dy.toFixed(1) + "px"); });
+  }
+  var spreadT = 0;
+  function spreadSoon() { clearTimeout(spreadT); spreadT = setTimeout(spreadSnaps, 60); }
+  window.addEventListener("resize", spreadSoon);
+  mems.forEach(function (b) { var im = b.querySelector(".mem-snap img"); if (im) im.addEventListener("load", spreadSoon); });
+  spreadSoon();
+
   memBtn.addEventListener("click", function () {
+    spreadSnaps();
     var on = memBtn.getAttribute("aria-pressed") !== "true";
     memBtn.setAttribute("aria-pressed", String(on));
     hero.classList.toggle("memories", on);

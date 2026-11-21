@@ -27,7 +27,7 @@ Production is the Cloudflare Worker `py-portfolio` (static assets only), deploye
 | `data.js` | All content: tagline, work, play, brands, links, water memories. The file you edit. |
 | `index.html`, `about.html` | Home and About pages. |
 | `styles.css` | Look and layout; tokens in `:root`. |
-| `fonts/` | Self-hosted WOFF2: ZT Nature (body) and PP Editorial New (headings). |
+| `fonts/` | Self-hosted WOFF2: ZT Nature (body) and PP Museum (headings). |
 | `app.js`, `about.js` | Build each page from `data.js`: work list, hover previews, Play list, reveals. `app.js` also runs the demo fish that swims up to Microsoft Advertising to show the hover preview (on "View my Work", or after 1s in view with no hover). |
 | `water.js` | The hero lake: 2.5D halftone dots printed as a two-ink riso (teal + orange) with moiré line screens. Palette in `STOPS`. |
 | `flow.js` | Page transition: one riso wave washes down the screen and carries on into the next page. |
@@ -35,7 +35,8 @@ Production is the Cloudflare Worker `py-portfolio` (static assets only), deploye
 | `shapes.js` | Water outlines (Natural Earth / GSHHG data or traced from maps; not to scale). |
 | `heron.js` | Dot-drawn fish and heron in About: hover the fish and the heron swoops. |
 | `sound.js` | Generated wave sound, starts muted. |
-| `memories/`, `about/`, `previews/`, `logos/` | Memory snapshots, About portrait, hover previews, brand logos. |
+| `memories/`, `about/`, `previews/`, `logos/` | Memory snapshots, About portrait and the two sketches pasted on it, hover previews, brand logos. |
+| `signature.svg` | Header brand on every page: the oil-pastel "Philman" signature, traced to a white SVG. |
 | `work/pretzel.html`, `img/` | Pretzel 1.0 case study, a copy of `philmany/pretzel-case-study`. |
 | `Resume_2027_PhilmanYeung.pdf` | Resume, linked from About. |
 

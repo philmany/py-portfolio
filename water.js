@@ -137,7 +137,7 @@
     var mode = o.mode || "riso", paper = !!o.paper;
     var inkA, inkB, actxA, actxB, grainPat, dprR = 1;
     var active = -1, all = false, paused = !!o.startPaused, visible = true;
-    var raf = 0, last = 0, acc = 0, time = 0, intro = o.startPaused ? 1 : 0;
+    var raf = 0, last = 0, acc = 0, drawAcc = 1e9, time = 0, intro = o.startPaused ? 1 : 0;
     var ptr = { on: false, x: 0, y: 0, lx: 0, ly: 0, moved: false };
     var seed = 11;
     function srand() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
@@ -145,7 +145,7 @@
     function layout() {
       W = host.clientWidth; H = host.clientHeight;
       if (!W || !H) return false;
-      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       dprR = dpr;
@@ -158,7 +158,8 @@
       if (hctx) { haze.width = Math.ceil(W / 2); haze.height = Math.ceil(H / 2); }
 
       var narrow = W < 760;
-      pNear = narrow ? 15 : W < 1200 ? 19 : 22;
+      // a finer, printed halftone: 1.25x the dots per area (pitch shrinks by 1/sqrt(1.25)); dot size follows the pitch
+      pNear = (narrow ? 15 : W < 1200 ? 19 : 22) / Math.sqrt(1.25);
       tilt = 0.74;
       var yTop = Math.max(64, H * 0.1), sEnd = 0.4;
       var Dn = (H + pNear - yTop) / (pNear * tilt * (1 - sEnd));
@@ -312,7 +313,7 @@
         var dx2 = x - ccx, dy2 = y - ccy;
         var mo = mode === "none" ? 0.62 : 0.5 + 0.25 * Math.cos(f1 * (x * ca + y * sa) + ph1) +
                  0.25 * Math.cos(f2 * Math.sqrt(dx2 * dx2 + dy2 * dy2) - ph2);
-        var r = pch * 0.62 * Math.pow(Lm, 0.7) * (0.5 + 0.5 * Math.pow(mo, 1.2));
+        var r = pch * 0.55 * Math.pow(Lm, 0.7) * (0.5 + 0.5 * Math.pow(mo, 1.2));
         if (r < 0.45) continue;
         var sunx = (xs[i] - sunX) / (W * (0.16 + 0.22 * far));
         var sun = Math.exp(-sunx * sunx) * (0.35 + 0.65 * far);
@@ -434,7 +435,8 @@
       while (acc >= STEP && s < 3) { step(); acc -= STEP; s++; }
       if (acc > STEP * 3) acc = 0;
       for (var p = 0; p < n; p++) act[p] += (target[p] - act[p]) * 0.08;
-      draw();
+      drawAcc += dt;
+      if (drawAcc >= 31 || intro < 1) { drawAcc = 0; draw(); }  // ~30 fps paint: the swell is slow, so half the paints look the same
       raf = requestAnimationFrame(frame);
     }
     function kick() { if (!raf && !paused && visible) { last = 0; raf = requestAnimationFrame(frame); } }

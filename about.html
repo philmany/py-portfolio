@@ -18,7 +18,7 @@
 <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preload" href="/fonts/ZTNature-Regular.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/PPEditorialNew-Italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/PPMuseum-Italic.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="alternate" type="text/markdown" href="/llms.txt" title="Summary for AI assistants">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -27,7 +27,7 @@
 <div id="progress" aria-hidden="true"></div>
 
 <header class="nav">
-  <a class="brand" href="/">Philman Yeung</a>
+  <a class="brand sig" href="/"><img src="/signature.svg" width="739" height="276" alt="Philman Yeung"></a>
   <nav aria-label="Sections">
     <a href="/#work">Work</a>
     <a href="/#play">Play</a>
@@ -37,14 +37,21 @@
 
 <main>
   <section class="ab-head wrap" aria-labelledby="ab-name">
-    <h1 class="ab-name" id="ab-name" data-split>Philman Yeung</h1>
-    <p class="ab-role rv">Product Manager</p>
+    <h1 class="ab-name" id="ab-name" data-split>Hey there, I’m Philman.</h1>
     <p class="ab-claim" data-split><em>I nurture ideas and people.</em></p>
   </section>
 
   <section class="ab-body wrap" id="story" aria-label="About Philman">
     <figure class="portrait rv" id="portrait" data-src="about/portrait.jpg">
       <canvas id="portrait-dots" aria-hidden="true"></canvas>
+      <button type="button" class="pnote pn-sketch" style="--i:0">
+        <span class="pn-paper"><img src="/about/note-hero.webp" width="900" height="519" alt="" draggable="false"></span>
+        <span class="pn-cap">The Hero Section of this Portfolio started as ultra lo-fi sketches.</span>
+      </button>
+      <button type="button" class="pnote pn-sticky" style="--i:1">
+        <span class="pn-paper"><img src="/about/note-favicon.webp" width="640" height="589" alt="" draggable="false"></span>
+        <span class="pn-cap">My Favicon as a sticky-note sketch.</span>
+      </button>
       <figcaption class="portrait-note">Portrait coming soon</figcaption>
     </figure>
 
@@ -62,6 +69,9 @@
     <button type="button" class="fish-bait" id="fish" aria-label="A fish swimming. Hover it, or press Enter, and a heron swoops down to catch it."></button>
     <div class="wrap">
       <h2 class="sec" id="about-h" data-split><em>Say hello.</em></h2>
+      <a class="book say-book" id="book" href="https://calendly.com/philmanyeung/30min" target="_blank" rel="noopener" data-tip="Clicking will open a new tab for Philman’s Calend.ly">Book a Meeting
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg>
+      </a>
       <ul class="links" id="links"></ul>
     </div>
   </section>

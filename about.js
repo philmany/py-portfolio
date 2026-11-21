@@ -27,6 +27,8 @@
     if (l.text) li.appendChild(el("small", { class: "addr", text: l.text }));
     $("#links").appendChild(li);
   });
+  /* "Book a Meeting" under Say hello, pointed at the same booking link as the hero */
+  if (D.person && D.person.bookingUrl) $("#book").href = D.person.bookingUrl;
   $("#copy").textContent = "© " + new Date().getFullYear() + " " + ((D.person && D.person.name) || "Philman Yeung");
 
   /* portrait: a photo if one is set, otherwise a field of dots from the lake */
@@ -81,6 +83,20 @@
     }
   }
 
+  /* sketches pasted on the portrait: hover or focus lifts one and shows its note; tap pins it on touch */
+  var notes = $$(".pnote");
+  notes.forEach(function (n) {
+    n.setAttribute("aria-pressed", "false");
+    n.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var on = !n.classList.contains("on");
+      notes.forEach(function (o) { o.classList.remove("on"); o.setAttribute("aria-pressed", "false"); });
+      n.classList.toggle("on", on); n.setAttribute("aria-pressed", String(on));
+    });
+    n.addEventListener("keydown", function (e) { if (e.key === "Escape") { n.classList.remove("on"); n.setAttribute("aria-pressed", "false"); n.blur(); } });
+  });
+  document.addEventListener("click", function () { notes.forEach(function (o) { o.classList.remove("on"); o.setAttribute("aria-pressed", "false"); }); });
+
   /* ripple page transition for links within the site */
   $$("a[href]").forEach(function (a) {
     var h = a.getAttribute("href");
@@ -95,9 +111,10 @@
   });
 
   /* "new page" tooltip for links that leave the site */
-  var tip = el("div", { class: "tip", role: "tooltip", id: "tip", text: "This will send you to a new page" });
+  var tip = el("div", { class: "tip", role: "tooltip", id: "tip", text: "" });
   document.body.appendChild(tip);
   function tipAt(a) {
+    tip.textContent = a.getAttribute("data-tip") || "This will send you to a new page";
     var anchor = $(".li-ic", a) || a, r = anchor.getBoundingClientRect();
     tip.classList.add("on");
     var w = tip.offsetWidth, x = Math.max(12, Math.min(window.innerWidth - w - 12, r.left + r.width / 2 - w / 2));
