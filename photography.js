@@ -46,14 +46,51 @@
   var grid = $(".ph-grid"), items = $$(".ph-item");
   function lay() {
     var cs = getComputedStyle(grid), cols = cs.gridTemplateColumns.split(" ").length;
-    var gap = parseFloat(cs.columnGap) || 0, colW = (grid.clientWidth - gap * (cols - 1)) / cols;
-    var mb = parseFloat(getComputedStyle(items[0]).marginBottom) || 0;
+    var colW = grid.clientWidth / cols;
+    // 1px rows: each tile is as tall as its photo, to the pixel, so neighbours meet with no gap.
+    // Place each photo in the shortest column (reading order stays left to right, top to bottom)...
+    var colH = [], colItems = [], i, c;
+    for (c = 0; c < cols; c++) { colH.push(0); colItems.push([]); }
     items.forEach(function (li) {
-      var span = li.classList.contains("ph-wide") ? Math.min(2, cols) : 1;
-      var w = colW * span + gap * (span - 1), h = w / parseFloat(li.style.getPropertyValue("--ar"));
-      li.style.setProperty("--rows", Math.ceil((h + mb) / 8));
+      var h = Math.round(colW / parseFloat(li.style.getPropertyValue("--ar")));
+      var k = colH.indexOf(Math.min.apply(Math, colH));
+      colItems[k].push({ li: li, h: h }); colH[k] += h;
     });
+    // ...then stretch the shorter columns a touch so every column ends on the same line.
+    // object-fit: cover trims the few extra pixels from each photo; capped so no photo loses much.
+    var target = Math.max.apply(Math, colH);
+    for (c = 0; c < cols; c++) {
+      var col = colItems[c], extra = target - colH[c];
+      if (extra > 0 && extra / colH[c] <= 0.14) {
+        var left = extra;
+        col.forEach(function (t, n) {
+          var add = n === col.length - 1 ? left : Math.round(extra * t.h / colH[c]);
+          t.h += add; left -= add;
+        });
+      }
+      var y = 1;
+      col.forEach(function (t) {
+        t.li.style.gridColumn = String(c + 1);
+        t.li.style.gridRow = y + " / span " + t.h;
+        y += t.h;
+      });
+    }
+    fitLockup();
   }
+
+  /* logo lockup: size "Photography" so it is exactly as wide as "Caurinus" */
+  function fitLockup() {
+    var a = $(".lk-a"), b = $(".lk-b");
+    if (!a || !b) return;
+    b.style.fontSize = "";
+    var wa = a.firstChild.length ? measure(a) : a.offsetWidth, wb = b.getBoundingClientRect().width;
+    if (wa && wb) b.style.fontSize = (parseFloat(getComputedStyle(b).fontSize) * wa / wb).toFixed(2) + "px";
+  }
+  function measure(el) {
+    // width of the word itself, without the footnote marker
+    var r = document.createRange(); r.selectNodeContents(el.firstChild); return r.getBoundingClientRect().width;
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitLockup);
   lay();
   var rT = 0;
   window.addEventListener("resize", function () { cancelAnimationFrame(rT); rT = requestAnimationFrame(lay); });
