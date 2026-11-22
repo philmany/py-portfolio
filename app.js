@@ -151,6 +151,8 @@
       if (w >= 760 && w < 1200) size *= 0.82;
       var ar = b._ar, bw = ar >= 1 ? size : size * ar, bh = ar >= 1 ? size / ar : size;
       var cx = at[0] * w, cy = at[1] * h;
+      // phone: the bottom row (label under the Mediterranean) stays above the "View my Work" pill on short screens
+      if (narrow && at[1] > 0.5) cy = Math.min(cy, h - 205);
       cx = Math.max(bw / 2 + 12, Math.min(w - bw / 2 - 12, cx));
       b.style.left = cx - bw / 2 + "px"; b.style.top = cy - bh / 2 + "px";
       b.style.width = bw + "px"; b.style.height = bh + "px";
@@ -332,7 +334,7 @@
         // preview layer: a live page, a screenshot, or a dot thumbnail
         var layer = el("div", { class: "layer" }), pv = it.preview || {};
         if (pv.type === "page") {
-          var f = el("iframe", { tabindex: "-1", "aria-hidden": "true", title: "Preview" });
+          var f = el("iframe", { tabindex: "-1", "aria-hidden": "true", title: "Preview", name: "peek" });
           f.dataset.src = pv.src;
           layer.appendChild(f);
         } else if (pv.type === "image") {

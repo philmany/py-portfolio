@@ -27,7 +27,7 @@
     if (l.text) li.appendChild(el("small", { class: "addr", text: l.text }));
     $("#links").appendChild(li);
   });
-  /* "Book a Meeting" under Say hello, pointed at the same booking link as the hero */
+  /* "Let’s Build Together" under Say hello, pointed at the same booking link as the hero */
   if (D.person && D.person.bookingUrl) $("#book").href = D.person.bookingUrl;
   $("#copy").textContent = "© " + new Date().getFullYear() + " " + ((D.person && D.person.name) || "Philman Yeung");
 

@@ -8,6 +8,7 @@ Strongest in monetization, experimentation, UX and design systems. Open to Produ
 
 - [Pretzel 1.0 Design System case study](https://philmanyeung.com/work/pretzel): building an iOS design system in Figma for the Snack app
 - [About](https://philmanyeung.com/about): background, story and contact links
+- [Caurinus Photography](https://philmanyeung.com/photography): Philman's portrait photography, "Helping people see themselves in a new light."
 - [Resume (PDF)](https://philmanyeung.com/Resume_2027_PhilmanYeung.pdf)
 
 ## Elsewhere

@@ -8,7 +8,7 @@ window.SITE_DATA = {
     // {A|B|C} flips through titles; a single {word} is just accented.
     tagline: ["a {Product Manager} & {Designer|Founder|Artist|AI Native|Marketer|GTM Lead} that flows like water."],
     taglineSpeed: 2400,   // milliseconds each title stays before the next flips in
-    // "Book a Meeting" button in the hero. Opens in a new tab.
+    // "Let’s Build Together" button in the hero. Opens in a new tab.
     bookingUrl: "https://calendly.com/philmanyeung/30min",
   },
 
@@ -108,12 +108,13 @@ window.SITE_DATA = {
         },
         {
           id: "photography",
-          title: "Philman Photography",
+          title: "Caurinus Photography",
           tags: ["Portraits"],
           status: "complete",
-          href: "https://philmanyeung.mypixieset.com/",
+          href: "/photography",
           summary: "Helping people see themselves in a new light.",
-          preview: { type: "image", src: "previews/pixieset.jpg" },
+          // a live view of the page itself, like Pretzel, so it always matches the latest version
+          preview: { type: "page", src: "/photography#preview" },
         },
         {
           id: "nwhacks", slug: "nwhacks",
@@ -143,21 +144,21 @@ window.SITE_DATA = {
     subtitle: "Bodies of water I love, and have memories in.",
     places: [
       { name: "Lake Washington", region: "Pacific Northwest", where: "Washington, USA", activity: "cold-plunged", last: "2025-09",
-        at: [0.19, 0.33], atNarrow: [0.17, 0.25], size: 170, label: "above", labelNarrow: "above",
+        at: [0.19, 0.33], atNarrow: [0.17, 0.25], size: 170, label: "above", labelNarrow: "below",
         photo: "memories/lake-washington.jpg", photoSide: "right" },
       { name: "Deep Cove", region: "Pacific Northwest", where: "British Columbia, Canada", activity: "kayaked", last: "2026-08",
-        at: [0.5, 0.22], atNarrow: [0.5, 0.18], size: 170, label: "above", labelNarrow: "above",
+        at: [0.5, 0.22], atNarrow: [0.5, 0.25], size: 170, label: "above", labelNarrow: "above",
         photo: "memories/deep-cove.jpg", photoSide: "right", photoSideNarrow: "below" },
       { name: "Garibaldi Lake", region: "Pacific Northwest", where: "British Columbia, Canada", activity: "swam", last: "2026-06",
-        at: [0.81, 0.33], atNarrow: [0.83, 0.25], size: 130, label: "above", labelNarrow: "above",
+        at: [0.81, 0.33], atNarrow: [0.83, 0.25], size: 130, label: "above", labelNarrow: "below",
         photo: "memories/garibaldi.jpg", photoSide: "left" },
-      { name: "Lachine Canal", region: "Elsewhere", where: "Qu\u00e9bec, Canada", activity: "kayaked", last: "2017-07",
-        at: [0.2, 0.68], atNarrow: [0.19, 0.71], size: 190, label: "above", labelNarrow: "above" },
+      { name: "St. Lawrence River", region: "Elsewhere", where: "Montr\u00e9al, Qu\u00e9bec, Canada", activity: "kayaked", last: "2017-07",
+        at: [0.2, 0.68], atNarrow: [0.17, 0.71], size: 210, label: "above", labelNarrow: "above" },
       { name: "Mediterranean Sea", region: "Elsewhere", where: "C\u00f4te d\u2019Azur, France", activity: "skinny-dipped", last: "2025-10",
-        at: [0.5, 0.79], atNarrow: [0.5, 0.86], size: 280, label: "above", labelNarrow: "above",
+        at: [0.5, 0.79], atNarrow: [0.5, 0.71], size: 280, label: "above", labelNarrow: "below",
         photo: "memories/mediterranean.jpg", photoSide: "right" },
       { name: "Tai O (\u5927\u6fb3)", region: "Elsewhere", where: "Lantau Island, Hong Kong SAR, China", activity: "out on a fishing boat", last: "2025-12",
-        at: [0.8, 0.68], atNarrow: [0.81, 0.71], size: 150, label: "above", labelNarrow: "above",
+        at: [0.8, 0.68], atNarrow: [0.83, 0.71], size: 150, label: "above", labelNarrow: "above",
         photo: "memories/tai-o.jpg", photoSide: "left" },
     ],
   },

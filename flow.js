@@ -1,16 +1,17 @@
 /*
-  Page transition: one wave.
-  Seen from above, a single wave washes down the screen in the lake's riso
-  print: a lacy foam line leads, the swells roll behind it, and the page
-  underneath stays sharp until the water covers it. On the next page the same
-  wave carries on down and off the bottom, leaving a few wet specks that dry.
+  Page transition: the page materializes out of the lake.
+  Clicking a link goes straight to the next page (nothing plays on the way
+  out, so it loads sooner). That page arrives under the lake's riso water, and
+  an opening spreads from where you clicked: a lacy foam line rolls outward,
+  the swells behind it, and the page shows through the cutout, leaving a few
+  wet specks that dry.
 
   The water is printed exactly like the hero lake: two spot-ink drums (teal and
   fluorescent orange) of halftone dots, orange sitting 2px above the teal, with
   the same moiré line screens woven into each drum. The swell phase runs on the
   wall clock, so the water on the next page carries on from where it left off.
 
-  window.flowTo(url, x, y) starts it from a point on screen.
+  window.flowTo(url, x, y) navigates and remembers the point on screen.
   A small inline script in each page's <head> covers the page with calm water
   on arrival, until this script takes over.
 */
@@ -23,7 +24,6 @@
   var css = document.createElement("style");
   css.textContent =
     ".flow-cv{position:fixed;inset:0;width:100%;height:100%;z-index:300;pointer-events:none;display:block}" +
-    "html.flowing{overflow:hidden}" +
     "html.flow-settle body>*:not(.flow-cv){transition:transform 1.05s cubic-bezier(.2,.8,.2,1)}";
   document.head.appendChild(css);
 
@@ -83,74 +83,67 @@
     }
   }
 
-  // the shoreline of the wave: long and short undulations, plus a tongue of
-  // water that runs ahead toward the point you clicked. dir is the side the
-  // water lies on: -1 above the line (washing down), +1 below it (passing on).
-  function shore(x, F, T, amp, bx, bulge, dir) {
-    var y = F + amp * (0.55 * Math.sin(x * 0.0062 + T * 1.3 + 0.7) + 0.3 * Math.sin(x * 0.017 - T * 2.1 + 2.0) + 0.15 * Math.sin(x * 0.041 + T * 3.3));
-    if (bulge) { var q = (x - bx) / (W * 0.3); y -= dir * bulge * Math.exp(-q * q); }
-    return y;
+  // the shoreline of the opening: a ring of water pulling back from a point,
+  // its edge wobbling with long and short undulations so it reads as a tide line
+  var CX = 0, CY = 0, TH = null, DS = null;
+  function edge(th, R, T, amp) {
+    return R + amp * (0.55 * Math.sin(th * 3 + T * 1.3 + 0.7) + 0.3 * Math.sin(th * 7 - T * 2.1 + 2.0) + 0.15 * Math.sin(th * 13 + T * 3.3));
   }
 
-  function render(mode, F, amp, foamW, T, bx, bulge, fade) {
+  function render(R, amp, foamW, T, fade) {
     ctx.clearRect(0, 0, W, H);
-    var i, k, dir = mode === "out" ? -1 : 1;
+    var i, k;
+    // the wobble grows with the opening, so a small hole is still round-ish
+    var a = amp * Math.min(1, Math.max(0, R) / (amp * 4 + 1));
 
-    // the water's body: a wet sheen running ahead, then the dark lake itself
-    var step = 12, n = Math.ceil(W / step) + 2, fs = new Float32Array(n);
-    for (i = 0; i < n; i++) fs[i] = shore(i * step - step, F, T, amp, bx, bulge, dir);
-    // drawn small and scaled up, so every edge is a true soft gradient: a damp
-    // sheen running ahead of the water, then the body of the lake
+    // the water's body, drawn small and scaled up so every edge is a true soft
+    // gradient: the whole screen, with the opening cut out of it (even-odd)
+    var SEG = 120;
     var poly = function (off, alpha, sc) {
       var sw = Math.ceil(W / sc) + 2, sh = Math.ceil(H / sc) + 2;
       if (soft.width !== sw || soft.height !== sh) { soft.width = sw; soft.height = sh; }
       sg.setTransform(1, 0, 0, 1, 0, 0); sg.clearRect(0, 0, sw, sh);
-      var edge = dir > 0 ? sh + 1 : -1;
-      sg.beginPath(); sg.moveTo(-1, edge);
-      for (var m = 0; m < n; m++) sg.lineTo((m * step - step) / sc, (fs[m] + dir * off) / sc);
-      sg.lineTo(sw + 1, edge); sg.closePath(); sg.fillStyle = BG; sg.fill();
+      sg.beginPath(); sg.rect(-1, -1, sw + 2, sh + 2);
+      var r0 = R + off;
+      if (r0 > 0) {
+        for (var m = 0; m <= SEG; m++) {
+          var th = (m / SEG) * TAU - Math.PI, rr = Math.max(0, edge(th, r0, T, a));
+          var px = (CX + Math.cos(th) * rr) / sc, py = (CY + Math.sin(th) * rr) / sc;
+          if (m === 0) sg.moveTo(px, py); else sg.lineTo(px, py);
+        }
+        sg.closePath();
+      }
+      sg.fillStyle = BG; sg.fill("evenodd");
       ctx.save(); ctx.globalAlpha = alpha; ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
       ctx.drawImage(soft, 0, 0, sw * sc, sh * sc); ctx.restore();
     };
-    poly(-foamW * 0.2, 0.2 * fade, 28);
-    poly(foamW * 0.62, 1, 7);
-
-    for (i = 0; i < cols; i++) {
-      FR[i * 2] = shore((i - 0.5) * P, F, T, amp, bx, bulge, dir);
-      FR[i * 2 + 1] = shore(i * P, F, T, amp, bx, bulge, dir);
-    }
+    poly(-foamW * 0.2, 0.2 * fade, 28);   // a damp sheen just inside the opening
+    poly(foamW * 0.62, 1, 7);             // the body of the lake, behind the foam
 
     // the lake's moiré, on this grid
-    var th = 0.42 + 0.12 * Math.sin(T * 0.06), ca = Math.cos(th), sa = Math.sin(th);
+    var th0 = 0.42 + 0.12 * Math.sin(T * 0.06), ca = Math.cos(th0), sa = Math.sin(th0);
     var f1 = TAU * 1.09, f2 = TAU * 0.945, ph1 = T * 0.5, ph2 = T * 0.7;
     var ccx = cols * (0.5 + 0.2 * Math.sin(T * 0.045)), ccy = rows * (0.5 + 0.16 * Math.cos(T * 0.037));
-    var deepL = 0.32 * H + 120, ahead = mode === "out" ? foamW * 0.75 : H * 0.5;
-    var foamK = mode === "out" ? 1 : 0.6;
+    var deepL = 0.32 * H + 120, behind = Math.max(W, H) * 0.5;
 
     ga.clearRect(0, 0, W, H); gb.clearRect(0, 0, W, H);
     ga.fillStyle = INK_A; gb.fillStyle = INK_B;
     ga.beginPath(); gb.beginPath();
     for (k = 0; k < N; k++) {
-      var x = X[k], y = Y[k], col = (k % cols), row = (k / cols) | 0;
-      var d = dir * (y - FR[col * 2 + (row % 2)]);
-      if (d < -ahead || y < -P || y > H + P) continue;
+      var x = X[k], y = Y[k];
+      if (y < -P || y > H + P) continue;
+      var d = DS[k] - edge(TH[k], R, T, a);     // > 0 out in the water, < 0 inside the opening
+      if (d < -behind) continue;
       var h = SP[k], Lm, c;
 
       if (d < 0) {
-        if (mode === "out") {
-          // spray thrown ahead of the foam line
-          if (h < 0.8) continue;
-          var sf = 1 + d / ahead;
-          Lm = 0.12 + 0.34 * sf; c = 0.62 + 0.3 * sf;
-        } else {
-          // wet specks the wave leaves behind as it passes, drying out
-          if (h < 0.78) continue;
-          var wf = Math.exp(d / (H * 0.085)) * fade;
-          Lm = 0.1 + 0.32 * wf; c = 0.3 + 0.4 * wf;
-          if (wf < 0.04) continue;
-        }
+        // wet specks the water leaves on the page as it pulls back, drying out
+        if (h < 0.78) continue;
+        var wf = Math.exp(d / (H * 0.085)) * fade;
+        if (wf < 0.04) continue;
+        Lm = 0.1 + 0.32 * wf; c = 0.3 + 0.4 * wf;
       } else {
-        // swells rolling in toward the shore, with a little cross-chop
+        // swells rolling in toward the edge, with a little cross-chop
         var sw = 0.5 + 0.5 * Math.sin(d * 0.042 - T * 5.2 + 0.8 * Math.sin(x * 0.009 + T * 0.4));
         var cr = 0.5 + 0.5 * Math.sin(x * 0.07 + d * 0.02 + T * 2.6);
         var dec = Math.exp(-Math.max(0, d - foamW) / deepL);
@@ -158,7 +151,7 @@
         c = 0.2 + (0.3 * sw + 0.08 * cr) * dec;
         if (d < foamW * 1.4) {
           // the foam line: lacy, brightest at the very edge, where the orange shows
-          var fw = smooth(foamW * 1.4, 0, d) * foamK;
+          var fw = smooth(foamW * 1.4, 0, d);
           var lace = 0.5 + 0.5 * Math.sin(x * 0.043 + y * 0.031 + T * 2.2) * Math.sin(x * 0.019 - y * 0.057 - T * 1.7);
           lace = smooth(0.22, 0.78, lace * 0.78 + h * 0.36);
           var fl = 0.4 + 0.6 * lace, fc = 0.5 + 0.47 * lace;
@@ -202,51 +195,51 @@
     ctx.restore();
   }
 
-  /* One wave, washing down from the top, once. mode "out": its leading edge
-     covers this page. mode "in": on the next page the same wave keeps going,
-     its trailing edge carrying on down and off the bottom. The two halves meet
-     at the same speed, so it reads as a single pass. */
-  function run(mode, bx, done) {
+  /* The page materializes: it arrives under calm water, and an opening in the
+     water spreads out from the point you clicked (on the last page), its foam
+     line rolling outward until the whole page is uncovered. */
+  function reveal(fx, fy, done) {
     mount();
-    var t0 = performance.now(), D = mode === "out" ? 0.56 : 0.62;
+    CX = fx * W; CY = fy * H;
+    TH = new Float32Array(N); DS = new Float32Array(N);
+    for (var k = 0; k < N; k++) { var dx = X[k] - CX, dy = Y[k] - CY; TH[k] = Math.atan2(dy, dx); DS[k] = Math.sqrt(dx * dx + dy * dy); }
+    var far = Math.max(Math.hypot(CX, CY), Math.hypot(W - CX, CY), Math.hypot(CX, H - CY), Math.hypot(W - CX, H - CY));
     var m = Math.min(W, H), amp = 10 + m * 0.035, foamW = 44 + m * 0.04;
-    var reach = H * 0.13;
-    if (bx == null) bx = W / 2;
+    var a = -(foamW * 1.5 + amp + 16), b = far + foamW * 0.8 + amp + 24;
+    var t0 = performance.now(), D = 0.82;
     cancelAnimationFrame(raf);
     (function frame(now) {
-      var p = Math.min(1, (now - t0) / 1000 / D), F, bulge = 0, fade = 1;
-      if (mode === "out") {
-        // the leading edge: in from the top, gathering speed
-        var a = -(foamW * 0.8 + amp + reach + 24), b = H + foamW * 1.5 + amp + 16;
-        var e = 0.7 * p + 0.3 * p * p;
-        F = a + (b - a) * e;
-        bulge = reach * (1 - e * 0.85);
-      } else {
-        // the trailing edge: already moving, easing out past the bottom
-        var a2 = -(foamW * 1.5 + amp + 16), b2 = H + foamW * 0.8 + amp + 24;
-        var e2 = 1 - Math.pow(1 - p, 1.5);
-        F = a2 + (b2 - a2) * e2;
-        fade = 1 - smooth(0.55, 1, p);
-      }
-      render(mode, F, amp, foamW, clock(), bx, bulge, fade);
+      var p = Math.min(1, (now - t0) / 1000 / D);
+      var e = 1 - Math.pow(1 - p, 1.8);                 // opens quickly, settles out at the corners
+      render(a + (b - a) * e, amp, foamW, clock(), 1 - smooth(0.6, 1, p));
       if (p < 1) raf = requestAnimationFrame(frame);
       else { raf = 0; if (done) done(); }
     })(t0);
   }
 
-  window.flowTo = function (url, x) {
+  /* Leaving: no animation here, so the next page starts loading the moment you
+     click. Where you clicked is passed along so the water opens from there. */
+  window.flowTo = function (url, x, y) {
     if (reduce) { window.location.href = url; return; }
-    try { sessionStorage.setItem("flow", "1"); } catch (e) {}
-    root.classList.add("flowing");
-    var went = false, go = function () { if (!went) { went = true; window.location.href = url; } };
-    run("out", x, go);
-    setTimeout(go, 800);   // in case frames are throttled
+    var vw = window.innerWidth || 1, vh = window.innerHeight || 1;
+    var fx = x == null ? 0.5 : Math.max(0, Math.min(1, x / vw)), fy = y == null ? 0.5 : Math.max(0, Math.min(1, y / vh));
+    var v = fx.toFixed(3) + "," + fy.toFixed(3);
+    try { sessionStorage.setItem("flow", v); } catch (e) {}
+    // window.name survives navigation inside the same frame, for viewers that block sessionStorage
+    try { if (window.name !== "peek") window.name = "flow:" + v; } catch (e) {}
+    window.location.href = url;
   };
 
-  /* arriving: the water that covered the last page drains off this one */
+  /* arriving: the water that covers this page opens up and reveals it */
   if (root.classList.contains("flow-in")) {
+    var at = [0.5, 0.5];
+    try {
+      var v = String(window.__flow || "").split(",");
+      if (v.length === 2 && isFinite(+v[0]) && isFinite(+v[1])) at = [+v[0], +v[1]];
+    } catch (e) {}
     try { sessionStorage.removeItem("flow"); } catch (e) {}
-    run("in", null, function () { if (cv && cv.parentNode) cv.parentNode.removeChild(cv); root.classList.remove("flow-settle"); });
+    if (/^flow:/.test(window.name)) window.name = "";
+    reveal(at[0], at[1], function () { if (cv && cv.parentNode) cv.parentNode.removeChild(cv); root.classList.remove("flow-settle"); });
     requestAnimationFrame(function () {
       root.classList.add("flow-settle");
       requestAnimationFrame(function () {
@@ -257,12 +250,31 @@
     });
   }
 
+  /* warm the cache: fetch a page as soon as someone shows intent to open it,
+     and the pages in the nav once this one is idle */
+  var warmed = {};
+  function warm(href) {
+    try {
+      var u = new URL(href, location.href);
+      if (u.origin !== location.origin || u.pathname === location.pathname || warmed[u.pathname]) return;
+      warmed[u.pathname] = 1;
+      var l = document.createElement("link"); l.rel = "prefetch"; l.href = u.pathname; document.head.appendChild(l);
+    } catch (e) {}
+  }
+  function intent(e) { var a = e.target.closest && e.target.closest("a[href]"); if (a && a.target !== "_blank") warm(a.href); }
+  document.addEventListener("pointerover", intent, { passive: true });
+  document.addEventListener("touchstart", intent, { passive: true });
+  document.addEventListener("focusin", intent);
+  var idle = window.requestIdleCallback || function (f) { return setTimeout(f, 1500); };
+  window.addEventListener("load", function () { idle(function () { Array.prototype.forEach.call(document.querySelectorAll(".nav a[href]"), function (a) { warm(a.href); }); }); });
+
   /* coming back with the browser's back button: clear the water */
   window.addEventListener("pageshow", function (e) {
     if (!e.persisted) return;
-    root.classList.remove("flowing", "flow-in", "flow-settle");
+    root.classList.remove("flow-in", "flow-settle");
     cancelAnimationFrame(raf);
     if (cv && cv.parentNode) cv.parentNode.removeChild(cv);
     try { sessionStorage.removeItem("flow"); } catch (err) {}
+    if (/^flow:/.test(window.name)) window.name = "";
   });
 })();
