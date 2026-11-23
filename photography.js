@@ -43,8 +43,9 @@
   });
 
   /* row-ordered masonry: give each tile as many 8px grid rows as its photo is tall */
-  var grid = $(".ph-grid"), items = $$(".ph-item");
+  var grid = $(".ph-grid");
   function lay() {
+    var items = $$(".ph-item", grid);
     var cs = getComputedStyle(grid), cols = cs.gridTemplateColumns.split(" ").length;
     var colW = grid.clientWidth / cols;
     // 1px rows: each tile is as tall as its photo, to the pixel, so neighbours meet with no gap.
@@ -147,6 +148,7 @@
 
   /* ---------- viewer ---------- */
   var tiles = $$(".ph-open"), lb = $("#lb"), img = $("#lb-img"), count = $("#lb-count");
+  function refreshTiles() { tiles = $$(".ph-open", grid); }
   var cur = -1, opener = null, canDialog = typeof lb.showModal === "function";
 
   function show(i, dir) {
@@ -179,7 +181,58 @@
     document.documentElement.classList.remove("lb-on");
     if (opener) opener.focus();
   });
-  tiles.forEach(function (t, i) { t.addEventListener("click", function () { open(i); }); });
+  grid.addEventListener("click", function (e) {
+    var t = e.target.closest(".ph-open"); if (!t) return;
+    refreshTiles(); open(tiles.indexOf(t));
+  });
+
+  /* ---------- shuffle ----------
+     Every press deals a fresh random order. Photos this visitor hasn't scrolled past yet come first,
+     so the top of the grid is always something new; ones they've seen go to the back. When almost
+     everything has been seen, the slate is wiped (except what is on screen right now). */
+  var KEY = "ph-seen", seen = {};
+  try { seen = JSON.parse(sessionStorage.getItem(KEY) || "{}") || {}; } catch (e) { seen = {}; }
+  function save() { try { sessionStorage.setItem(KEY, JSON.stringify(seen)); } catch (e) {} }
+  if ("IntersectionObserver" in window && !preview) {
+    var seenIO = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { seen[e.target.dataset.k] = 1; } });
+      save();
+    }, { threshold: 0.4 });
+    $$(".ph-item", grid).forEach(function (li) { seenIO.observe(li); });
+  }
+  function shuffled(a) {
+    for (var i = a.length - 1; i > 0; i--) { var r = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[r]; a[r] = t; }
+    return a;
+  }
+  function onScreen(li) { var r = li.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; }
+  var btn = $("#ph-shuffle"), status = $("#ph-status");
+  btn.addEventListener("click", function () {
+    var all = $$(".ph-item", grid), cols = getComputedStyle(grid).gridTemplateColumns.split(" ").length;
+    var visibleNow = all.filter(onScreen), fresh = all.filter(function (li) { return !seen[li.dataset.k]; });
+    // too few unseen left to fill the top two rows: start over, but never repeat what is on screen now
+    if (fresh.length < cols * 2) {
+      seen = {}; visibleNow.forEach(function (li) { seen[li.dataset.k] = 1; }); save();
+      fresh = all.filter(function (li) { return !seen[li.dataset.k]; });
+      status.textContent = "You've seen them all. Starting a new round.";
+    } else status.textContent = "";
+    var old = all.filter(function (li) { return fresh.indexOf(li) < 0; });
+    var next = shuffled(fresh).concat(shuffled(old));
+    var apply = function () {
+      next.forEach(function (li) { grid.appendChild(li); li.classList.add("in"); });
+      lay(); refreshTiles();
+    };
+    var top = $(".ph-gallery").getBoundingClientRect().top;
+    if (top < 0) window.scrollTo({ top: scrollY + top - 80, behavior: reduce ? "auto" : "smooth" });
+    if (document.startViewTransition && !reduce) {
+      all.forEach(function (li) { li.style.viewTransitionName = "ph-" + li.dataset.k; });
+      var vt = document.startViewTransition(apply);
+      vt.finished.then(function () { all.forEach(function (li) { li.style.viewTransitionName = ""; }); });
+    } else {
+      grid.classList.add("dealing");
+      setTimeout(function () { apply(); grid.classList.remove("dealing"); }, reduce ? 0 : 260);
+    }
+    btn.classList.remove("spin"); void btn.offsetWidth; btn.classList.add("spin");
+  });
   $("#lb-x").addEventListener("click", close);
   $("#lb-prev").addEventListener("click", function () { show(cur - 1, -1); });
   $("#lb-next").addEventListener("click", function () { show(cur + 1, 1); });

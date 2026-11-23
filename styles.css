@@ -627,7 +627,7 @@ h2.sec em { font-style: italic; color: var(--accent-2); }
 /* logo lockup: "Photography" is sized by photography.js so it runs exactly as wide as "Caurinus" */
 .ph-lockup { grid-column: 1; margin: 0; display: inline-flex; flex-direction: column; align-items: flex-start; justify-self: start; color: #fff; font-weight: 400; }
 .lk-a { position: relative; font: 400 clamp(46px, 5.6vw, 84px)/0.9 var(--serif); letter-spacing: -0.05em; }
-.lk-b { font: italic 400 clamp(29px, 3.5vw, 53px)/1 var(--serif); letter-spacing: -0.03em; margin-top: 0.06em; white-space: nowrap; }
+.lk-b { font: italic 400 clamp(29px, 3.5vw, 53px)/0.86 var(--serif); letter-spacing: -0.03em; margin-top: -0.1em; white-space: nowrap; }
 .lk-fn { position: absolute; left: 100%; top: 0.08em; margin-left: 0.06em; font: 400 0.36em/1 var(--sans); color: var(--muted); text-decoration: none; }
 .lk-fn:hover, .lk-fn:focus-visible { color: var(--text); }
 .ph-lede { grid-column: 1; margin-top: clamp(12px, 1.4vw, 18px); font-size: clamp(16px, 1.35vw, 20px); color: rgba(243, 237, 232, 0.86); max-width: 30em; }
@@ -637,7 +637,18 @@ h2.sec em { font-style: italic; color: var(--accent-2); }
 .ph-quote footer::before { content: "- "; }
 
 /* row-ordered masonry: each tile spans as many 8px rows as its photo is tall */
-.ph-gallery { padding-top: clamp(26px, 3.6vw, 52px); }
+.ph-gallery { padding-top: clamp(22px, 3vw, 44px); }
+.ph-tools { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: clamp(12px, 1.4vw, 18px); }
+.ph-shuffle { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 0 18px 0 15px; border: 1px solid var(--line-2); border-radius: 999px; background: transparent; color: var(--text); font: 500 15px/1 var(--sans); cursor: pointer; transition: border-color 0.3s, background 0.3s, color 0.3s; }
+.ph-shuffle:hover { border-color: var(--accent); color: #fff; background: rgba(94, 214, 196, 0.08); }
+.ph-shuffle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.ph-shuffle svg { transition: transform 0.6s var(--ease); }
+.ph-shuffle.spin svg { animation: ph-spin 0.6s var(--ease); }
+@keyframes ph-spin { 50% { transform: scaleX(-1) rotate(-12deg); } }
+.ph-status { font-size: 13px; color: var(--muted); }
+.ph-status:empty { display: none; }
+.ph-grid.dealing .ph-item { opacity: 0; transition: opacity 0.25s; }
+::view-transition-group(*) { animation-duration: 0.55s; animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1); }
 /* seamless row-ordered masonry: no gaps, no rounding. Each tile spans as many 1px rows as its photo is tall */
 .ph-grid { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1px; gap: 0; }
 .ph-item { margin: 0; }

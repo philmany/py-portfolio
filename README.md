@@ -26,7 +26,7 @@ Production is the Cloudflare Worker `py-portfolio` (static assets only), deploye
 | --- | --- |
 | `data.js` | All content: tagline, work, play, brands, links, water memories. The file you edit. |
 | `index.html`, `about.html` | Home and About pages. |
-| `photography.html`, `photography.js`, `photos/` | Caurinus Photography (Play): row-ordered photo grid and full-screen viewer (arrows, swipe). Photos are WebP, `-sm` for the grid and `-lg` for the viewer, with all metadata stripped (EXIF, GPS, XMP, colour profiles). `#preview` hides navigation and auto-scrolls for the hover preview. |
+| `photography.html`, `photography.js`, `photos/` | Caurinus Photography (Play): seamless masonry grid with a Shuffle button (random order, photos the visitor hasn't seen this visit come first; tracked in `sessionStorage`) and a full-screen viewer (arrows, swipe). Photos are WebP, `-sm` for the grid and `-lg` for the viewer, with all metadata stripped (EXIF, GPS, XMP, colour profiles). `#preview` hides navigation and auto-scrolls for the hover preview. |
 | `styles.css` | Look and layout; tokens in `:root`. |
 | `fonts/` | Self-hosted WOFF2: ZT Nature (body) and PP Museum (headings). |
 | `app.js`, `about.js` | Build each page from `data.js`: work list, hover previews, Play list, reveals. `app.js` also runs the demo fish that swims up to Microsoft Advertising to show the hover preview (on "View my Work", or after 1s in view with no hover). |
