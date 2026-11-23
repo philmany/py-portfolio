@@ -427,12 +427,12 @@ h2.sec em { font-style: italic; color: var(--accent-2); }
   font: italic 400 clamp(28px, 2.7vw, 40px)/1.02 var(--serif); letter-spacing: -0.04em; word-spacing: -0.05em; }
 .ab-end { margin-top: clamp(24px, 4vw, 56px); }
 .nav nav a[aria-current="page"] { opacity: 1; background-size: 100% 1px; }
-/* signature in the nav: traced from oil pastel, kept white */
+/* logo in the nav: crayon PHILMAN traced to SVG, kept white */
 .brand.sig { display: block; margin: -5px 0; line-height: 0; }
-.brand.sig img { display: block; height: 32px; width: auto; transform-origin: 20% 70%;
+.brand.sig img { display: block; height: 22px; width: auto; transform-origin: 20% 70%;
   transition: transform 0.7s cubic-bezier(0.22, 1.28, 0.36, 1), opacity 0.3s; opacity: 0.94; }
 .brand.sig:hover img, .brand.sig:focus-visible img { transform: rotate(-3deg) scale(1.06); opacity: 1; }
-@media (max-width: 760px) { .brand.sig img { height: 26px; } }
+@media (max-width: 760px) { .brand.sig img { height: 18px; } }
 
 /* Say hello: the booking button sits right under the heading; the links below stay Resume, LinkedIn, Email */
 .about .say-book { margin-top: clamp(22px, 2.6vw, 34px); }

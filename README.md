@@ -37,7 +37,7 @@ Production is the Cloudflare Worker `py-portfolio` (static assets only), deploye
 | `heron.js` | Dot-drawn fish and heron in About: hover the fish and the heron swoops. |
 | `sound.js` | Generated wave sound, starts muted. |
 | `memories/`, `about/`, `previews/`, `logos/` | Memory snapshots, About portrait and the two sketches pasted on it, screenshot previews for outside sites, brand logos. |
-| `signature.svg` | Header brand on every page: the oil-pastel "Philman" signature, traced to a white SVG. |
+| `logo.svg` | Header brand on every page: the crayon "PHILMAN" wordmark, traced to a white SVG with the grain kept. |
 | `work/pretzel.html`, `img/` | Pretzel 1.0 case study, a copy of `philmany/pretzel-case-study`. |
 | `Resume_2027_PhilmanYeung.pdf` | Resume, linked from About. |
 
