@@ -184,7 +184,7 @@
   }
 
   var art = window.WaterArt && window.WaterArt.create({
-    canvas: $("#water"), glow: $("#glow"), haze: $("#haze"), host: hero, places: W.places, startPaused: reduce,
+    canvas: $("#water"), glow: $("#glow"), haze: $("#haze"), host: hero, places: W.places, startPaused: window.Motion ? window.Motion.paused() : reduce,
     getQuietRects: function () {
       // the title; the outlines carry their own close feather (CSS drop-shadow)
       // ~30% more black water around the headline and the booking button
@@ -207,16 +207,13 @@
   var pauseBtn = $("#pause"), memBtn = $("#memories");
   if (art) {
     hero.classList.add("live");
-    var setPause = function (p) {
-      art.setPaused(p);
-      $(".pl", pauseBtn).textContent = p ? "Play motion" : "Pause motion";
-      pauseBtn.setAttribute("aria-pressed", String(p));
-    };
-    setPause(reduce);
-    pauseBtn.addEventListener("click", function () { setPause(!art.isPaused()); });
+    // the label stays "Pause motion"; aria-pressed carries the state (motion.js)
+    if (window.Motion) window.Motion.on(function (p) { art.setPaused(p); });
+    else {
+      art.setPaused(reduce);
+      pauseBtn.addEventListener("click", function () { var p = !art.isPaused(); art.setPaused(p); pauseBtn.setAttribute("aria-pressed", String(p)); });
+    }
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { art.relayout(); });
-  } else {
-    pauseBtn.hidden = true;
   }
   // With every memory showing, nudge the snapshots apart so no two photos overlap.
   // Boxes are measured untransformed (beside their outline), padded for the tilt, then pushed apart along the shorter overlap.
@@ -602,7 +599,7 @@
     function inView() { var t = ttl.getBoundingClientRect(); return t.top > 70 && t.bottom < window.innerHeight - 40; }
     function play(tries) {
       tries = tries || 0;
-      if (live) return;
+      if (live || (window.Motion && window.Motion.paused())) return;
       if (!inView()) { if (tries < 8) setTimeout(function () { play(tries + 1); }, 400); return; }
       live = true;
       // the title's end, in list coordinates (the fish lives inside the list, so it scrolls with it)
@@ -649,4 +646,6 @@
     var cue = $("#cue");
     if (cue) cue.addEventListener("click", function () { clearTimeout(waitT); stopFish(); setTimeout(function () { play(); }, 1000); });
   })();
+  /* Escape dismisses hover content without moving the pointer (WCAG 1.4.13) */
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { hidePeek(); tipOff(); } });
 })();

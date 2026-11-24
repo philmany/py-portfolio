@@ -268,7 +268,8 @@
     raf = 0;
     if (!visible) return;
     var dt = Math.min(0.05, (ts - (last || ts)) / 1000);
-    last = ts; clock += dt;
+    last = ts;
+    if (swoop || !(window.Motion && window.Motion.paused())) clock += dt;   // paused: the fish holds still until tapped
     if (swoop) {
       var s = clock - swoop.t0;
       if (fishGone < 0 && s >= T_IN) fishGone = clock;            // snatched

@@ -27,7 +27,7 @@
     box.appendChild(sizer); box.appendChild(cur);
     var i = 0;
     if (!reduce) setInterval(function () {
-      if (document.hidden) return;
+      if (document.hidden || (window.Motion && window.Motion.paused())) return;
       i = (i + 1) % words.length;
       var next = el("span", "roll-w", words[i]);
       box.appendChild(next);

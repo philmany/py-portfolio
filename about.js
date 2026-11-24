@@ -129,6 +129,7 @@
     a.addEventListener("blur", tipOff);
   });
   window.addEventListener("scroll", tipOff, { passive: true });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") tipOff(); });
 
   /* split headings and reveals */
   $$("[data-split]").forEach(function (h) {
