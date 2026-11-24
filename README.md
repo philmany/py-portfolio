@@ -40,7 +40,7 @@ Production is the Cloudflare Worker `py-portfolio` (static assets only), deploye
 | `sound.js` | Generated wave sound, starts muted. |
 | `memories/`, `about/`, `previews/`, `logos/` | Memory snapshots, About portrait and the two sketches pasted on it, screenshot previews for outside sites, brand logos. |
 | `logo.svg` | Header brand on every page: the crayon "PHILMAN" wordmark, traced to a white SVG with the grain kept. |
-| `work/pretzel.html`, `img/` | Pretzel 1.0 case study, a copy of `philmany/pretzel-case-study`. |
+| `work/pretzel.html`, `img/` | Pretzel 1.0 case study for Snack, built on the py design system in Snack's dark theme. |
 | `Resume_2027_PhilmanYeung.pdf` | Resume, linked from About. |
 
 ## Editing `data.js`
@@ -53,6 +53,6 @@ Production is the Cloudflare Worker `py-portfolio` (static assets only), deploye
 - **Brands**: `brands.items`. Drop an SVG or transparent PNG in `logos/`; it is recoloured white automatically.
 - **Water memories**: `water.places` (grouped by `region`). `last` ("YYYY-MM") sets how often rain falls; outlines live in `shapes.js` under the same name.
 
-## Pretzel page changes
+## Pretzel page
 
-Resynced from `philmany/pretzel-case-study` on request. Local edits: the name link returns to `/#work`, assets use root-relative paths, and `#preview` hides navigation and slowly auto-scrolls for the hover preview. Also keep the no-cut-off fixes on resync: wider `.split .w` reveal windows, and narrow-phone fixes for the Atomic cards, button grid and flywheel labels.
+Built on `tokens.css` (ZT Nature + PP Museum, type ramp, spacing, motion, a11y rules) with Snack's own colour tokens in place of the two accents, on `--bg`. No longer synced from `philmany/pretzel-case-study`; edit it here. `#preview` hides navigation and slowly auto-scrolls for the hover preview. Pause motion shares the site's `localStorage.motion`.
