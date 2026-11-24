@@ -425,9 +425,8 @@ h2.sec em { font-style: italic; color: var(--accent-2); }
 .ab-text .ab-place { color: var(--accent); }
 .ab-text .ab-close { margin-top: 2em; padding-top: 1.4em; border-top: 1px solid var(--line);
   font: italic 400 clamp(28px, 2.7vw, 40px)/1.02 var(--serif); letter-spacing: -0.04em; word-spacing: -0.05em; }
-/* opening "Welcome.": bold italic PP Museum, same face as the closing line */
-.ab-text .ab-welcome { font: italic 800 clamp(34px, 3.4vw, 50px)/1 var(--serif); letter-spacing: -0.045em; word-spacing: -0.05em; color: #fff; }
-.ab-text .ab-welcome + p { margin-top: 0.9em; }
+/* opening "Welcome.": body size, ZT Nature regular, in white */
+.ab-text .ab-welcome { font-style: normal; font-weight: 400; color: #fff; }
 /* the café aside: italic and grey so it sits back from the story */
 .ab-text .ab-soft { font-style: italic; color: var(--muted); }
 .ab-end { margin-top: clamp(24px, 4vw, 56px); }
