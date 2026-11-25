@@ -103,8 +103,32 @@
     return { d: d.join(""), w: w, h: h };
   }
 
+  // A soft silhouette of each place for the lit dot patch: closed shores filled, every shore drawn
+  // as a broad band, then blurred, so the patch is the place's rough shape rather than its exact line.
+  function maskOf(o, sh) {
+    var M = 64, c = document.createElement("canvas"), g = c.getContext && c.getContext("2d");
+    if (!g || !window.Path2D) return null;
+    c.width = c.height = M;
+    var sx = (M * 0.8) / o.w, sy = (M * 0.8) / o.h;
+    g.setTransform(sx, 0, 0, sy, M * 0.1, M * 0.1);
+    var path = new Path2D(o.d);
+    g.fillStyle = g.strokeStyle = "#fff"; g.lineJoin = g.lineCap = "round";
+    if ((sh.rings || []).length && !(sh.lines || []).length) g.fill(path);
+    g.lineWidth = 9;  // path units: the outline sits in a 100-unit box
+    g.stroke(path);
+    var c2 = document.createElement("canvas"), g2 = c2.getContext("2d");
+    c2.width = c2.height = M;
+    if ("filter" in g2) g2.filter = "blur(1.6px)";
+    g2.drawImage(c, 0, 0);
+    var px = g2.getImageData(0, 0, M, M).data, data = new Float32Array(M * M);
+    for (var k = 0; k < M * M; k++) data[k] = px[k * 4 + 3] / 255;
+    return { M: M, data: data };
+  }
+  var masks = [];
+
   var mems = W.places.map(function (p, i) {
     var o = outline(SH[p.name] || {}) || { d: "M50 50m-40 0a40 40 0 1 0 80 0a40 40 0 1 0 -80 0", w: 100, h: 100 };
+    masks[i] = maskOf(o, SH[p.name] || {});
     var svg = document.createElementNS(NS, "svg");
     svg.setAttribute("viewBox", (-3) + " " + (-3) + " " + (o.w + 6).toFixed(2) + " " + (o.h + 6).toFixed(2));
     svg.setAttribute("class", "shape");
@@ -117,6 +141,8 @@
       el("span", { class: "mem-card", "aria-hidden": "true" },
         el("b", { text: p.name }), el("span", { class: "where", text: p.where }), el("span", { class: "when", text: lastLine(p) })));
     b.insertBefore(el("span", { class: "mem-fx", "aria-hidden": "true" }, svg), b.firstChild);
+    // the hit area sits over the lit dots (the patch is foreshortened, so it is shorter than the outline box)
+    b.insertBefore(el("span", { class: "mem-hit", "aria-hidden": "true" }), b.firstChild);
     if (p.photo) {
       b.classList.add("has-snap");
       var img = el("img", { src: p.photo, alt: "", loading: "lazy", decoding: "async" });
@@ -126,6 +152,7 @@
     }
     b._ar = o.w / o.h;
     b.addEventListener("click", function (e) { e.stopPropagation(); setOn(b, !b.classList.contains("on")); });
+    ["pointerenter", "pointerleave", "focus", "blur"].forEach(function (ev) { b.addEventListener(ev, function () { setTimeout(syncHot, 0); }); });
     memLayer.appendChild(b);
     return b;
   });
@@ -140,6 +167,14 @@
       m.setAttribute("aria-expanded", String(x));
     });
     hero.classList.toggle("focus", !!on);
+    if (art) art.setFocus(on ? mems.indexOf(b) : -1);
+  }
+  // Which patch is under the pointer or keyboard focus: it lights up and the lake slows down.
+  function syncHot() {
+    if (!art) return;
+    var h = -1;
+    mems.forEach(function (m, i) { if (m.matches(":hover") || m.matches(":focus-visible")) h = i; });
+    art.setHot(h);
   }
   hero.addEventListener("click", function (e) { if (!e.target.closest(".mem, .ctl, .ctl-r, .cue-wrap, a")) setOn(null, false); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") setOn(null, false); });
@@ -161,7 +196,7 @@
       return !visible || document.hidden || hero.classList.contains("focus") || hero.classList.contains("memories") ||
         (window.Motion && window.Motion.paused()) || !!memLayer.querySelector(".mem:hover, .mem:focus-visible");
     }
-    function clear() { mems.forEach(function (m) { m.classList.remove("pulse"); }); }
+    function clear() { mems.forEach(function (m) { m.classList.remove("pulse"); }); if (art) art.setActive(-1); }
     function stop() { clearInterval(lap); lap = 0; idx = -1; clear(); }
     function arm() { clearTimeout(wait); if (!done && !lap) wait = setTimeout(start, 2000); }
     function start() {
@@ -173,6 +208,7 @@
         clear();
         if (++idx >= ring.length) { stop(); done = true; return; }
         ring[idx].classList.add("pulse");
+        if (art) art.setActive(mems.indexOf(ring[idx]));
       }
       step(); lap = setInterval(step, 1000);
     }
@@ -217,7 +253,7 @@
       var sideSign = side === "left" ? -1 : side === "below" ? 0 : 1;
       b.style.setProperty("--sdx", (sideSign * (sc - 1) * bw / 2).toFixed(1) + "px");
       b.style.setProperty("--sdy", ((sc - 1) * bh / 2).toFixed(1) + "px");
-      return { x: cx, y: cy, r: Math.max(bw, bh) * 0.5 };
+      return { x: cx, y: cy, r: Math.max(bw, bh) * 0.5, ar: ar };
     });
   }
 
@@ -228,8 +264,9 @@
     return { x: a.left - h.left, y: a.top - h.top, w: a.width, h: a.height, pad: pad };
   }
 
-  var art = window.WaterArt && window.WaterArt.create({
-    canvas: $("#water"), glow: $("#glow"), haze: $("#haze"), host: hero, places: W.places, startPaused: window.Motion ? window.Motion.paused() : reduce,
+  var art = null;
+  art = window.WaterArt && window.WaterArt.create({
+    canvas: $("#water"), glow: $("#glow"), haze: $("#haze"), lit: $("#lit"), masks: masks, host: hero, places: W.places, startPaused: window.Motion ? window.Motion.paused() : reduce,
     getQuietRects: function () {
       // the title; the outlines carry their own close feather (CSS drop-shadow)
       // ~30% more black water around the headline and the booking button
@@ -240,7 +277,22 @@
       return r;
     },
     getMarkers: function (w, h) { return placeShapes(w, h); },
-    onLayout: function (w) {
+    onLayout: function (w, h, boxes) {
+      mems.forEach(function (b, i) {
+        var q = boxes && boxes[i], hit = b.querySelector(".mem-hit");
+        if (q && hit) {
+          var t = 44, hw = Math.max(t, q.w), hh = Math.max(t, q.h);  // at least a 44px target
+          hit.style.left = (q.x + q.w / 2 - hw / 2 - parseFloat(b.style.left)).toFixed(1) + "px";
+          hit.style.top = (q.y + q.h / 2 - hh / 2 - parseFloat(b.style.top)).toFixed(1) + "px";
+          hit.style.width = hw.toFixed(1) + "px"; hit.style.height = hh.toFixed(1) + "px";
+          // the label hangs off the lit dots, not the (hidden) outline box; when open it still follows the grown outline
+          var bh = parseFloat(b.style.height), ht = parseFloat(hit.style.top), hb = ht + hh, up = b.classList.contains("up");
+          var cdy = parseFloat(b.style.getPropertyValue("--cdy")) || 0;
+          b.style.setProperty("--ht", ht.toFixed(1) + "px");
+          b.style.setProperty("--hb", hb.toFixed(1) + "px");
+          b.style.setProperty("--cdy", (up ? cdy - ht : cdy + (bh - hb)).toFixed(1) + "px");
+        }
+      });
       mems.forEach(function (b) {
         var card = b.querySelector(".mem-card"), cx = parseFloat(b.style.left) + parseFloat(b.style.width) / 2;
         var cw = card.offsetWidth || 200, lo = 12 - (cx - cw / 2), hi = w - 12 - (cx + cw / 2);

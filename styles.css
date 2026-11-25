@@ -161,32 +161,39 @@ html.motion-paused *, html.motion-paused *::before, html.motion-paused *::after 
 .pz { width: 10px; height: 11px; border-left: 3px solid currentColor; border-right: 3px solid currentColor; }
 .ctl[aria-pressed="true"] .pz { border: 0; width: 0; height: 0; border-left: 10px solid currentColor; border-top: 6px solid transparent; border-bottom: 6px solid transparent; }
 
-/* Memories: white outlines of each body of water */
+/* Memories: each body of water is a patch of lit dots in the lake (water.js, #lit).
+   The outline only appears once a patch is opened. */
+.hero .lit { z-index: var(--z-art); pointer-events: none; transition: opacity var(--fade-slow) var(--ease); }
 .mem-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 /* while a lake is hovered, focused or all memories are showing, its label rises above the headline (still under the controls) */
 .hero:has(.mem:hover) .mem-layer, .hero:has(.mem:focus-visible) .mem-layer, .hero.focus .mem-layer, .hero.memories .mem-layer { z-index: var(--z-hero-ctl); }
 .mem {
-  position: absolute; min-width: var(--target); min-height: var(--target); border: 0; background: none; padding: 0;
-  cursor: pointer; pointer-events: auto; color: inherit; font: inherit; transition: opacity var(--fade-slow) var(--ease);
+  position: absolute; border: 0; background: none; padding: 0;
+  cursor: pointer; pointer-events: none; color: inherit; font: inherit; transition: opacity var(--fade-slow) var(--ease);
 }
+/* the target is the lit patch itself (sized in app.js from the dots); the button box stays the outline's box */
+.mem-hit { position: absolute; pointer-events: auto; border-radius: 40%; }
+.mem:focus-visible { outline: none; }
+.mem:focus-visible .mem-hit { outline: 2px solid var(--accent); outline-offset: var(--space-1); }
 .mem-fx { position: absolute; inset: 0; pointer-events: none; transform-origin: 50% 50%; transition: transform var(--move-spring) var(--ease-spring); }
 .mem.on .mem-fx { transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--sc, 1)); }
-.shape { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; filter: var(--drop-lake); transition: filter var(--fade-slow) var(--ease); }
+.shape { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; filter: var(--drop-lake);
+  opacity: 0; transition: filter var(--fade-slow) var(--ease), opacity var(--fade-slow) var(--ease); }
+.mem.on .shape { opacity: 1; }
 .shape path {
   fill: none; stroke: var(--text-strong); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke;
   opacity: 0.78; transition: opacity var(--fade), stroke-width var(--fade);
 }
-.mem:hover .shape path, .mem:focus-visible .shape path, .mem.on .shape path, .hero.memories .shape path, .mem.pulse .shape path { opacity: 1; stroke-width: 2.3; }
-.mem:hover .shape, .mem:focus-visible .shape, .mem.pulse .shape { filter: var(--drop-lake-hi); }
-.mem:focus-visible { outline-offset: var(--space-2); }
+.mem.on .shape path { opacity: 1; stroke-width: 2.3; }
+.mem.on .shape { filter: var(--drop-lake-hi); }
 .mem-card {
-  position: absolute; left: 50%; top: calc(100% + var(--space-2-5)); white-space: nowrap; text-align: left; z-index: 2;
+  position: absolute; left: 50%; top: calc(var(--hb, 100%) + var(--space-2-5)); white-space: nowrap; text-align: left; z-index: 2;
   transform: translate(calc(-50% + var(--shift, 0px)), 6px); opacity: 0; visibility: hidden; pointer-events: none;
   background: var(--surface); box-shadow: var(--shadow-card);  /* solid: nothing behind shows through */
   border: var(--hairline) solid var(--line-2); border-radius: var(--radius-lg); padding: var(--space-2-5) var(--space-3);
   transition: opacity var(--fade), transform var(--move-spring) var(--ease-spring), visibility 0s var(--fade);
 }
-.mem.up .mem-card { top: auto; bottom: calc(100% + var(--space-2-5)); transform: translate(calc(-50% + var(--shift, 0px)), -6px); }
+.mem.up .mem-card { top: auto; bottom: calc(100% - var(--ht, 0px) + var(--space-2-5)); transform: translate(calc(-50% + var(--shift, 0px)), -6px); }
 .mem:hover .mem-card, .mem:focus-visible .mem-card, .hero.memories .mem-card {
   opacity: 1; visibility: visible; transform: translate(calc(-50% + var(--shift, 0px)), 0); transition-delay: 0s;
 }
@@ -221,6 +228,7 @@ html.motion-paused *, html.motion-paused *::before, html.motion-paused *::after 
 .mem.on .mem-snap { transform: translate(var(--mx), var(--my)) rotate(var(--r)) scale(var(--s)); --mx: calc(var(--tx, 0px) + var(--sdx, 0px)); --my: calc(var(--ty, 0px) + var(--sdy, 0px)); --s: 2.9; transition-delay: calc(var(--stagger) * 2), calc(var(--stagger) * 2), 0s; }
 .mem.on .mem-snap:hover { --s: 3.1; transition-delay: 0s; }
 .mem.has-snap:hover { z-index: 4; }
+.mem:hover { z-index: 4; }
 .hero.focus .mem:not(.on) .mem-snap { opacity: 0.2; }
 @media (max-width: 760px) {
   .mem-snap { padding: var(--space-0-5); bottom: -6px; }
@@ -237,6 +245,8 @@ html.motion-paused *, html.motion-paused *::before, html.motion-paused *::after 
 .hero.memories .water, .hero.memories .haze { opacity: 0.5; }
 .hero.focus .hero-text { opacity: 0.1; }
 .hero.focus .mem:not(.on) { opacity: 0.25; }
+/* the open memory's dots stay bright; the engine dims the other patches itself */
+.hero.focus .lit { opacity: 0.85; }
 
 /* Sections */
 .section { padding: var(--section-y) 0 0; }

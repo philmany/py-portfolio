@@ -21,6 +21,11 @@
     are separate ink layers, the orange sitting 2px above the teal (off
     register), and the moiré line screens are woven into each layer.
   - Dots fade under the text, under the navigation and into the page below.
+  - Memories: each body of water is a patch of lit dots woven into the same
+    tilted grid, so it rides the swell and foreshortens with the lake. The
+    patch is the place's shoreline, softened, sampled at the grid's own dots.
+    Hovering one brightens it and slows the whole lake; focusing one keeps
+    the lake slow while its outline and photo come forward (app.js).
   - Ambient motion and pausing never change any data value.
 */
 (function () {
@@ -55,6 +60,11 @@
   })();
 
   var C2 = 0.34, DAMP = 0.9935, STEP = 1000 / 60, TAU = Math.PI * 2;
+  // TEMPO: the lake's clock runs at 60% of real time; CALM is how far it slows while a memory is hovered or open.
+  // DOT_ALPHA: the water's dots are printed at reduced opacity so the lit memories carry the light.
+  // DENSITY: dots per area relative to the first halftone (pitch shrinks by 1/sqrt).
+  var TEMPO = 0.6, CALM = 0.28, DOT_ALPHA = 0.55, DENSITY = 2;
+  var LIT = "#fff3e2", LIT_IDLE = 0.5, LIT_DIM = 0.3;
 
   function smooth(a, b, x) {
     var t = (x - a) / (b - a);
@@ -121,6 +131,10 @@
     if (!ctx) return null;
     var gctx = glow && glow.getContext ? glow.getContext("2d") : null;
     var haze = o.haze, hctx = haze && haze.getContext ? haze.getContext("2d") : null;
+    var litC = o.lit, lctx = litC && litC.getContext ? litC.getContext("2d") : null;
+    var masks = o.masks || [];
+    var litCells, litVal, litOf, boxes = [];
+    var hot = -1, focus = -1, speed = 1, speedTo = 1;
     var cutTile = lineTile(2.65, 1.05, "#000", 1.6), threadTile = lineTile(3.7, 0.9, "#fff", 2.2);
     var cutPat = cutTile && ctx.createPattern(cutTile, "repeat");
     var threadPat = threadTile && ctx.createPattern(threadTile, "repeat");
@@ -156,10 +170,11 @@
       if (!grainPat) { var gt = grainTile(); grainPat = gt && ctx.createPattern(gt, "repeat"); }
       if (gctx) { glow.width = Math.ceil(W / 4); glow.height = Math.ceil(H / 4); }
       if (hctx) { haze.width = Math.ceil(W / 2); haze.height = Math.ceil(H / 2); }
+      if (lctx) { litC.width = canvas.width; litC.height = canvas.height; lctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
 
       var narrow = W < 760;
-      // a finer, printed halftone: 1.25x the dots per area (pitch shrinks by 1/sqrt(1.25)); dot size follows the pitch
-      pNear = (narrow ? 15 : W < 1200 ? 19 : 22) / Math.sqrt(1.25);
+      // a fine, printed halftone: DENSITY x the dots per area of the first lake; dot size follows the pitch
+      pNear = (narrow ? 15 : W < 1200 ? 19 : 22) / Math.sqrt(DENSITY);
       tilt = 0.74;
       var yTop = Math.max(64, H * 0.1), sEnd = 0.4;
       var Dn = (H + pNear - yTop) / (pNear * tilt * (1 - sEnd));
@@ -208,11 +223,46 @@
 
       markers = (o.getMarkers ? o.getMarkers(W, H) : []).map(function (m) {
         var g = toGrid(m.x, m.y);
-        return { gx: g[0], gy: g[1], gr: Math.max(3, m.r / rowP[Math.round(g[1])]) };
+        return { gx: g[0], gy: g[1], gr: Math.max(3, m.r / rowP[Math.round(g[1])]), ar: m.ar || 1 };
       });
-      if (o.onLayout) o.onLayout(W, H);
+      layoutPatches();
+      if (o.onLayout) o.onLayout(W, H, boxes);
 
       return true;
+    }
+
+    // Each memory's patch: the place's softened shoreline mask laid flat on the
+    // lake in grid space (grid cells are square on the water), so on screen it
+    // foreshortens with the tilt like everything else. North points away.
+    function sampleMask(mk, u, v) {
+      if (!mk) { var du = u - 0.5, dv = v - 0.5; return 1 - smooth(0.16, 0.24, du * du + dv * dv); }
+      var M = mk.M, fx = u * (M - 1), fy = v * (M - 1);
+      if (fx < 0 || fy < 0 || fx > M - 1 || fy > M - 1) return 0;
+      var x0 = fx | 0, y0 = fy | 0, x1 = Math.min(M - 1, x0 + 1), y1 = Math.min(M - 1, y0 + 1), ax = fx - x0, ay = fy - y0, d = mk.data;
+      return (d[y0 * M + x0] * (1 - ax) + d[y0 * M + x1] * ax) * (1 - ay) + (d[y1 * M + x0] * (1 - ax) + d[y1 * M + x1] * ax) * ay;
+    }
+    function layoutPatches() {
+      var cells = [], vals = [], of = [];
+      boxes = markers.map(function (m, p) {
+        var pad = 1 / 0.8;  // masks are drawn into the middle 80% of their tile
+        var Wc = 2 * m.gr * (m.ar >= 1 ? 1 : m.ar) * pad, Hr = 2 * m.gr * (m.ar >= 1 ? 1 / m.ar : 1) * pad;
+        var y0 = Math.max(1, Math.floor(m.gy - Hr / 2)), y1 = Math.min(rows - 2, Math.ceil(m.gy + Hr / 2));
+        var c0 = Math.max(1, Math.floor(m.gx - Wc / 2)), c1 = Math.min(cols - 2, Math.ceil(m.gx + Wc / 2));
+        var bx0 = 1e9, by0 = 1e9, bx1 = -1e9, by1 = -1e9;
+        for (var y = y0; y <= y1; y++) for (var c = c0; c <= c1; c++) {
+          var i = y * cols + c;
+          if (xs[i] < 4 || xs[i] > W - 4) continue;
+          var mv = sampleMask(masks[p], (c - m.gx) / Wc + 0.5, 0.5 - (y - m.gy) / Hr);
+          var val = smooth(0.14, 0.5, mv);
+          if (val < 0.06) continue;
+          cells.push(i); vals.push(val); of.push(p);
+          var rr = rowP[y] * 0.6;
+          bx0 = Math.min(bx0, xs[i] - rr); bx1 = Math.max(bx1, xs[i] + rr);
+          by0 = Math.min(by0, rowY[y] - rr - pNear * 0.5 * rowS[y]); by1 = Math.max(by1, rowY[y] + rr);
+        }
+        return bx1 > bx0 ? { x: bx0, y: by0, w: bx1 - bx0, h: by1 - by0 } : null;
+      });
+      litCells = new Int32Array(cells); litVal = new Float32Array(vals); litOf = new Uint8Array(of);
     }
 
     // screen point -> grid coordinates (column, row) on the tilted lake
@@ -266,12 +316,65 @@
       integrate();
     }
 
+    // wind swells rolling toward the viewer (y grows into the distance): height, slope into the distance, slope across
+    var SW = { hs: 0, dz: 0, dxs: 0 };
+    function swell(x, y, t) {
+      var grp = 0.6 + 0.4 * Math.sin(x * 0.025 - y * 0.035 + t * 0.16) * Math.cos(x * 0.011 + y * 0.019 - t * 0.09);
+      var a1 = x * 0.06 + y * 0.52 + t * 2.05, a2 = -x * 0.22 + y * 0.86 + t * 2.9;
+      var a3 = x * 0.4 + y * 1.3 + t * 4.0, a4 = x * 1.05 + y * 0.45 + t * 5.0;
+      var a5 = -x * 0.7 + y * 1.6 + t * 5.6, a6 = x * 0.17 - y * 0.12 + t * 0.9;
+      var chop = 0.85 + 0.45 * Math.sin(x * 0.05 + y * 0.09 - t * 0.42);
+      SW.hs = grp * (0.5 * Math.sin(a1) + 0.3 * Math.sin(a2)) + chop * (0.2 * Math.sin(a3) + 0.1 * Math.sin(a4) + 0.08 * Math.sin(a5)) + 0.12 * Math.sin(a6);
+      SW.dz = grp * (0.5 * 0.52 * Math.cos(a1) + 0.3 * 0.86 * Math.cos(a2)) + chop * (0.2 * 1.3 * Math.cos(a3) + 0.1 * 0.45 * Math.cos(a4) + 0.08 * 1.6 * Math.cos(a5)) - 0.12 * 0.12 * Math.cos(a6);
+      SW.dxs = grp * (0.5 * 0.06 * Math.cos(a1) - 0.3 * 0.22 * Math.cos(a2)) + chop * (0.2 * 0.4 * Math.cos(a3) + 0.1 * 1.05 * Math.cos(a4) - 0.08 * 0.7 * Math.cos(a5)) + 0.12 * 0.17 * Math.cos(a6);
+      return SW;
+    }
+
+    // The memories: lit dots on their own unmasked layer, so a patch reads as
+    // clearly near the horizon as near the shore. Each dot still rides the swell.
+    var LB = 10, lBuck = [], lr = [], lry = [], lx = [], ly = [];
+    function drawLit() {
+      if (!lctx) return;
+      lctx.clearRect(0, 0, W, H);
+      if (!litCells || !litCells.length) return;
+      var t = time, lift = pNear * 0.95, revealY = intro < 1 ? intro * (H + 160) - 80 : 1e9;
+      for (var b = 0; b < LB; b++) lBuck[b] = [];
+      for (var k = 0; k < litCells.length; k++) {
+        var i = litCells[k], p = litOf[k], x = i % cols, y = (i / cols) | 0, s = rowS[y], pch = rowP[y];
+        var on = LIT_IDLE + (1 - LIT_IDLE) * act[p];
+        if (focus >= 0 && p !== focus) on *= LIT_DIM;
+        var py0 = rowY[y];
+        if (py0 > revealY) on *= smooth(revealY + 80, revealY, py0);
+        var a = litVal[k] * on;
+        if (a < 0.03) continue;
+        var w = swell(x, y, t), h = u[i], gx = u[i + 1] - u[i - 1], gy = u[i + cols] - u[i - cols];
+        var spec = (w.dz * 1.7 + gy * 1.2) + (w.dxs * 0.45 - gx * 0.4);
+        var glint = 0.62 + 0.5 * spec + 0.08 * Math.sin(t * 0.7 + i * 0.37);  // the light breathes a little, dot to dot
+        a *= glint < 0.3 ? 0.3 : glint > 1.15 ? 1.15 : glint;
+        if (a > 1) a = 1;
+        var r = pch * (0.2 + 0.13 * litVal[k] * (0.6 + 0.4 * act[p]));
+        var bi = Math.min(LB - 1, (a * LB) | 0);
+        lBuck[bi].push(k);
+        lr[k] = r; lry[k] = r * Math.min(1, tilt * s * 1.35);
+        lx[k] = xs[i] + Math.max(-pch * 0.5, Math.min(pch * 0.5, (gx + w.dxs * 0.6) * pch));
+        ly[k] = py0 - (w.hs * 0.9 + h * 1.4) * lift * s;
+      }
+      lctx.fillStyle = LIT;
+      for (b = 0; b < LB; b++) {
+        var L = lBuck[b]; if (!L.length) continue;
+        lctx.globalAlpha = (b + 0.5) / LB;
+        lctx.beginPath();
+        for (var j = 0; j < L.length; j++) { var q = L[j]; lctx.moveTo(lx[q] + lr[q], ly[q]); lctx.ellipse(lx[q], ly[q], lr[q], lry[q], 0, 0, TAU); }
+        lctx.fill();
+      }
+      lctx.globalAlpha = 1;
+    }
+
     function draw() {
       if (!u || !cellList) return;
       ctx.clearRect(0, 0, W, H);
       counts.fill(0);
-      var t = time, nv = 0, L = drawList.length, anyAct = false, p;
-      for (p = 0; p < markers.length; p++) if (act[p] > 0.01) anyAct = true;
+      var t = time, nv = 0, L = drawList.length;
 
       // moiré gratings for this frame
       var th = 0.42 + 0.12 * Math.sin(t * 0.06), ca = Math.cos(th), sa = Math.sin(th);
@@ -286,15 +389,7 @@
         var x = i % cols, y = (i / cols) | 0;
         var s = rowS[y], pch = rowP[y];
 
-        // wind swells rolling toward the viewer (y grows into the distance)
-        var grp = 0.6 + 0.4 * Math.sin(x * 0.025 - y * 0.035 + t * 0.16) * Math.cos(x * 0.011 + y * 0.019 - t * 0.09);
-        var a1 = x * 0.06 + y * 0.52 + t * 2.05, a2 = -x * 0.22 + y * 0.86 + t * 2.9;
-        var a3 = x * 0.4 + y * 1.3 + t * 4.0, a4 = x * 1.05 + y * 0.45 + t * 5.0;
-        var a5 = -x * 0.7 + y * 1.6 + t * 5.6, a6 = x * 0.17 - y * 0.12 + t * 0.9;
-        var chop = 0.85 + 0.45 * Math.sin(x * 0.05 + y * 0.09 - t * 0.42);
-        var hs = grp * (0.5 * Math.sin(a1) + 0.3 * Math.sin(a2)) + chop * (0.2 * Math.sin(a3) + 0.1 * Math.sin(a4) + 0.08 * Math.sin(a5)) + 0.12 * Math.sin(a6);
-        var dz = grp * (0.5 * 0.52 * Math.cos(a1) + 0.3 * 0.86 * Math.cos(a2)) + chop * (0.2 * 1.3 * Math.cos(a3) + 0.1 * 0.45 * Math.cos(a4) + 0.08 * 1.6 * Math.cos(a5)) - 0.12 * 0.12 * Math.cos(a6);
-        var dxs = grp * (0.5 * 0.06 * Math.cos(a1) - 0.3 * 0.22 * Math.cos(a2)) + chop * (0.2 * 0.4 * Math.cos(a3) + 0.1 * 1.05 * Math.cos(a4) - 0.08 * 0.7 * Math.cos(a5)) + 0.12 * 0.17 * Math.cos(a6);
+        var w0 = swell(x, y, t), hs = w0.hs, dz = w0.dz, dxs = w0.dxs;
 
         var h = u[i], gx = u[i + 1] - u[i - 1], gy = u[i + cols] - u[i - cols];
         var lap = u[i + 1] + u[i - 1] + u[i + cols] + u[i - cols] - 4 * h;
@@ -328,8 +423,9 @@
       var s0 = 0;
       for (var b2 = 0; b2 < NB; b2++) { starts[b2] = s0; s0 += counts[b2]; }
       for (k = 0; k < nv; k++) { var ii = vis[k]; order[starts[bOf[ii]]++] = ii; }
-      if (mode === "riso") { drawRiso(nv); afterDraw(); return; }
+      if (mode === "riso") { drawRiso(nv); drawLit(); afterDraw(); return; }
       var c0 = 0;
+      ctx.globalAlpha = DOT_ALPHA;
       for (b2 = 0; b2 < NB; b2++) {
         var c1 = c0 + counts[b2];
         if (c1 > c0) {
@@ -344,6 +440,7 @@
         }
         c0 = c1;
       }
+      ctx.globalAlpha = 1;
       if (mode === "moire" && cutPat && canTurn) {
         var a1 = 0.09 + 0.05 * Math.sin(t * 0.05), a2 = -0.19 + 0.05 * Math.cos(t * 0.043);
         cutPat.setTransform(new DOMMatrix().translate(t * 3.1, t * 1.3).rotate(a1 * 57.2958).scale(1, 1 + 0.06 * Math.sin(t * 0.09)));
@@ -357,6 +454,7 @@
         ctx.fillStyle = threadPat; ctx.fillRect(0, 0, W, H);
         ctx.restore();
       }
+      drawLit();
       afterDraw();
     }
 
@@ -364,6 +462,7 @@
       if (gctx) {
         gctx.clearRect(0, 0, glow.width, glow.height);
         gctx.drawImage(canvas, 0, 0, glow.width, glow.height);
+        if (lctx) gctx.drawImage(litC, 0, 0, glow.width, glow.height);  // the memories glow through the blur
       }
       if (hctx) {
         hctx.clearRect(0, 0, haze.width, haze.height);
@@ -418,6 +517,7 @@
       ctx.clearRect(0, 0, W, H);
       ctx.save();
       ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = DOT_ALPHA;
       ctx.drawImage(inkA, 0, 0);
       ctx.globalCompositeOperation = inks.op;
       ctx.drawImage(inkB, 0, -2 * dprR);                     // the orange drum sits 2px above the teal
@@ -429,7 +529,8 @@
       if (paused || !visible) return;
       if (!cellList) { relayout(true); if (!cellList) return; }
       var dt = Math.min(50, ts - (last || ts));
-      last = ts; time += dt / 1000; acc += dt;
+      speed += (speedTo - speed) * Math.min(1, dt / 520);   // ease into and out of the calm
+      last = ts; time += (dt / 1000) * TEMPO * speed; acc += dt * (0.4 + 0.45 * speed);
       if (intro < 1) intro = Math.min(1, intro + dt / 1900);
       var s = 0;
       while (acc >= STEP && s < 3) { step(); acc -= STEP; s++; }
@@ -442,8 +543,15 @@
     function kick() { if (!raf && !paused && visible) { last = 0; raf = requestAnimationFrame(frame); } }
 
     function setTargets() {
-      for (var p = 0; p < n; p++) target[p] = all || p === active ? 1 : 0;
+      for (var p = 0; p < n; p++) target[p] = all || p === active || p === hot || p === focus ? 1 : 0;
+      speedTo = hot >= 0 || focus >= 0 ? CALM : 1;
       if (paused) { act.set(target); draw(); }
+    }
+    // a small drop at a patch's heart: the water answers the touch
+    function ping(p, amp) {
+      var m = markers[p];
+      if (!m || !u || paused) return;
+      drop(m.gx, m.gy, amp || 0.5, Math.max(1.6, m.gr * 0.22));
     }
 
     host.addEventListener("pointermove", function (e) {
@@ -487,6 +595,21 @@
         all = !!b;
         setTargets();
       },
+      // hovered / keyboard-focused patch (-1 for none): lights it and calms the lake
+      setHot: function (i) {
+        i = i == null ? -1 : i;
+        if (i === hot) return;
+        if (i >= 0) ping(i, 0.35);
+        hot = i; setTargets();
+      },
+      // the open memory (-1 for none): the others dim, the lake stays calm
+      setFocus: function (i) {
+        i = i == null ? -1 : i;
+        if (i === focus) return;
+        if (i >= 0) ping(i, 0.7);
+        focus = i; setTargets();
+      },
+      boxes: function () { return boxes; },
     };
   }
 
