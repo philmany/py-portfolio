@@ -180,9 +180,11 @@ html.motion-paused *, html.motion-paused *::before, html.motion-paused *::after 
 .shape { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; filter: var(--drop-lake);
   opacity: 0; transition: filter var(--fade-slow) var(--ease), opacity var(--fade-slow) var(--ease); }
 .mem.on .shape, .hero.memories .shape { opacity: 1; }
+/* a faint white bloom so the outline reads brighter over the lit dots; kept tight because it grows with the outline */
+.mem.on .shape, .hero.memories .shape { filter: var(--drop-lake) drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.35)); }
 .shape path {
   fill: none; stroke: var(--text-strong); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke;
-  opacity: 0.78; transition: opacity var(--fade), stroke-width var(--fade);
+  opacity: 0.9; transition: opacity var(--fade), stroke-width var(--fade);
 }
 .mem.on .shape path, .hero.memories .shape path { opacity: 1; stroke-width: 2.3; }
 /* the open outline grows by --sc; the drop-shadow filter makes the browser scale the stroke with it, so divide it back to 2.3px */
