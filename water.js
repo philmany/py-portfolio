@@ -63,7 +63,7 @@
   // TEMPO: the lake's clock runs at 60% of real time; CALM is how far it slows while a memory is hovered or open.
   // DOT_ALPHA: the water's dots are printed at reduced opacity so the lit memories carry the light.
   // DENSITY: dots per area relative to the first halftone (pitch shrinks by 1/sqrt).
-  var TEMPO = 0.6, CALM = 0.28, DOT_ALPHA = 0.55, DENSITY = 2;
+  var TEMPO = 0.6, CALM = 0.28, DOT_ALPHA = 0.8, DENSITY = 2;
   var LIT = "#fff3e2", LIT_IDLE = 0.5, LIT_DIM = 0.3;
 
   function smooth(a, b, x) {
