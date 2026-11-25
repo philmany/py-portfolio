@@ -56,3 +56,11 @@ Production is the Cloudflare Worker `py-portfolio` (static assets only), deploye
 ## Pretzel page
 
 Built on `tokens.css` (ZT Nature + PP Museum, type ramp, spacing, motion, a11y rules) with Snack's own colour tokens in place of the two accents, on `--bg`. No longer synced from `philmany/pretzel-case-study`; edit it here. `#preview` hides navigation and slowly auto-scrolls for the hover preview. Pause motion shares the site's `localStorage.motion`.
+
+## Versions
+
+Each deploy is tagged `vMM.DD.YYYY` (a second deploy the same day adds `-2`, `-3`).
+
+| Version | Changes |
+| --- | --- |
+| v11.25.2026 | Snack case study: the problem animation ("one-off buttons" to one component) now sits in a bordered box; messy positions are fitted to the box (rotation included) so nothing bleeds out at any screen size. |
