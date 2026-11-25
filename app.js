@@ -179,13 +179,13 @@
   hero.addEventListener("click", function (e) { if (!e.target.closest(".mem, .ctl, .ctl-r, .cue-wrap, a")) setOn(null, false); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") setOn(null, false); });
 
-  // Idle cue, played once: after 2s with no pointer movement over the lake, each lake lights up for 1s
-  // as if hovered, clockwise from 12 o'clock, then it goes still for good. A real hover or click on a lake
-  // means they've got it, so it never plays. Interrupted laps wait for the next quiet moment.
-  // Off with reduced motion, Pause motion (motion.js), the memories toggle, or the lake out of view.
+  // Ambient illumination: after 2s with no pointer movement over the lake, the memories light up one at a time,
+  // as if hovered. The first lap runs clockwise from 12 o'clock so the set reads as a ring; after that a random
+  // lake glows every few seconds, never the same one twice in a row. Hovering, opening a memory, the memories
+  // toggle, Pause motion, reduced motion or the lake leaving the view all hush it; it resumes after a quiet 2s.
   (function () {
     if (reduce || mems.length < 2) return;
-    var idx = -1, visible = true, done = false, lap = 0, wait = 0;
+    var visible = true, timer = 0, wait = 0, ring = null, idx = -1, last = -1, running = false;
     function ang(m) {
       var x = parseFloat(m.style.left) + parseFloat(m.style.width) / 2 - hero.clientWidth / 2;
       var y = parseFloat(m.style.top) + parseFloat(m.style.height) / 2 - hero.clientHeight * 0.52;
@@ -197,27 +197,33 @@
         (window.Motion && window.Motion.paused()) || !!memLayer.querySelector(".mem:hover, .mem:focus-visible");
     }
     function clear() { mems.forEach(function (m) { m.classList.remove("pulse"); }); if (art) art.setActive(-1); }
-    function stop() { clearInterval(lap); lap = 0; idx = -1; clear(); }
-    function arm() { clearTimeout(wait); if (!done && !lap) wait = setTimeout(start, 2000); }
+    function stop() { clearTimeout(timer); timer = 0; running = false; clear(); }
+    function arm() { clearTimeout(wait); if (!running) wait = setTimeout(start, 2000); }
+    function light(m) { m.classList.add("pulse"); last = mems.indexOf(m); if (art) art.setActive(last); }
     function start() {
-      if (done) return;
       if (busy()) { arm(); return; }
-      var ring = mems.slice().sort(function (a, b) { return ang(a) - ang(b); });
-      function step() {
+      running = true;
+      if (!ring) ring = mems.slice().sort(function (a, b) { return ang(a) - ang(b); });
+      step();
+    }
+    function step() {
+      if (busy()) { stop(); arm(); return; }
+      clear();
+      if (ring && ++idx < ring.length) { light(ring[idx]); timer = setTimeout(step, 1100); return; }
+      ring = []; idx = 0;  // first lap done: from here on, random and unhurried
+      var k = Math.floor(Math.random() * (mems.length - 1));
+      if (k >= last) k++;
+      timer = setTimeout(function () {
         if (busy()) { stop(); arm(); return; }
-        clear();
-        if (++idx >= ring.length) { stop(); done = true; return; }
-        ring[idx].classList.add("pulse");
-        if (art) art.setActive(mems.indexOf(ring[idx]));
-      }
-      step(); lap = setInterval(step, 1000);
+        light(mems[k]);
+        timer = setTimeout(step, 1700);
+      }, 1400 + Math.random() * 2600);
     }
     hero.addEventListener("pointermove", function (e) {
-      if (e.target.closest && e.target.closest(".mem")) { done = true; stop(); clearTimeout(wait); return; }
-      if (!lap) arm();
+      if (e.target.closest && e.target.closest(".mem")) { if (running) stop(); clearTimeout(wait); return; }
+      if (!running) arm();
     });
-    mems.forEach(function (m) { m.addEventListener("click", function () { done = true; stop(); clearTimeout(wait); }); });
-    if (window.Motion) window.Motion.on(function (p) { if (!p) arm(); });
+    if (window.Motion) window.Motion.on(function (p) { if (p) stop(); else arm(); });
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible) arm(); }, { threshold: 0.2 }).observe(hero);
     }

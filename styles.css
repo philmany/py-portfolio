@@ -179,13 +179,14 @@ html.motion-paused *, html.motion-paused *::before, html.motion-paused *::after 
 .mem.on .mem-fx { transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--sc, 1)); }
 .shape { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; filter: var(--drop-lake);
   opacity: 0; transition: filter var(--fade-slow) var(--ease), opacity var(--fade-slow) var(--ease); }
-.mem.on .shape { opacity: 1; }
+.mem.on .shape, .hero.memories .shape { opacity: 1; }
 .shape path {
   fill: none; stroke: var(--text-strong); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke;
   opacity: 0.78; transition: opacity var(--fade), stroke-width var(--fade);
 }
-.mem.on .shape path { opacity: 1; stroke-width: 2.3; }
-.mem.on .shape { filter: var(--drop-lake-hi); }
+.mem.on .shape path, .hero.memories .shape path { opacity: 1; stroke-width: 2.3; }
+/* the open outline grows by --sc; the drop-shadow filter makes the browser scale the stroke with it, so divide it back to 2.3px */
+.mem.on .shape path { stroke-width: calc(2.3px / var(--sc, 1)); }
 .mem-card {
   position: absolute; left: 50%; top: calc(var(--hb, 100%) + var(--space-2-5)); white-space: nowrap; text-align: left; z-index: 2;
   transform: translate(calc(-50% + var(--shift, 0px)), 6px); opacity: 0; visibility: hidden; pointer-events: none;
