@@ -105,7 +105,7 @@
 
   // A soft silhouette of each place for the lit dot patch: closed shores filled, every shore drawn
   // as a broad band, then blurred, so the patch is the place's rough shape rather than its exact line.
-  function maskOf(o, sh) {
+  function maskOf(o, sh, spread) {
     var M = 64, c = document.createElement("canvas"), g = c.getContext && c.getContext("2d");
     if (!g || !window.Path2D) return null;
     c.width = c.height = M;
@@ -114,7 +114,7 @@
     var path = new Path2D(o.d);
     g.fillStyle = g.strokeStyle = "#fff"; g.lineJoin = g.lineCap = "round";
     if ((sh.rings || []).length && !(sh.lines || []).length) g.fill(path);
-    g.lineWidth = 9;  // path units: the outline sits in a 100-unit box
+    g.lineWidth = 9 * (spread || 1);  // path units: the outline sits in a 100-unit box; spread widens the band so the patch covers more dots
     g.stroke(path);
     var c2 = document.createElement("canvas"), g2 = c2.getContext("2d");
     c2.width = c2.height = M;
@@ -128,7 +128,7 @@
 
   var mems = W.places.map(function (p, i) {
     var o = outline(SH[p.name] || {}) || { d: "M50 50m-40 0a40 40 0 1 0 80 0a40 40 0 1 0 -80 0", w: 100, h: 100 };
-    masks[i] = maskOf(o, SH[p.name] || {});
+    masks[i] = maskOf(o, SH[p.name] || {}, p.spread && window.innerWidth < 760 ? 1 + (p.spread - 1) * 0.35 : p.spread);  // phones: a gentler widening, or the bottom row runs together
     var svg = document.createElementNS(NS, "svg");
     svg.setAttribute("viewBox", (-3) + " " + (-3) + " " + (o.w + 6).toFixed(2) + " " + (o.h + 6).toFixed(2));
     svg.setAttribute("class", "shape");
@@ -160,11 +160,17 @@
   // Hover shows the label in place. A click focuses: the dots dim, and the
   // outline glides toward the centre and grows. Click again, click the water,
   // or press Escape to let it go.
+  function applySide(b, which, p) {
+    var v = b._sides && b._sides[which]; if (!v) return;
+    ["left", "right", "below"].forEach(function (s) { b.classList.toggle("snap-" + s, !!b.querySelector(".mem-snap") && s === v[0]); });
+    b.style.setProperty("--sdx", v[1].toFixed(1) + "px");
+  }
   function setOn(b, on) {
     mems.forEach(function (m) {
       var x = m === b && on;
       m.classList.toggle("on", x);
       m.setAttribute("aria-expanded", String(x));
+      applySide(m, x ? "on" : "rest");
     });
     hero.classList.toggle("focus", !!on);
     if (art) art.setFocus(on ? mems.indexOf(b) : -1);
@@ -254,10 +260,13 @@
       b.style.setProperty("--sc", sc.toFixed(3));
       b.style.setProperty("--cdy", ((sc - 1) * bh / 2 * (up ? -1 : 1)).toFixed(1) + "px");
       // the snapshot rides along beside the grown outline
+      // photoSideOn / photoOnGap: where the photo sits once the lake is opened (it can differ from its resting
+      // side in "Water contains memories."), and extra px clear of the grown outline so the two never overlap
       var side = (narrow && p.photoSideNarrow) || p.photoSide || "right";
-      ["left", "right", "below"].forEach(function (s) { b.classList.toggle("snap-" + s, p.photo && s === side); });
-      var sideSign = side === "left" ? -1 : side === "below" ? 0 : 1;
-      b.style.setProperty("--sdx", (sideSign * (sc - 1) * bw / 2).toFixed(1) + "px");
+      var sideOn = (!narrow && p.photoSideOn) || side, gap = p.photoOnGap || 0;
+      var sgn = function (x) { return x === "left" ? -1 : x === "below" ? 0 : 1; };
+      b._sides = { rest: [side, sgn(side) * (sc - 1) * bw / 2], on: [sideOn, sgn(sideOn) * ((sc - 1) * bw / 2 + gap)] };
+      applySide(b, b.classList.contains("on") ? "on" : "rest", p);
       b.style.setProperty("--sdy", ((sc - 1) * bh / 2).toFixed(1) + "px");
       return { x: cx, y: cy, r: Math.max(bw, bh) * 0.5, ar: ar };
     });
