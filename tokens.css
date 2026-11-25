@@ -145,6 +145,9 @@
   --drop-paper: drop-shadow(0 9px 12px rgba(8, 3, 12, 0.5)) drop-shadow(0 2px 3px rgba(8, 3, 12, 0.45));
   --drop-paper-lift: drop-shadow(0 22px 28px rgba(8, 3, 12, 0.6)) drop-shadow(0 4px 6px rgba(8, 3, 12, 0.4));
   --drop-outline: drop-shadow(0 0 1.5px rgba(12, 6, 16, 0.85)) drop-shadow(0 0 4px rgba(12, 6, 16, 0.45));
+  /* hero lake outlines: a deeper shadow lifts them off the water so they read as pressable; -hi adds a white glow on hover and the idle cue */
+  --drop-lake: drop-shadow(0 0 2px rgba(10, 4, 14, 0.95)) drop-shadow(0 0 9px rgba(10, 4, 14, 0.8)) drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6));
+  --drop-lake-hi: var(--drop-lake) drop-shadow(0 0 6px rgba(255, 255, 255, 0.45));
   --feather: 0 0 22px 14px rgba(20, 10, 24, 0.72);   /* dark halo so a pill reads over water */
   --glow-cta: 0 10px 30px -10px rgba(255, 138, 61, 0.6);
   --glow-cta-hover: 0 0 0 6px rgba(255, 138, 61, 0.16), 0 14px 34px -10px rgba(255, 138, 61, 0.7);

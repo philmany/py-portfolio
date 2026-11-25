@@ -115,10 +115,8 @@ html.motion-paused *, html.motion-paused *::before, html.motion-paused *::after 
 .ctl[aria-pressed="true"] .sw { background: var(--accent); border-color: var(--accent); }
 .ctl[aria-pressed="true"] .sw i { transform: translateX(11px); background: var(--bg); }
 .ctl-r { display: flex; align-items: center; gap: var(--space-1-5); }
-/* scroll cue: a pill with Philman's photo; bobs three times, then rests */
-.cue-wrap { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); animation: cue 4.2s ease-in-out 3; }
-.cue-wrap:hover, .cue-wrap:focus-within { animation-play-state: paused; }
-@keyframes cue { 0%, 100% { translate: 0 0; } 50% { translate: 0 -4px; } }
+/* scroll cue: a pill with Philman's photo; still, so the water stays the one ambient motion */
+.cue-wrap { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); }
 .cue {
   display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target); padding: var(--space-1) var(--space-2-5) var(--space-1) 5px;
   font-size: var(--fs-subhead); letter-spacing: var(--track-ui); white-space: nowrap; color: var(--text); text-decoration: none;
@@ -173,12 +171,13 @@ html.motion-paused *, html.motion-paused *::before, html.motion-paused *::after 
 }
 .mem-fx { position: absolute; inset: 0; pointer-events: none; transform-origin: 50% 50%; transition: transform var(--move-spring) var(--ease-spring); }
 .mem.on .mem-fx { transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--sc, 1)); }
-.shape { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; filter: var(--drop-outline); }
+.shape { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; filter: var(--drop-lake); transition: filter var(--fade-slow) var(--ease); }
 .shape path {
   fill: none; stroke: var(--text-strong); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke;
   opacity: 0.78; transition: opacity var(--fade), stroke-width var(--fade);
 }
-.mem:hover .shape path, .mem:focus-visible .shape path, .mem.on .shape path, .hero.memories .shape path { opacity: 1; stroke-width: 2.3; }
+.mem:hover .shape path, .mem:focus-visible .shape path, .mem.on .shape path, .hero.memories .shape path, .mem.pulse .shape path { opacity: 1; stroke-width: 2.3; }
+.mem:hover .shape, .mem:focus-visible .shape, .mem.pulse .shape { filter: var(--drop-lake-hi); }
 .mem:focus-visible { outline-offset: var(--space-2); }
 .mem-card {
   position: absolute; left: 50%; top: calc(100% + var(--space-2-5)); white-space: nowrap; text-align: left; z-index: 2;
@@ -499,7 +498,7 @@ h2.sec em { font-style: italic; color: var(--accent-2); }
 
 /* Closing section: heron + links */
 .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
-.section.about { position: relative; padding-top: clamp(40px, 5vw, 72px); padding-bottom: var(--space-14); overflow: hidden; }
+.section.about { position: relative; padding-top: clamp(164px, 18.5vw, 280px); /* room to breathe after Play */ padding-bottom: var(--space-14); overflow: hidden; }
 @media (max-width: 760px) { .section.about { padding-bottom: var(--space-24); } }
 .about .wrap { position: relative; z-index: 1; pointer-events: none; }
 .about .wrap a, .about .wrap button { pointer-events: auto; }
@@ -509,7 +508,7 @@ h2.sec em { font-style: italic; color: var(--accent-2); }
   border-radius: 40px; cursor: pointer; will-change: transform;
 }
 .fish-bait:focus-visible { outline: var(--focus-ring) solid var(--accent); outline-offset: var(--space-0-5); }
-.about h2.sec { padding-top: 0; font-size: var(--fs-display-xl); line-height: var(--lh-title); }
+.about h2.sec { padding-top: 0; font-size: clamp(2.5rem, 5.6vw, 5.5rem); /* 40-88, quieter closing heading */ line-height: var(--lh-title); }
 .links { list-style: none; display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-10); margin-top: 36px; }
 .links a, .links .todo { font-size: var(--fs-link-lg); text-decoration: none; letter-spacing: var(--track-tight); }
 .links a span { display: inline-block; transition: transform var(--move-slow) var(--ease); }
@@ -560,8 +559,9 @@ h2.sec em { font-style: italic; color: var(--accent-2); }
   .group-top { flex-direction: column-reverse; align-items: flex-start; gap: 0; }
   .group-top .hint { margin: 0; padding-bottom: var(--space-2); }
 }
-/* the hand waves three times, then rests */
-.hint .hand { display: inline-flex; color: var(--accent-2); transform-origin: 50% 90%; animation: wave 2.4s ease-in-out 3; }
+/* the hand waves once, the first time the hint scrolls into view (app.js adds .waved) */
+.hint .hand { display: inline-flex; color: var(--accent-2); transform-origin: 50% 90%; }
+.hint.waved .hand { animation: wave 2.4s ease-in-out 1; }
 @keyframes wave {
   0%, 100% { transform: translateY(0) rotate(0deg); }
   15% { transform: translateY(-2px) rotate(-14deg); }
@@ -667,7 +667,7 @@ html.lb-on { overflow: hidden; }
   .logo-item[aria-hidden="true"] { display: none; }
   .rv, .split .w > span, .hero-text > *, .pnote, .ph-open img { transform: none; filter: none; }
   .pnote { opacity: 1; transition-delay: 0s; }
-  .cue-wrap, .hint .hand { animation: none; }
+  .hint .hand { animation: none; }
   .demo-fish { display: none; }
 }
 

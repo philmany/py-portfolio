@@ -41,7 +41,8 @@
   if (D.person.bookingUrl) $("#book").href = D.person.bookingUrl; else $("#book").remove();
   [].concat(D.person.tagline).forEach(function (line, i) {
     if (i) $("#hero-tagline").appendChild(el("br"));
-    window.Rolodex.fill($("#hero-tagline"), line, D.person.taglineSpeed);
+    // a touch slower than the data.js speed, so the hero stays calm around the water
+    window.Rolodex.fill($("#hero-tagline"), line, Math.round((D.person.taglineSpeed || 2400) * 1.35));
   });
   [].concat(D.introduction).forEach(function (line, i) {
     if (i) $("#about-h").appendChild(el("br"));
@@ -142,6 +143,50 @@
   }
   hero.addEventListener("click", function (e) { if (!e.target.closest(".mem, .ctl, .ctl-r, .cue-wrap, a")) setOn(null, false); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") setOn(null, false); });
+
+  // Idle cue, played once: after 2s with no pointer movement over the lake, each lake lights up for 1s
+  // as if hovered, clockwise from 12 o'clock, then it goes still for good. A real hover or click on a lake
+  // means they've got it, so it never plays. Interrupted laps wait for the next quiet moment.
+  // Off with reduced motion, Pause motion (motion.js), the memories toggle, or the lake out of view.
+  (function () {
+    if (reduce || mems.length < 2) return;
+    var idx = -1, visible = true, done = false, lap = 0, wait = 0;
+    function ang(m) {
+      var x = parseFloat(m.style.left) + parseFloat(m.style.width) / 2 - hero.clientWidth / 2;
+      var y = parseFloat(m.style.top) + parseFloat(m.style.height) / 2 - hero.clientHeight * 0.52;
+      var t = Math.atan2(y, x) + Math.PI / 2;
+      return t < 0 ? t + 2 * Math.PI : t;
+    }
+    function busy() {
+      return !visible || document.hidden || hero.classList.contains("focus") || hero.classList.contains("memories") ||
+        (window.Motion && window.Motion.paused()) || !!memLayer.querySelector(".mem:hover, .mem:focus-visible");
+    }
+    function clear() { mems.forEach(function (m) { m.classList.remove("pulse"); }); }
+    function stop() { clearInterval(lap); lap = 0; idx = -1; clear(); }
+    function arm() { clearTimeout(wait); if (!done && !lap) wait = setTimeout(start, 2000); }
+    function start() {
+      if (done) return;
+      if (busy()) { arm(); return; }
+      var ring = mems.slice().sort(function (a, b) { return ang(a) - ang(b); });
+      function step() {
+        if (busy()) { stop(); arm(); return; }
+        clear();
+        if (++idx >= ring.length) { stop(); done = true; return; }
+        ring[idx].classList.add("pulse");
+      }
+      step(); lap = setInterval(step, 1000);
+    }
+    hero.addEventListener("pointermove", function (e) {
+      if (e.target.closest && e.target.closest(".mem")) { done = true; stop(); clearTimeout(wait); return; }
+      if (!lap) arm();
+    });
+    mems.forEach(function (m) { m.addEventListener("click", function () { done = true; stop(); clearTimeout(wait); }); });
+    if (window.Motion) window.Motion.on(function (p) { if (!p) arm(); });
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible) arm(); }, { threshold: 0.2 }).observe(hero);
+    }
+    arm();
+  })();
 
   // Size and place each outline on the lake; returns markers for the water engine.
   function placeShapes(w, h) {
@@ -372,6 +417,13 @@
     g0.insertBefore(top, g0.firstChild);
     if (gh) top.appendChild(gh);
     top.appendChild(hint);
+    // the hand waves once, the first time the hint is in view
+    if ("IntersectionObserver" in window && !reduce) {
+      var hio = new IntersectionObserver(function (es) {
+        if (es[0].isIntersecting) { hint.classList.add("waved"); hio.disconnect(); }
+      }, { threshold: 1 });
+      hio.observe(hint);
+    }
   });
 
   // each row's dot takes a colour from the lake: teal down to tangerine
