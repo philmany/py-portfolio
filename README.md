@@ -32,10 +32,10 @@ Production is the Cloudflare Worker `py-portfolio` (static assets only), deploye
 | `motion.js` | Site-wide Pause motion: any `[data-motion-toggle]` button toggles `html.motion-paused` (remembered across pages); scripts read `Motion.paused()`. |
 | `fonts/` | Self-hosted WOFF2: ZT Nature (body) and PP Museum (headings). |
 | `app.js`, `about.js` | Build each page from `data.js`: work list, hover previews, Play list, reveals. `app.js` also runs the demo fish that swims up to Microsoft Advertising to show the hover preview (on "View my Work", or after 1s in view with no hover). |
-| `water.js` | The hero lake: 2.5D halftone dots printed as a two-ink riso (teal + orange) with moiré line screens. Palette in `STOPS`. |
+| `water.js` | The hero lake: 2.5D halftone dots printed as a two-ink riso (teal + orange) with moiré line screens, plus each memory as a patch of lit dots in the same grid. Hover calms the lake; click reveals the outline and photo. Tempo, calm, dot opacity and density are constants at the top; palette in `STOPS`. |
 | `flow.js` | Page transition: a click goes straight to the next page, which loads under the riso water; an opening spreads from where you clicked and reveals it. Also prefetches pages on hover. |
 | `rolodex.js` | Flipping text in the hero tagline and closing heading. |
-| `shapes.js` | Water outlines (Natural Earth / GSHHG data or traced from maps; not to scale). |
+| `shapes.js` | Water outlines (Natural Earth / GSHHG data or traced from maps; not to scale). They shape each lit dot patch and are drawn as outlines once a memory is opened. |
 | `heron.js` | Dot-drawn fish and heron in About: hover the fish and the heron swoops. |
 | `sound.js` | Generated wave sound, starts muted. |
 | `memories/`, `about/`, `previews/`, `logos/` | Memory snapshots, About portrait and the two sketches pasted on it, screenshot previews for outside sites, brand logos. |
