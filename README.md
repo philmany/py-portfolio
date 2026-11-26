@@ -63,5 +63,6 @@ Each deploy is tagged `vMM.DD.YYYY` (a second deploy the same day adds `-2`, `-3
 
 | Version | Changes |
 | --- | --- |
+| v11.26.2026 | Hero water: faster load and smoother frames, same picture. Removed an unused grain texture that was built on every load; wave maths now done per column and row instead of per dot; per-dot constants cached at layout. |
 | v11.25.2026-2 | Snack case study: section 3.3 phone and rules table centred; section 4 button grid removed (interactive button only); section 7 reflection copy updated (02, 03, and 04 is now "Create a culture around the design system"). |
 | v11.25.2026 | Snack case study: the problem animation ("one-off buttons" to one component) now sits in a bordered box; messy positions are fitted to the box (rotation included) so nothing bleeds out at any screen size. |

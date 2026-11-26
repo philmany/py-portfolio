@@ -97,32 +97,21 @@
   }
 
 
-  // Riso grain: fine speckle where the ink skipped, plus soft mottled patches
-  // where the drum laid ink unevenly. Drawn once, tiled.
-  function grainTile() {
-    var s = 384, c = document.createElement("canvas");
-    c.width = c.height = s;
-    var g = c.getContext("2d");
-    if (!g) return null;
-    var img = g.createImageData(s, s), d = img.data, seed = 7;
-    function r() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
-    var blobs = [];
-    for (var b = 0; b < 26; b++) blobs.push([r() * s, r() * s, 20 + r() * 70, r()]);
-    for (var y = 0; y < s; y++) for (var x = 0; x < s; x++) {
-      var m = 0;
-      for (b = 0; b < blobs.length; b++) {
-        var B = blobs[b];
-        var dx = Math.min(Math.abs(x - B[0]), s - Math.abs(x - B[0])), dy = Math.min(Math.abs(y - B[1]), s - Math.abs(y - B[1]));
-        m += B[3] * Math.exp(-(dx * dx + dy * dy) / (B[2] * B[2]));
-      }
-      var n = r(), a = 0;
-      if (n > 0.86) a = 0.55 + 0.45 * r();      // skipped specks
-      else a = Math.min(0.5, m * 0.32) + n * 0.12;  // mottling + tooth of the paper
-      var p = (y * s + x) * 4;
-      d[p] = d[p + 1] = d[p + 2] = 0; d[p + 3] = Math.round(a * 255);
-    }
-    g.putImageData(img, 0, 0);
-    return c;
+  // Performance (v11.26.2026): same picture, much less work on load and per frame.
+  // - The riso grain tile (147k pixels x 26 gaussian blobs, built on first load)
+  //   was never painted, so it is gone: that was the single biggest block on load.
+  // - Every travelling wave is sin(a*col + b*row + c*t). By angle addition that is
+  //   sin(col part) * cos(row part) + cos(col part) * sin(row part), so each frame
+  //   takes ~10 sines per column and per row instead of ~20 per dot.
+  // - Per-dot constants (column, row, ink-spread hash) are worked out once per layout,
+  //   the two pow() curves come from small lookup tables, and rows the intro reveal
+  //   has not reached yet are skipped before any wave maths.
+  var NA = 10;                                  // separable angles per frame
+  var LUT = 1024, P07 = new Float32Array(LUT + 2), P12 = new Float32Array(LUT + 2);
+  for (var li = 0; li <= LUT + 1; li++) { var lx0 = Math.min(1, li / LUT); P07[li] = Math.pow(lx0, 0.7); P12[li] = Math.pow(lx0, 1.2); }
+  function lut(T, x) {                          // x in [0, 1]
+    var f = x * LUT, j = f | 0;
+    return T[j] + (T[j + 1] - T[j]) * (f - j);
   }
 
   function create(o) {
@@ -146,10 +135,12 @@
     var W = 0, H = 0, pNear, tilt, cols, rows, N;
     var rowS, rowY, rowP;             // per row: scale, resting screen y, horizontal pitch
     var u, v, fade, depth, xs, cellList, drawList, vis, order, bOf, rad, rady, sx, sy, counts, starts;
+    var dCol, dRow, hashA, hashB, CS, CC, RS, RC;  // per-dot constants; per-frame column/row trig tables
+    var dA = new Float32Array(NB), dB = new Float32Array(NB);
     var markers = [];
     var act = new Float32Array(n), target = new Float32Array(n);
     var mode = o.mode || "riso", paper = !!o.paper;
-    var inkA, inkB, actxA, actxB, grainPat, dprR = 1;
+    var inkA, inkB, actxA, actxB, dprR = 1;
     var active = -1, all = false, paused = !!o.startPaused, visible = true;
     var raf = 0, last = 0, acc = 0, drawAcc = 1e9, time = 0, intro = o.startPaused ? 1 : 0;
     var ptr = { on: false, x: 0, y: 0, lx: 0, ly: 0, moved: false };
@@ -167,7 +158,6 @@
       inkA.width = inkB.width = canvas.width; inkA.height = inkB.height = canvas.height;
       actxA = inkA.getContext("2d"); actxB = inkB.getContext("2d");
       actxA.setTransform(dpr, 0, 0, dpr, 0, 0); actxB.setTransform(dpr, 0, 0, dpr, 0, 0);
-      if (!grainPat) { var gt = grainTile(); grainPat = gt && ctx.createPattern(gt, "repeat"); }
       if (gctx) { glow.width = Math.ceil(W / 4); glow.height = Math.ceil(H / 4); }
       if (hctx) { haze.width = Math.ceil(W / 2); haze.height = Math.ceil(H / 2); }
       if (lctx) { litC.width = canvas.width; litC.height = canvas.height; lctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
@@ -197,6 +187,10 @@
       vis = new Int32Array(N); order = new Int32Array(N); bOf = new Uint8Array(N);
       rad = new Float32Array(N); rady = new Float32Array(N); sx = new Float32Array(N); sy = new Float32Array(N);
       counts = new Int32Array(NB); starts = new Int32Array(NB);
+      dCol = new Int16Array(N); dRow = new Int16Array(N);
+      hashA = new Float32Array(N); hashB = new Float32Array(N);
+      CS = new Float64Array(NA * cols); CC = new Float64Array(NA * cols);
+      RS = new Float64Array(NA * rows); RC = new Float64Array(NA * rows);
 
       var rects = o.getQuietRects ? o.getQuietRects() : [];
       var list = [], dlist = [];
@@ -216,6 +210,8 @@
         if (q < 0.02) continue;
         fade[i] = 0.04 + 0.96 * q;
         depth[i] = 0.5 + 0.3 * Math.sin(c * 0.021 + 1.3) * Math.cos(k * 0.05 - 0.4) + 0.2 * Math.sin((c + k) * 0.013 + 2.1);
+        dCol[i] = c; dRow[i] = k;
+        hashA[i] = 0.9 + 0.2 * hash(i * 3); hashB[i] = 0.9 + 0.2 * hash(i * 3 + 1);   // ink spread varies dot to dot
         dlist.push(i);
       }
       cellList = new Int32Array(list);
@@ -316,17 +312,45 @@
       integrate();
     }
 
-    // wind swells rolling toward the viewer (y grows into the distance): height, slope into the distance, slope across
+    // wind swells rolling toward the viewer (y grows into the distance): height, slope into the distance, slope across.
+    // Per-frame trig tables: angle j is (column part, carrying the time term) + (row part), so
+    // sin(X+Y) = sX cY + cX sY and cos(X+Y) = cX cY - sX sY.
+    //  0 group A (sin)   1 group B (cos)   2..7 swells a1..a6   8 chop   9 moiré grating
+    var CXK = [0.025, 0.011, 0.06, -0.22, 0.4, 1.05, -0.7, 0.17, 0.05, 0];
+    var RYK = [-0.035, 0.019, 0.52, 0.86, 1.3, 0.45, 1.6, -0.12, 0.09, 0];
+    function trig(t, moX, moY, moT) {
+      var CT = [t * 0.16, -t * 0.09, t * 2.05, t * 2.9, t * 4.0, t * 5.0, t * 5.6, t * 0.9, -t * 0.42, moT];
+      CXK[9] = moX; RYK[9] = moY;
+      for (var j = 0; j < NA; j++) {
+        var cx = CXK[j], ct = CT[j], ry = RYK[j], ob = j * cols, rb = j * rows, jj, a;
+        for (jj = 0; jj < cols; jj++) { a = jj * cx + ct; CS[ob + jj] = Math.sin(a); CC[ob + jj] = Math.cos(a); }
+        for (jj = 0; jj < rows; jj++) { a = jj * ry; RS[rb + jj] = Math.sin(a); RC[rb + jj] = Math.cos(a); }
+      }
+    }
     var SW = { hs: 0, dz: 0, dxs: 0 };
-    function swell(x, y, t) {
-      var grp = 0.6 + 0.4 * Math.sin(x * 0.025 - y * 0.035 + t * 0.16) * Math.cos(x * 0.011 + y * 0.019 - t * 0.09);
-      var a1 = x * 0.06 + y * 0.52 + t * 2.05, a2 = -x * 0.22 + y * 0.86 + t * 2.9;
-      var a3 = x * 0.4 + y * 1.3 + t * 4.0, a4 = x * 1.05 + y * 0.45 + t * 5.0;
-      var a5 = -x * 0.7 + y * 1.6 + t * 5.6, a6 = x * 0.17 - y * 0.12 + t * 0.9;
-      var chop = 0.85 + 0.45 * Math.sin(x * 0.05 + y * 0.09 - t * 0.42);
-      SW.hs = grp * (0.5 * Math.sin(a1) + 0.3 * Math.sin(a2)) + chop * (0.2 * Math.sin(a3) + 0.1 * Math.sin(a4) + 0.08 * Math.sin(a5)) + 0.12 * Math.sin(a6);
-      SW.dz = grp * (0.5 * 0.52 * Math.cos(a1) + 0.3 * 0.86 * Math.cos(a2)) + chop * (0.2 * 1.3 * Math.cos(a3) + 0.1 * 0.45 * Math.cos(a4) + 0.08 * 1.6 * Math.cos(a5)) - 0.12 * 0.12 * Math.cos(a6);
-      SW.dxs = grp * (0.5 * 0.06 * Math.cos(a1) - 0.3 * 0.22 * Math.cos(a2)) + chop * (0.2 * 0.4 * Math.cos(a3) + 0.1 * 1.05 * Math.cos(a4) - 0.08 * 0.7 * Math.cos(a5)) + 0.12 * 0.17 * Math.cos(a6);
+    function swell(x, y) {
+      var o, r, sX, cX, sY, cY;
+      sX = CS[x]; cX = CC[x]; sY = RS[y]; cY = RC[y];
+      var gA = sX * cY + cX * sY;
+      o = cols + x; r = rows + y; sX = CS[o]; cX = CC[o]; sY = RS[r]; cY = RC[r];
+      var grp = 0.6 + 0.4 * gA * (cX * cY - sX * sY);
+      o += cols; r += rows; sX = CS[o]; cX = CC[o]; sY = RS[r]; cY = RC[r];
+      var s1 = sX * cY + cX * sY, c1 = cX * cY - sX * sY;
+      o += cols; r += rows; sX = CS[o]; cX = CC[o]; sY = RS[r]; cY = RC[r];
+      var s2 = sX * cY + cX * sY, c2 = cX * cY - sX * sY;
+      o += cols; r += rows; sX = CS[o]; cX = CC[o]; sY = RS[r]; cY = RC[r];
+      var s3 = sX * cY + cX * sY, c3 = cX * cY - sX * sY;
+      o += cols; r += rows; sX = CS[o]; cX = CC[o]; sY = RS[r]; cY = RC[r];
+      var s4 = sX * cY + cX * sY, c4 = cX * cY - sX * sY;
+      o += cols; r += rows; sX = CS[o]; cX = CC[o]; sY = RS[r]; cY = RC[r];
+      var s5 = sX * cY + cX * sY, c5 = cX * cY - sX * sY;
+      o += cols; r += rows; sX = CS[o]; cX = CC[o]; sY = RS[r]; cY = RC[r];
+      var s6 = sX * cY + cX * sY, c6 = cX * cY - sX * sY;
+      o += cols; r += rows; sX = CS[o]; cX = CC[o]; sY = RS[r]; cY = RC[r];
+      var chop = 0.85 + 0.45 * (sX * cY + cX * sY);
+      SW.hs = grp * (0.5 * s1 + 0.3 * s2) + chop * (0.2 * s3 + 0.1 * s4 + 0.08 * s5) + 0.12 * s6;
+      SW.dz = grp * (0.5 * 0.52 * c1 + 0.3 * 0.86 * c2) + chop * (0.2 * 1.3 * c3 + 0.1 * 0.45 * c4 + 0.08 * 1.6 * c5) - 0.12 * 0.12 * c6;
+      SW.dxs = grp * (0.5 * 0.06 * c1 - 0.3 * 0.22 * c2) + chop * (0.2 * 0.4 * c3 + 0.1 * 1.05 * c4 - 0.08 * 0.7 * c5) + 0.12 * 0.17 * c6;
       return SW;
     }
 
@@ -347,7 +371,7 @@
         if (py0 > revealY) on *= smooth(revealY + 80, revealY, py0);
         var a = litVal[k] * on;
         if (a < 0.03) continue;
-        var w = swell(x, y, t), h = u[i], gx = u[i + 1] - u[i - 1], gy = u[i + cols] - u[i - cols];
+        var w = swell(x, y), h = u[i], gx = u[i + 1] - u[i - 1], gy = u[i + cols] - u[i - cols];
         var spec = (w.dz * 1.7 + gy * 1.2) + (w.dxs * 0.45 - gx * 0.4);
         var glint = 0.62 + 0.5 * spec + 0.08 * Math.sin(t * 0.7 + i * 0.37);  // the light breathes a little, dot to dot
         a *= glint < 0.3 ? 0.3 : glint > 1.15 ? 1.15 : glint;
@@ -382,14 +406,17 @@
       var ccx = cols * (0.5 + 0.2 * Math.sin(t * 0.045)), ccy = rows * (0.5 + 0.16 * Math.cos(t * 0.037));
       var ph1 = t * 0.5, ph2 = t * 0.7;
       var sunX = W * 0.62;
-      var lift = pNear * 0.95, revealY = intro < 1 ? intro * (H + 160) - 80 : 1e9;
+      var lift = pNear * 0.95, revealY = intro < 1 ? intro * (H + 160) - 80 : 1e9, revealCut = revealY + 80;
+      trig(t, f1 * ca, f1 * sa, ph1);               // also used by drawLit() this frame
+      var moOn = mode !== "none", M9 = 9 * cols, R9 = 9 * rows;
 
       for (var k = 0; k < L; k++) {
-        var i = drawList[k], q = fade[i];
-        var x = i % cols, y = (i / cols) | 0;
+        var i = drawList[k], y = dRow[i], py0 = rowY[y];
+        if (py0 >= revealCut) continue;            // not revealed yet: would fade to nothing
+        var q = fade[i], x = dCol[i];
         var s = rowS[y], pch = rowP[y];
 
-        var w0 = swell(x, y, t), hs = w0.hs, dz = w0.dz, dxs = w0.dxs;
+        var w0 = swell(x, y), hs = w0.hs, dz = w0.dz, dxs = w0.dxs;
 
         var h = u[i], gx = u[i + 1] - u[i - 1], gy = u[i + cols] - u[i - cols];
         var lap = u[i + 1] + u[i - 1] + u[i + cols] + u[i - cols] - 4 * h;
@@ -398,17 +425,18 @@
         var spec = (dz * 1.7 + gy * 1.2) + (dxs * 0.45 - gx * 0.4);
         var caus = lap < 0 ? Math.min(-lap * 2, 0.6) : 0;
         var Lm = 0.25 + 0.27 * far + 0.06 * (1 - dp) + spec * 0.66 + caus * 0.45;
-        var hl = 0;
-        var py0 = rowY[y];
-        if (py0 > revealY) Lm *= smooth(revealY + 80, revealY, py0);
+        if (py0 > revealY) Lm *= smooth(revealCut, revealY, py0);
         Lm *= q;
         if (Lm < 0.05) continue;
         if (Lm > 1) Lm = 1;
 
-        var dx2 = x - ccx, dy2 = y - ccy;
-        var mo = mode === "none" ? 0.62 : 0.5 + 0.25 * Math.cos(f1 * (x * ca + y * sa) + ph1) +
-                 0.25 * Math.cos(f2 * Math.sqrt(dx2 * dx2 + dy2 * dy2) - ph2);
-        var r = pch * 0.55 * Math.pow(Lm, 0.7) * (0.5 + 0.5 * Math.pow(mo, 1.2));
+        var mo = 0.62;
+        if (moOn) {
+          var dx2 = x - ccx, dy2 = y - ccy, mc = M9 + x, mr = R9 + y;
+          mo = 0.5 + 0.25 * (CC[mc] * RC[mr] - CS[mc] * RS[mr]) + 0.25 * Math.cos(f2 * Math.sqrt(dx2 * dx2 + dy2 * dy2) - ph2);
+          mo = mo < 0 ? 0 : mo > 1 ? 1 : mo;
+        }
+        var r = pch * 0.55 * lut(P07, Lm) * (0.5 + 0.5 * lut(P12, mo));
         if (r < 0.45) continue;
         var sunx = (xs[i] - sunX) / (W * (0.16 + 0.22 * far));
         var sun = Math.exp(-sunx * sunx) * (0.35 + 0.65 * far);
@@ -478,19 +506,24 @@
       var inks = paper
         ? { a: "#0f8a8c", b: "#ff6a4d", op: "multiply" }    // Riso Teal + Fluorescent Orange on cream stock
         : { a: "#1aa39d", b: "#ff6436", op: "screen" };     // the same inks, lifted for the dark page
-      var layers = [[actxA, inks.a, 0], [actxB, inks.b, 1]];
+      // ink density only depends on the colour bucket: 48 values per drum, not one per dot
+      for (var bk = 0; bk < NB; bk++) {
+        var tb = bk / (NB - 1);
+        var da = smooth(-0.05, 0.5, tb) * (1 - (paper ? 0.92 : 0.7) * smooth(0.66, 0.88, tb));
+        var db = Math.min(1, 1.15 * smooth(0.6, 0.86, tb));
+        dA[bk] = da < 0.04 ? 0 : Math.sqrt(da) * 1.12;
+        dB[bk] = db < 0.04 ? 0 : Math.sqrt(db) * 1.05;
+      }
+      var layers = [[actxA, inks.a, 0, dA, hashA], [actxB, inks.b, 1, dB, hashB]];
       for (var L = 0; L < 2; L++) {
-        var g = layers[L][0], which = layers[L][2];
+        var g = layers[L][0], which = layers[L][2], DD = layers[L][3], HH = layers[L][4];
         g.clearRect(0, 0, W, H);
         g.fillStyle = layers[L][1];
         g.beginPath();
         for (var k = 0; k < nv; k++) {
-          var j = vis[k], t = bOf[j] / (NB - 1), d;
-          if (which === 0) d = smooth(-0.05, 0.5, t) * (1 - (paper ? 0.92 : 0.7) * smooth(0.66, 0.88, t));
-          else d = Math.min(1, 1.15 * smooth(0.6, 0.86, t));
-          if (d < 0.04) continue;
-          var sp = 0.9 + 0.2 * hash(j * 3 + which);           // ink spread varies dot to dot
-          var rr = rad[j] * Math.sqrt(d) * sp * (which ? 1.05 : 1.12), ry = rr * rady[j] / rad[j];
+          var j = vis[k], dk = DD[bOf[j]];
+          if (dk === 0) continue;
+          var rr = rad[j] * dk * HH[j], ry = rr * rady[j] / rad[j];
           if (rr < 0.4) continue;
           g.moveTo(sx[j] + rr, sy[j]);
           g.ellipse(sx[j], sy[j], rr, ry, 0, 0, TAU);
