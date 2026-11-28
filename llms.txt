@@ -7,6 +7,7 @@ Strongest in monetization, experimentation, UX and design systems. Open to Produ
 ## Pages
 
 - [Pretzel 1.0 Design System case study](https://philmanyeung.com/work/pretzel): building an iOS design system in Figma for the Snack app
+- [Bandit Labs case study](https://philmanyeung.com/work/bandit-labs): product and UX revamp of an AI chat analytics dashboard, from research to final UI and branding
 - [About](https://philmanyeung.com/about): background, story and contact links
 - [Caurinus Photography](https://philmanyeung.com/photography): Philman's portrait photography, "Helping people see themselves in a new light."
 - [Resume (PDF)](https://philmanyeung.com/Resume_2027_PhilmanYeung.pdf)

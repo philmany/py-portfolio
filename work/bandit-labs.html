@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bandit Labs | Product Revamp Case Study | Philman Yeung</title>
+<meta name="description" content="Product Revamp: Product & UX Demonstration for Bandit Labs, an AI chat analytics platform. Product and design consultant, Jan 2022 to Mar 2022.">
+<script>try{var fl=null;try{fl=sessionStorage.getItem("flow")}catch(e){}if(!fl&&/^flow:/.test(window.name))fl=window.name.slice(5);if(fl&&window.name!=="peek"){window.__flow=fl;document.documentElement.className+=" flow-in";document.write('<style id="flow-cover">html.flow-in body>*:not(.flow-cv){transform:translateY(-12px)}html.flow-in body::before{content:"";position:fixed;inset:0;z-index:299;background:radial-gradient(circle,rgba(26,163,157,.42) 0 1.4px,transparent 1.9px) 0 0/14px 24.25px,radial-gradient(circle,rgba(26,163,157,.42) 0 1.4px,transparent 1.9px) 7px 12.12px/14px 24.25px,#140a18}</style>')}}catch(e){}</script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/fonts/ZTNature-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/PPMuseum-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<meta name="theme-color" content="#140a18">
+<link rel="alternate" type="text/markdown" href="/llms.txt" title="Summary for AI assistants">
+<script src="/motion.js"></script>
+<link rel="stylesheet" href="/tokens.css">
+<style>
+/* ---------- Bandit Labs colour tokens (from the Figma file) + dark page roles ---------- */
+:root{
+  --bn-navy:#050550;--bn-orange:#ff7410;--bn-green:#01b88c;--bn-pink:#ff275b;
+  --bn-lav:#e3e8ff;--bn-paper:#f1f3ff;--bn-blue:#6f7ad9;--bn-ink:#050550;--bn-line:#e3e6f5;--bn-grey:#8a8aa8;
+  --bn-note:#fff2a8;--bn-purple:#7a86e0;
+  /* dark roles: Bandit orange replaces the portfolio accents on this page */
+  --sn-accent:var(--bn-orange);            /* emphasis, numbers, focus. 7.6:1 on --bg */
+  --sn-wash:rgba(255,116,16,.09);
+  --sn-edge:rgba(255,116,16,.6);
+  --sn-glow:0 12px 30px -14px rgba(255,116,16,.7);
+  --loop-float:7s;--loop-dash:2.6s;--loop-pulse:2.4s;--loop-marq:60s;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:var(--nav-h)}
+body{font:400 var(--fs-body)/var(--lh-body) var(--sans);color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;overflow-x:clip}
+html{overflow-x:clip}
+@media(max-width:760px){body{font-size:var(--fs-callout)}}
+img{max-width:100%;display:block}
+::selection{background:var(--sn-accent);color:var(--bg)}
+a{color:inherit}
+button{font-family:inherit}
+:focus-visible{outline:var(--focus-ring) solid var(--sn-accent);outline-offset:var(--focus-offset);border-radius:var(--radius-sm)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.skip{position:absolute;left:-999px;top:var(--space-2-5);z-index:var(--z-skip);min-height:var(--target);display:inline-flex;align-items:center;padding:0 var(--space-4);background:var(--bg);color:var(--text);border:var(--hairline) solid var(--line-2);border-radius:var(--radius-pill);font-size:var(--fs-footnote);text-decoration:none}
+.skip:focus{left:var(--space-3)}
+
+/* progress + nav */
+#progress{position:fixed;top:0;left:0;right:0;height:var(--space-0-5);z-index:var(--z-progress);transform-origin:0 50%;transform:scaleX(0);background:var(--bn-orange)}
+.nav{position:fixed;top:0;left:0;right:0;z-index:var(--z-nav);display:flex;justify-content:space-between;align-items:center;padding:var(--space-5) var(--gutter);border-bottom:var(--hairline) solid transparent;transition:background-color var(--fade-slow) var(--ease),backdrop-filter var(--fade-slow) var(--ease),border-color var(--fade-slow) var(--ease),transform var(--move) var(--ease)}
+.nav.solid{background:var(--glass);-webkit-backdrop-filter:blur(var(--blur));backdrop-filter:blur(var(--blur));border-bottom-color:var(--line)}
+.nav.hide{transform:translateY(-100%)}
+.nav .brand{display:inline-flex;align-items:center;gap:var(--space-2-5);min-height:var(--target);text-decoration:none;font-size:var(--fs-subhead)}
+.nav .brand img{display:block;height:22px;width:auto;transform-origin:20% 70%;transition:transform var(--move-slow) var(--ease-spring)}
+.nav .brand:hover img,.nav .brand:focus-visible img{transform:rotate(-3deg) scale(1.06)}
+.nav nav{display:flex;gap:clamp(18px,3vw,36px)}
+.nav nav a,.lnk{position:relative;text-decoration:none;padding-bottom:var(--space-0-5);background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size var(--move) var(--ease),opacity var(--fade) var(--ease),color var(--fade) var(--ease)}
+.nav nav a{font-size:var(--fs-subhead);opacity:.8}
+.nav nav a::after,.lnk::after{content:"";position:absolute;left:-8px;right:-8px;top:min(0px,calc((100% - var(--target))/2));bottom:min(0px,calc((100% - var(--target))/2))}
+.nav nav a:hover,.nav nav a:focus-visible,.lnk:hover,.lnk:focus-visible{background-size:100% 1px;opacity:1}
+@media(max-width:760px){.nav .brand img{height:18px}}
+
+/* layout + type */
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 var(--gutter)}
+section{position:relative}
+.eyebrow{font-size:var(--fs-caption);letter-spacing:var(--track-caps);text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:var(--space-2-5)}
+.eyebrow b{color:var(--sn-accent);font-weight:400;font-variant-numeric:tabular-nums}
+h2.sec{font-family:var(--serif);font-weight:400;font-size:var(--fs-display-sm);line-height:var(--lh-display);letter-spacing:var(--track-display);word-spacing:var(--word-display);color:var(--text-strong);margin:var(--space-4) 0 var(--space-6)}
+h2.sec em,.h3x em{font-style:italic;color:var(--sn-accent)}
+.lede{font-size:var(--fs-lead);max-width:36rem;color:var(--text-2)}
+.lede.wide{max-width:46rem}
+p+p{margin-top:1em}
+.mp{color:var(--muted)}
+.src{font-size:var(--fs-caption);color:var(--muted);margin-top:var(--space-5)}
+.cap{font-size:var(--fs-footnote);color:var(--muted);margin-top:var(--space-4)}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(36px);transition:opacity var(--fade-reveal) var(--ease),transform var(--move-reveal) var(--ease)}
+.rv.in{opacity:1;transform:none}
+.rv.d1{transition-delay:var(--stagger)}.rv.d2{transition-delay:calc(var(--stagger)*2)}.rv.d3{transition-delay:calc(var(--stagger)*3)}.rv.d4{transition-delay:calc(var(--stagger)*4)}
+.rv.done{transition-delay:0s!important}
+.split .w{display:inline-block;overflow:hidden;vertical-align:top;padding:.22em .16em .24em .16em;margin:-.22em -.16em -.24em -.16em}
+.split .w>span{display:inline-block;transform:translateY(135%);transition:transform var(--move-reveal) var(--ease);transition-delay:calc(var(--stagger)*var(--i,0))}
+.split.in .w>span{transform:none}
+
+.sub-h{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-5);margin:var(--space-24) 0 var(--space-8);border-bottom:var(--hairline) solid var(--line-2);padding-bottom:var(--space-4);flex-wrap:wrap}
+.sub-h:first-child{margin-top:0}
+.sub-h h3{font-family:var(--serif);font-weight:400;font-size:var(--fs-title);line-height:var(--lh-title);letter-spacing:var(--track-title);color:var(--text-strong)}
+.sub-h h3 span{font-family:var(--sans);font-size:var(--fs-footnote);color:var(--sn-accent);letter-spacing:0;margin-right:var(--space-3);vertical-align:middle;font-variant-numeric:tabular-nums}
+.pill-link{display:inline-flex;align-items:center;gap:var(--space-2);min-height:var(--target);padding:0 var(--space-4) 0 var(--space-3);border:var(--hairline) solid var(--line-2);border-radius:var(--radius-pill);font-size:var(--fs-subhead);text-decoration:none;color:var(--text);transition:border-color var(--fade) var(--ease),background-color var(--fade) var(--ease)}
+.pill-link:hover,.pill-link:focus-visible{border-color:var(--sn-accent);background:var(--sn-wash)}
+.pill-link svg{width:16px;height:16px;transition:transform var(--move) var(--ease)}
+.pill-link:hover svg{transform:translate(2px,-2px)}
+
+/* HERO */
+.hero{overflow-x:clip;min-height:100svh;display:grid;grid-template-columns:1fr 1.15fr;align-items:center;gap:var(--space-10);padding:var(--space-30) var(--gutter) var(--space-16);max-width:1440px;margin:0 auto}
+@media(max-width:960px){.hero{grid-template-columns:1fr;padding-top:var(--page-top)}}
+.hero>div:first-child{position:relative;z-index:var(--z-hero-text)}
+.he{opacity:0;transform:translateY(14px);filter:blur(6px);transition:opacity var(--fade-reveal) var(--ease),filter var(--fade-reveal) var(--ease),transform var(--move-reveal) var(--ease);transition-delay:calc(var(--delay-hero) + var(--stagger)*var(--i,0))}
+.hero.ready .he{opacity:1;transform:none;filter:none}
+.hero .tag{display:inline-flex;align-items:center;gap:var(--space-3)}
+.lockup{display:flex;align-items:center;gap:var(--space-4);color:var(--bn-orange)}
+.lockup svg{width:56px;height:auto;color:var(--text-strong)}
+.lockup b{font-weight:700;font-size:var(--fs-title-3);letter-spacing:.22em;font-variant-caps:all-small-caps;text-transform:uppercase}
+.hero h1{font-family:var(--serif);font-weight:400;font-size:var(--fs-display-xl);line-height:var(--lh-display);letter-spacing:var(--track-display);word-spacing:var(--word-display);color:var(--text-strong);margin:var(--space-6) 0 var(--space-4)}
+.hero h1 em{display:block;font-style:italic;color:var(--bn-orange);padding-right:.1em}
+.hero .sub{font-family:var(--serif);font-size:var(--fs-quote);line-height:1.1;letter-spacing:var(--track-quote);word-spacing:var(--word-quote);color:var(--text)}
+.meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-5) var(--space-8);margin-top:var(--space-10);font-size:var(--fs-subhead);max-width:34rem}
+@media(max-width:600px){.meta{grid-template-columns:1fr}}
+.meta dt{font-size:var(--fs-caption);letter-spacing:var(--track-caps);text-transform:uppercase;color:var(--muted);margin-bottom:var(--space-1)}
+.meta dd{color:var(--text)}
+.meta dd i{color:var(--muted)}
+.meta .full{grid-column:1/-1}
+.hero-links{display:flex;gap:var(--space-3);flex-wrap:wrap;margin-top:var(--space-8)}
+
+/* tilted laptop-style stage */
+.stage{perspective:1800px;height:min(74vh,700px);position:relative;display:flex;align-items:center;justify-content:center}
+@media(max-width:960px){.stage{height:380px}}
+.plane{position:relative;width:min(118%,820px);transform-style:preserve-3d;transform:rotateX(46deg) rotateZ(-22deg) translateZ(0);transition:transform var(--move-fast) var(--ease);animation:floaty var(--loop-float) ease-in-out 3}
+@keyframes floaty{0%,100%{translate:0 0}50%{translate:0 -14px}}
+.plane .appfit{border-radius:var(--radius-xl);box-shadow:0 60px 90px -30px rgba(0,0,0,.85),0 0 0 1px var(--line-2),0 0 120px -30px rgba(255,116,16,.35)}
+.plane::after{content:"";position:absolute;inset:-4% -4% -10%;border-radius:var(--radius-xl);background:var(--bn-navy);transform:translateZ(-26px);z-index:-1;opacity:.9}
+.scrollcue{position:absolute;left:50%;bottom:var(--space-6);transform:translateX(-50%);font-size:var(--fs-caption);letter-spacing:var(--track-caps);color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:var(--space-2)}
+.scrollcue span{width:1px;height:42px;background:linear-gradient(var(--muted),transparent);animation:cue 1.8s ease-in-out 3;transform-origin:top}
+@keyframes cue{0%{transform:scaleY(0)}50%{transform:scaleY(1)}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* project summary index */
+.summary{padding:var(--space-10) 0 var(--section-y)}
+.sum-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:var(--space-18);margin-top:var(--space-5)}
+@media(max-width:900px){.sum-grid{grid-template-columns:1fr;gap:var(--space-10)}}
+.toc{list-style:none;border-top:var(--hairline) solid var(--line-2);counter-reset:t}
+.toc li{border-bottom:var(--hairline) solid var(--line)}
+.toc a{display:grid;grid-template-columns:44px 1fr 22px;align-items:center;min-height:var(--target);padding:var(--space-4) 0;text-decoration:none;font-family:var(--serif);font-size:var(--fs-title);line-height:var(--lh-title);letter-spacing:var(--track-title);color:var(--text);transition:color var(--fade) var(--ease),padding var(--move-slow) var(--ease)}
+.toc a span{font-family:var(--sans);font-size:var(--fs-footnote);letter-spacing:0;color:var(--sn-accent);font-variant-numeric:tabular-nums}
+.toc a svg{width:20px;height:20px;opacity:0;transform:translateX(-8px);transition:opacity var(--fade) var(--ease),transform var(--move) var(--ease);color:var(--sn-accent)}
+.toc a:hover,.toc a:focus-visible{color:var(--text-strong);padding-left:var(--space-3)}
+.toc a:hover svg,.toc a:focus-visible svg{opacity:1;transform:none}
+.facts{border-top:var(--hairline) solid var(--line-2);align-self:start}
+.facts div{padding:var(--space-5) 0;border-bottom:var(--hairline) solid var(--line)}
+.facts b{display:block;font-weight:400;color:var(--muted);font-size:var(--fs-caption);text-transform:uppercase;letter-spacing:var(--track-caps);margin-bottom:var(--space-1-5)}
+.facts span{font-size:var(--fs-lead)}
+.facts span i{color:var(--sn-accent)}
+
+/* generic sections */
+.part{padding:var(--section-y) 0 0}
+.part:last-of-type{padding-bottom:var(--section-y)}
+.card-b{border:var(--hairline) solid var(--line-2);border-radius:var(--radius-xl);background:var(--surface);padding:var(--space-8)}
+
+/* background + big quote */
+.bg2{display:grid;grid-template-columns:1fr 1.1fr;gap:var(--space-16);align-items:center}
+@media(max-width:900px){.bg2{grid-template-columns:1fr}}
+.big-quote{font-family:var(--serif);font-size:var(--fs-quote);line-height:1.12;letter-spacing:var(--track-quote);word-spacing:var(--word-quote);color:var(--text)}
+.big-quote+.big-quote{margin-top:var(--space-6)}
+.big-quote em{color:var(--sn-accent)}
+.bold-line{margin-top:var(--space-8);font-weight:700;font-size:var(--fs-title-3)}
+.bold-line a{font-weight:400;display:block;color:var(--muted);font-size:var(--fs-subhead)}
+
+/* problem equation */
+.problem2{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-16);align-items:center}
+@media(max-width:900px){.problem2{grid-template-columns:1fr;gap:var(--space-10)}}
+.eq{display:flex;align-items:center;justify-content:center;gap:clamp(8px,2vw,24px);font-size:clamp(2.25rem,5vw,4.25rem);margin-top:var(--stack-xl);flex-wrap:wrap}
+.eq>span{opacity:0;transform:translateY(-40px) scale(.7);transition:opacity var(--fade) var(--ease),transform var(--move-spring) var(--ease-spring);transition-delay:calc(var(--stagger)*var(--i)*3)}
+.eq.in>span{opacity:1;transform:none}
+.eq .op{font-family:var(--serif);color:var(--muted);font-size:.7em}
+.eq .res{filter:drop-shadow(0 0 24px rgba(255,116,16,.5))}
+.eq.in .res{animation:pulse var(--loop-pulse) var(--ease) 3 1.2s}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18) rotate(6deg)}}
+.data-stack{display:flex;flex-direction:column;align-items:center;gap:var(--space-6)}
+.data-stack h4{font-family:var(--serif);font-weight:400;font-size:var(--fs-title);letter-spacing:var(--track-title)}
+.vendors{display:flex;flex-direction:column;gap:var(--space-5);align-items:center;background:#f1f3ff;border-radius:var(--radius-xl);padding:var(--space-7) var(--space-10)}
+.vendors img{height:46px;width:auto;object-fit:contain;opacity:0;transform:translateY(14px);transition:opacity var(--fade-reveal) var(--ease),transform var(--move-reveal) var(--ease);transition-delay:calc(var(--stagger)*var(--i)*2)}
+.vendors.in img{opacity:1;transform:none}
+.uhoh{display:flex;align-items:center;gap:var(--space-3);color:var(--bn-purple);font-size:var(--fs-title-3)}
+.uhoh svg{width:56px;height:56px}
+.uhoh.in .ghost{animation:wobble var(--loop-pulse) var(--ease) 3}
+@keyframes wobble{0%,100%{transform:rotate(0)}30%{transform:rotate(-8deg)}60%{transform:rotate(6deg)}}
+
+/* persona */
+.persona{display:grid;grid-template-columns:260px 1fr;gap:var(--space-12);align-items:center;padding:var(--space-10);background:#f1f3ff;color:var(--bn-navy);border-radius:var(--radius-xl);overflow:hidden;position:relative}
+@media(max-width:760px){.persona{grid-template-columns:1fr;padding:var(--space-7)}}
+.persona.sec2{background:#fff}
+.pface{text-align:center}
+.pface .ph{width:180px;height:180px;margin:0 auto var(--space-4);border-radius:50%;overflow:hidden;background:var(--bn-lav);box-shadow:0 0 0 0 rgba(255,116,16,0);transition:box-shadow var(--move-slow) var(--ease),transform var(--move-slow) var(--ease-spring)}
+.persona:hover .ph{box-shadow:0 0 0 6px var(--bn-orange);transform:scale(1.04)}
+.pface .ph img{width:100%;height:100%;object-fit:cover}
+.pface b{display:block;font-size:var(--fs-title-3);letter-spacing:var(--track-tight)}
+.pface span{display:block;font-size:var(--fs-subhead);line-height:1.35;opacity:.85}
+.ptext p{font-size:var(--fs-body);color:var(--bn-navy)}
+.ptext p:first-child{font-weight:700}
+.persona .src{color:#6b6b9c;text-align:right}
+.persona-wrap+.persona-wrap{margin-top:var(--space-6)}
+.focus-tag{display:inline-block;margin-bottom:var(--space-3);font-size:var(--fs-caption);letter-spacing:var(--track-caps);text-transform:uppercase;color:var(--bn-orange);font-weight:700}
+
+/* user stories */
+.stories{display:flex;flex-direction:column;gap:var(--space-8)}
+.story{display:grid;grid-template-columns:120px 1fr;gap:var(--space-8);align-items:center}
+@media(max-width:700px){.story{grid-template-columns:1fr}}
+.story .who{text-align:center;font-size:var(--fs-subhead)}
+.story .who img{width:92px;height:92px;border-radius:50%;object-fit:cover;margin:0 auto var(--space-2);box-shadow:0 0 0 2px var(--bn-orange)}
+.story blockquote{position:relative;background:#f1f3ff;color:var(--bn-navy);border-radius:var(--radius-lg);padding:var(--space-7) var(--space-8);font-size:var(--fs-body);line-height:1.5;box-shadow:var(--shadow-card)}
+.story blockquote::before{content:"";position:absolute;left:-10px;top:50%;margin-top:-10px;border:10px solid transparent;border-left:0;border-right-color:#f1f3ff}
+@media(max-width:700px){.story blockquote::before{display:none}}
+.story b{font-weight:700}
+
+/* affinity */
+.aff{display:grid;grid-template-columns:auto 1fr;gap:var(--space-10);align-items:start;margin-top:var(--space-8)}
+@media(max-width:820px){.aff{grid-template-columns:1fr}}
+.aff .face{width:110px;height:110px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 3px var(--bn-orange)}
+.aff-board{display:grid;grid-template-columns:2fr 1fr 2fr;gap:var(--space-6);min-width:0}
+@media(max-width:820px){.aff-board{grid-template-columns:1fr}}
+.aff-col h4{font-family:var(--serif);font-weight:400;font-size:var(--fs-quote-sm);letter-spacing:var(--track-quote);text-align:center;margin-bottom:var(--space-4);color:var(--text-strong)}
+.aff-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)}
+.aff-col.goals .aff-grid{grid-template-columns:1fr}
+@media(max-width:820px){.aff-grid{grid-template-columns:1fr 1fr}.aff-col.goals .aff-grid{grid-template-columns:1fr 1fr}}
+.note{position:relative;min-height:128px;padding:var(--space-4);border-radius:var(--radius-sm);font-weight:700;font-size:var(--fs-footnote);line-height:1.3;box-shadow:var(--shadow-card);transform:rotate(var(--r,0deg));opacity:0;translate:0 -24px;transition:opacity var(--fade-slow) var(--ease),translate var(--move-spring) var(--ease-spring),transform var(--move-slow) var(--ease-spring);transition-delay:calc(var(--stagger)*var(--i)*2)}
+.note.done{transition-delay:0s}
+.aff.in .note{opacity:1;translate:0 0}
+.note small{display:block;font-weight:400;margin-top:var(--space-1)}
+.note.n{background:var(--bn-orange);color:#fff}
+.note.g{background:var(--bn-navy);color:#fff}
+.note.f{background:#fff;color:var(--bn-navy)}
+.note:hover{transform:rotate(0) translateY(-6px) scale(1.04);z-index:2}
+
+/* flow diagrams */
+.diagram{border:var(--hairline) solid var(--line-2);border-radius:var(--radius-xl);background:#f1f3ff;padding:var(--space-6);overflow:hidden}
+.diagram svg{width:100%;height:auto;display:block;font-family:var(--sans)}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll-x:focus-visible{outline-offset:-2px}
+.scroll-x .inner{min-width:900px}
+.dgm text{fill:var(--bn-navy)}
+.dgm .box{fill:#fff;stroke:#dfe3f6;stroke-width:1.5}
+.dgm .dia{fill:var(--bn-orange)}
+.dgm .dia-t{fill:#fff;font-weight:700}
+.dgm .ln{fill:none;stroke:var(--bn-navy);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.dgm .draw{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset var(--move-reveal) var(--ease-io);transition-delay:calc(var(--stagger)*var(--i,0)*3)}
+.in .dgm .draw,.dgm.in .draw{stroke-dashoffset:0}
+.dgm .pop{opacity:0;transform:translateY(10px);transition:opacity var(--fade-reveal) var(--ease),transform var(--move-reveal) var(--ease);transition-delay:calc(var(--stagger)*var(--i,0)*2)}
+.in .dgm .pop,.dgm.in .pop{opacity:1;transform:none}
+.dgm .impact{fill:none;stroke:var(--bn-orange);stroke-width:4;stroke-dasharray:3 9;stroke-linecap:round}
+.dgm .impact-t{fill:var(--bn-orange);font-weight:700}
+.dgm .lbl{font-size:17px}
+.dgm .step.lit rect{stroke:var(--bn-orange);stroke-width:4}
+.dgm .step.lit.hot rect{stroke:#fff}
+.dgm .bx{font-size:15px;font-weight:700}
+.dgm .chip{fill:var(--bn-navy)}
+.dgm .chip-t{fill:#fff;font-weight:700}
+.dgm .hot .box{fill:var(--bn-orange);stroke:var(--bn-orange)}
+.dgm .hot text{fill:#fff}
+.dgm .tree-box{fill:#fff;stroke:#dfe3f6;stroke-width:1.5}
+.dgm .tree-blue{fill:var(--bn-purple)}
+.dgm .tree-blue-t{fill:#fff;font-weight:700}
+.dgm .flowdot{fill:var(--bn-orange)}
+.dgm .run{opacity:0}
+.in .dgm .run{opacity:1}
+.dgm.pulse-loop .lit{animation:lit var(--loop-dash) var(--ease) 3}
+@keyframes lit{0%,100%{filter:none}50%{filter:drop-shadow(0 6px 12px rgba(255,116,16,.5))}}
+
+/* information needs */
+.needs{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-5);margin-top:var(--space-8)}
+@media(max-width:820px){.needs{grid-template-columns:1fr}}
+.need{background:var(--bn-lav);color:var(--bn-navy);border-radius:var(--radius-lg);padding:var(--space-8);min-height:230px;position:relative;overflow:hidden;transition:transform var(--move) var(--ease),box-shadow var(--fade) var(--ease)}
+.need:nth-child(1){background:#fff}
+.need h4{font-size:var(--fs-title-3);font-weight:700;margin-bottom:var(--space-3)}
+.need ul{list-style:disc;padding-left:1.2em}
+.need li{font-weight:400}
+.need li:first-child{font-weight:700}
+.need::after{content:"";position:absolute;right:-30px;bottom:-30px;width:120px;height:120px;background:var(--bn-orange);opacity:.14;transform:rotate(45deg);border-radius:var(--radius-md);transition:transform var(--move-slow) var(--ease),opacity var(--fade) var(--ease)}
+@media(hover:hover){.need:hover{transform:translateY(-6px);box-shadow:var(--sn-glow)}.need:hover::after{transform:rotate(45deg) scale(1.5);opacity:.22}}
+.needs-foot{display:flex;justify-content:space-between;gap:var(--space-5);flex-wrap:wrap}
+
+/* audit */
+.audit{position:relative;background:#7a86e0;border-radius:var(--radius-xl);padding:var(--space-10) var(--space-8) var(--space-12);overflow:hidden}
+.audit-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.6fr);gap:var(--space-10);align-items:center}
+@media(max-width:900px){.audit-grid{grid-template-columns:1fr}}
+.audit h3{color:#fff;font-weight:700;font-size:var(--fs-title);line-height:1.1;letter-spacing:var(--track-title)}
+.old-app{position:relative;background:#fff;border-radius:var(--radius-md);box-shadow:var(--shadow-float);color:#212529;display:grid;grid-template-columns:210px 1fr;gap:12px;padding:12px;font-size:12px;min-height:420px}
+@media(max-width:700px){.old-app{grid-template-columns:1fr}}
+.old-app .pnl{border:1px solid #dfe0e2;border-radius:6px;padding:10px;background:#fff}
+.old-app .pnl h6{font-size:11px;font-weight:400;border-bottom:1px solid #dfe0e2;margin:-10px -10px 10px;padding:8px 10px;background:#f7f7f7}
+.old-app label{display:flex;gap:8px;align-items:center;margin:5px 0;font-size:11px}
+.old-app label i{width:11px;height:11px;border:1px solid #adb5bd;border-radius:2px;display:inline-block}
+.old-app .sel{border:1px solid #ced4da;border-radius:5px;padding:5px 8px;margin:4px 0 8px;font-size:11px}
+.old-app .srch{display:flex;border:1px solid #ced4da;border-radius:5px;overflow:hidden;margin-bottom:8px}
+.old-app .srch span{flex:1;height:26px}
+.old-app .srch b{width:30px;background:#212529}
+.old-app .conv{border:1px solid #dfe0e2;border-radius:5px;padding:9px 11px;margin-bottom:8px;position:relative}
+.old-app .conv h6{font-size:14px;font-weight:500;margin:0 0 2px;border:0;padding:0;background:none}
+.old-app .conv small{display:block;color:#6c757d;font-weight:700;font-size:10.5px;margin-bottom:3px}
+.old-app .conv em{position:absolute;right:10px;top:12px;font-style:normal;color:#6c757d;letter-spacing:1px;font-size:10px}
+.old-app .btnx{display:inline-block;border:1px solid #6c757d;border-radius:5px;padding:5px 9px;color:#6c757d;margin:3px 3px 0 0;font-size:11px}
+.sticky{position:absolute;width:min(40%,236px);padding:var(--space-4) var(--space-5);background:var(--bn-note);color:var(--bn-navy);font-size:var(--fs-footnote);line-height:1.35;box-shadow:0 14px 24px -10px rgba(0,0,0,.5);transform:rotate(var(--r,0deg));z-index:3;opacity:0;translate:0 -30px;transition:opacity var(--fade-slow) var(--ease),translate var(--move-spring) var(--ease-spring),transform var(--move-slow) var(--ease-spring);transition-delay:calc(var(--stagger)*var(--i)*4)}
+.sticky.done{transition-delay:0s}
+.audit.in .sticky{opacity:1;translate:0 0}
+.sticky p+p{margin-top:var(--space-3)}
+.sticky:hover{transform:rotate(0) scale(1.05);z-index:5}
+.sticky.s1{left:-1%;top:56%;--r:-2deg}.sticky.s2{left:20%;top:28%;--r:1.5deg}.sticky.s3{right:2%;top:-2%;--r:2deg;width:min(36%,210px)}.sticky.s4{right:-1%;bottom:4%;--r:-1.5deg;width:min(30%,190px)}
+@media(max-width:900px){.sticky{position:relative;inset:auto!important;width:auto!important;margin-top:var(--space-4);--r:0deg}}
+
+/* product solution */
+.solution{display:grid;grid-template-columns:1fr 1fr;border-radius:var(--radius-xl);overflow:hidden;color:var(--bn-navy);position:relative}
+@media(max-width:820px){.solution{grid-template-columns:1fr}}
+.solution>div{padding:var(--space-12) var(--space-10)}
+.sol-a{background:#fff}.sol-b{background:#e3e8ff;position:relative}
+.sol-b::before{content:"";position:absolute;left:-1px;top:50%;margin-top:-18px;border:18px solid transparent;border-left:18px solid #fff;border-right:0}
+@media(max-width:820px){.sol-b::before{display:none}}
+.solution h4{font-size:var(--fs-title-3);font-weight:700;margin-bottom:var(--space-3)}
+.solution p{font-size:var(--fs-body)}
+
+/* lofi */
+.lofi{display:grid;grid-template-columns:1fr minmax(0,420px);gap:var(--space-16);align-items:center}
+@media(max-width:900px){.lofi{grid-template-columns:1fr}}
+.sketch{background:#fff;border-radius:var(--radius-md);box-shadow:var(--shadow-paper);transform:rotate(1.5deg);overflow:hidden;transition:transform var(--move-spring) var(--ease-spring)}
+.sketch:hover{transform:rotate(0) scale(1.03)}
+.sketch img{width:100%;height:auto}
+
+/* annotated frames (mid-fi) */
+.annot{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:var(--space-12);align-items:center}
+@media(max-width:900px){.annot{grid-template-columns:1fr}}
+.annot+.annot{margin-top:var(--space-24)}
+.annot ol{list-style:none;display:flex;flex-direction:column;gap:var(--space-3)}
+.annot li button{display:flex;gap:var(--space-4);align-items:flex-start;text-align:left;width:100%;min-height:var(--target);padding:var(--space-3) var(--space-4);border:var(--hairline) solid transparent;border-radius:var(--radius-lg);background:none;color:var(--text);font-size:var(--fs-lead);cursor:pointer;transition:border-color var(--fade) var(--ease),background-color var(--fade) var(--ease)}
+.annot li button:hover,.annot li button[aria-pressed=true]{border-color:var(--sn-edge);background:var(--sn-wash)}
+.annot li b{font-weight:700;color:var(--text-strong)}
+.annot li .n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--bn-orange);color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--fs-footnote);font-weight:700;margin-top:2px}
+.mf{position:relative;background:#e6e6ea;border:1px solid #cfcfd6;border-radius:var(--radius-md);color:#2a2a33;font-family:var(--sans);overflow:hidden}
+.mf .pin{position:absolute;width:34px;height:34px;border-radius:50%;background:var(--bn-orange);color:#fff;border:0;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px #fff,0 8px 16px -6px rgba(0,0,0,.5);cursor:pointer;z-index:4;transition:transform var(--move) var(--ease-spring)}
+.mf .pin::after{content:"";position:absolute;inset:-10px}
+.mf .pin:hover,.mf .pin.on{transform:scale(1.2)}
+.mf .pin.on{box-shadow:0 0 0 3px #fff,0 0 0 8px rgba(255,116,16,.35)}
+.mf .zone{position:absolute;border:2px solid transparent;border-radius:6px;pointer-events:none;transition:border-color var(--fade) var(--ease),background-color var(--fade) var(--ease);z-index:3}
+.mf .zone.on{border-color:var(--bn-orange);background:rgba(255,116,16,.12)}
+
+/* final UI frames */
+.appfit{position:relative;width:100%;aspect-ratio:1280/800;overflow:hidden;background:var(--bn-paper);border-radius:var(--radius-lg)}
+.app{position:absolute;left:0;top:0;width:1280px;height:800px;transform-origin:0 0;transform:scale(var(--k,.5));display:grid;grid-template-columns:200px 1fr;color:var(--bn-navy);font-family:var(--sans);background:var(--bn-paper);text-align:left;font-size:14px;line-height:1.3}
+.app *{box-sizing:border-box}
+.app button{font-family:inherit;color:inherit;cursor:pointer;background:none;border:0}
+.app .sb{background:#fff;box-shadow:0 0 0 1px var(--bn-line);display:flex;flex-direction:column}
+.app .logo{height:118px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.app .logo svg{width:56px;height:auto;color:var(--bn-navy)}
+.app .logo b{color:var(--bn-orange);letter-spacing:.2em;font-size:15px;font-weight:700}
+.app .nv{display:flex;align-items:center;gap:14px;height:56px;padding:0 18px;font-weight:700;font-size:16px;border:0;border-bottom:1px solid var(--bn-line);width:100%;text-align:left;transition:background-color var(--fade) var(--ease),color var(--fade) var(--ease)}
+.app .nv svg{width:22px;height:22px;flex:none}
+.app .nv:hover{background:var(--bn-paper)}
+.app .nv[aria-current=page]{background:var(--bn-orange);color:#fff}
+.app .nv[aria-disabled=true]{cursor:default}
+.app .nv[aria-disabled=true]:hover{background:none}
+.app .mn{position:relative;overflow:hidden;min-width:0}
+.app .hd{height:96px;background:var(--bn-lav);display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 28px}
+.app .hd h5{font-size:34px;line-height:1.05;font-weight:700;letter-spacing:-.01em}
+.app .hd p{font-weight:700;font-size:15px}
+.app .hd p i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--bn-orange);vertical-align:top;margin-left:2px}
+.app .usr{display:flex;align-items:center;gap:12px;font-size:14px}
+.app .usr img{width:40px;height:40px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 2px var(--bn-orange)}
+.app .body{padding:20px 28px;position:relative}
+.app .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.app .kpi{background:#fff;border-radius:2px;box-shadow:0 2px 6px rgba(5,5,80,.1);height:150px;padding:16px 18px;position:relative;text-align:center}
+.app .kpi h6{font-size:15px;font-weight:700;text-align:left}
+.app .kpi .v{font-size:44px;line-height:1;font-weight:700;margin-top:16px;display:flex;justify-content:center;align-items:center;gap:6px}
+.app .kpi .v small{font-size:12px;color:var(--bn-pink);font-weight:400;align-self:flex-start;margin-top:6px}
+.app .kpi .v.pos{color:var(--bn-navy)}.app .kpi .v .g{color:var(--bn-green)}
+.app .kpi .d{font-size:12px;margin-top:8px}
+.app .kpi .info{position:absolute;right:14px;bottom:12px;width:20px;height:20px;color:var(--bn-purple)}
+.app .kpi .kb{position:absolute;right:12px;top:14px;width:16px;height:16px}
+.app .kpi.add{box-shadow:none;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--bn-purple);gap:6px;font-size:12px}
+.app .kpi.add svg{width:20px;height:20px}
+.app .tri{width:20px;height:14px;display:inline-block;flex:none}
+.app .tri.up{color:var(--bn-pink)}.app .tri.dn{color:var(--bn-green)}
+.app .panel{background:#fff;border-radius:2px;box-shadow:0 2px 6px rgba(5,5,80,.1);margin-top:18px;padding:20px 26px;position:relative}
+.app .panel h6{font-size:22px;font-weight:700}
+.app .panel .kb{position:absolute;right:22px;top:22px;width:16px;height:16px}
+.app .tabs{display:flex;gap:30px;margin:14px 0 20px;font-size:14px}
+.app .tabs span,.app .tabs button{padding:6px 0;font-weight:400;font-size:14px;border-bottom:2px solid transparent}
+.app .tabs .on{color:var(--bn-orange);border-color:var(--bn-orange)}
+.app .tabs [aria-disabled]{cursor:default}
+.app .sum{display:grid;grid-template-columns:1.1fr 1fr;gap:30px;font-size:14px}
+.app .sum h6{font-size:17px;font-weight:700;margin-bottom:12px}
+.app .stat{display:grid;grid-template-columns:20px 1fr auto auto;gap:6px 10px;align-items:center;margin-bottom:12px;font-size:15px}
+.app .stat.up{color:var(--bn-pink)}.app .stat.dn{color:var(--bn-navy)}
+.app .stat b{font-weight:400;color:inherit}.app .stat small{font-size:11px}
+.app .stat.up small{color:var(--bn-pink)}.app .stat.dn small{color:var(--bn-green)}
+.app .stat em{font-style:normal;margin-left:16px}
+.app .ch{display:inline-block;padding:2px 9px;font-size:11px;font-weight:700;color:#fff;background:var(--bn-purple);margin:3px 6px 6px 0;border-radius:2px}
+.app .ch.o{background:var(--bn-orange)}
+.app .ins h6{font-size:15px;margin:10px 0 6px}
+.app .ins h6:first-child{margin-top:0}
+.app .ins .big{font-size:17px;font-weight:700;margin-bottom:10px}
+.app .ins .big b{color:var(--bn-orange);font-weight:700}
+.app .scr{position:absolute;inset:96px 0 0 0;opacity:0;pointer-events:none;transition:opacity var(--fade) var(--ease)}
+.app .scr.on{opacity:1;pointer-events:auto}
+.app .scr-h{position:absolute;inset:0 0 auto 0;height:96px;background:var(--bn-lav);display:flex;align-items:center;justify-content:space-between;padding:0 28px;opacity:0;transition:opacity var(--fade) var(--ease)}
+.app .scr-h.on{opacity:1}
+
+/* insight explorer */
+.app .ie{display:grid;grid-template-columns:1fr 250px;gap:0;height:100%}
+.app .ie .l{padding:22px 24px 0 28px}
+.app .ie .r{background:#fff;padding:22px 20px;height:100%;border-left:1px solid var(--bn-line)}
+.app .search{display:flex;height:34px;background:#fff;border:1px solid var(--bn-line)}
+.app .search span{flex:1;padding:8px 12px;color:var(--bn-purple);font-size:13px}
+.app .search b{background:var(--bn-navy);color:#fff;padding:9px 20px;font-size:13px}
+.app .qchips{display:flex;gap:8px;margin:10px 0 28px;flex-wrap:wrap}
+.app .qchips button{border:1px solid transparent;background:var(--bn-lav);color:var(--bn-navy);font-size:11px;font-weight:700;padding:2px 8px;border-radius:2px;min-width:20px;transition:background-color var(--fade) var(--ease),color var(--fade) var(--ease)}
+.app .qchips button[aria-pressed=true]{background:var(--bn-navy);color:#fff}
+.app .ie-t{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+.app .ie-t h6{font-size:24px;font-weight:700}
+.app .ie-t span{font-size:13px}
+.app .crow{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--bn-line);padding:12px 14px;margin-bottom:10px;position:relative;box-shadow:0 1px 2px rgba(5,5,80,.05);transition:box-shadow var(--fade) var(--ease),transform var(--move) var(--ease),border-color var(--fade) var(--ease)}
+.app .crow:hover{box-shadow:0 8px 18px -8px rgba(5,5,80,.3);transform:translateY(-2px);border-color:var(--bn-orange)}
+.app .crow b{font-size:15px;display:block}
+.app .crow small{font-size:11px;display:block;opacity:.85}
+.app .crow p{font-size:11px;margin-top:8px;color:#4a4a7a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app .crow .stars{position:absolute;right:14px;top:12px}
+.app .crow .flag{position:absolute;right:14px;bottom:10px;font-size:10px;color:var(--bn-purple);display:flex;align-items:center;gap:4px}
+.app .crow .flag svg{width:18px;height:18px;color:var(--bn-green)}
+.app .stars{display:inline-flex;gap:3px}
+.app .stars svg{width:15px;height:15px}
+.app .stars .f{color:var(--bn-orange)}.app .stars .e{color:#d6d9f2}
+.app .ie .r h6{font-size:16px;font-weight:700;margin-bottom:12px}
+.app .fl{display:flex;align-items:center;gap:10px;margin-bottom:12px;width:100%;text-align:left}
+.app .fl i{width:16px;height:16px;border:2px solid var(--bn-navy);border-radius:2px;display:inline-flex;align-items:center;justify-content:center;flex:none;background:#fff;color:#fff;transition:background-color var(--fade-fast) var(--ease)}
+.app .fl[aria-pressed=true] i{background:var(--bn-navy)}
+.app .fl i svg{width:11px;height:11px;opacity:0}
+.app .fl[aria-pressed=true] i svg{opacity:1}
+.app .field{margin:14px 0 6px;font-size:13px}
+.app .inp{display:flex;border:1px solid var(--bn-line);background:#f6f7ff;height:30px;font-size:12px;color:var(--bn-purple);align-items:center;padding-left:8px;justify-content:space-between}
+.app .inp b{width:30px;height:30px;background:var(--bn-navy);display:flex;align-items:center;justify-content:center;color:#fff}
+.app .inp svg{width:16px;height:16px}
+.app .drill{position:absolute;inset:0;background:#fff;transform:translateX(100%);transition:transform var(--move-slow) var(--ease-io);z-index:5;padding:26px 36px;display:flex;flex-direction:column;gap:12px}
+.app .drill.on{transform:none}
+.app .drill .top{display:flex;align-items:center;gap:12px}
+.app .drill .top h6{font-size:24px;font-weight:700}
+.app .drill .top .stars{margin-left:2px}
+.app .drill .x{margin-left:auto;width:32px;height:32px;font-size:22px;line-height:1;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.app .drill .x:hover{background:var(--bn-lav)}
+.app .bub{max-width:62%;padding:10px 16px;font-size:13px;border:1px solid #f1e6a8;background:#fffdf0;box-shadow:0 1px 3px rgba(5,5,80,.12);position:relative;opacity:0;transform:translateY(10px);transition:opacity var(--fade) var(--ease),transform var(--move) var(--ease)}
+.app .drill.on .bub{opacity:1;transform:none;transition-delay:calc(var(--stagger)*var(--i)*5 + 400ms)}
+.app .bub.a{align-self:flex-end;background:#fff;border-color:#f1e6a8}
+.app .bub.c{align-self:flex-start;border-color:#f3b6c2;background:#fff}
+.app .bub .tg{display:inline-block;font-size:9px;font-weight:700;background:var(--bn-orange);color:#fff;padding:1px 6px;margin-left:6px;border-radius:2px;vertical-align:middle}
+.app .bub mark{background:#ffe4e9;color:inherit;padding:0 2px}
+.app .bub.a mark{background:#fff0d6}
+.app .ts{align-self:center;font-size:10px;color:var(--bn-purple)}
+.app .ava{position:absolute;bottom:-9px;width:22px;height:22px;border-radius:50%;background:var(--bn-navy);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.app .bub.c .ava{left:-9px}.app .bub.a .ava{right:-9px;background:var(--bn-green)}
+
+/* agent analytics */
+.app .aa-top{display:grid;grid-template-columns:260px 1fr;gap:18px}
+.app .agents{background:#fff;border-radius:2px;box-shadow:0 2px 6px rgba(5,5,80,.1);padding:16px 22px;position:relative;height:150px}
+.app .agents h6{font-size:16px;font-weight:700}
+.app .agents .sel{margin-top:12px;border:0;background:var(--bn-lav);height:34px;width:230px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:13px}
+.app .agents .sel svg{width:14px;height:14px}
+.app .agents .ag{position:absolute;right:60px;top:26px;display:flex;flex-direction:column;gap:9px;font-size:13px}
+.app .agents .ag div{display:flex;align-items:center;gap:8px}
+.app .agents .ag svg.u{width:16px;height:16px}
+.app .agents .ag .stars{margin-left:6px}
+.app .sankey{position:relative;margin-top:6px;height:220px;max-width:640px}
+.app .sankey svg{position:absolute;inset:0;width:100%;height:100%}
+.app .sankey .band{fill:var(--bn-lav);opacity:0;transition:opacity var(--fade-reveal) var(--ease)}
+.app .scr.on .sankey .band{opacity:1;transition-delay:.35s}
+.app .sankey .bar{transform-origin:50% 0;transform:scaleY(0);transition:transform var(--move-reveal) var(--ease)}
+.app .sankey .bar.b{transform-origin:50% 100%}
+.app .scr.on .sankey .bar{transform:none}
+.app .sankey text{fill:var(--bn-navy);font-size:13px}
+.app .sankey .hd2{fill:var(--bn-purple);font-size:14px}
+
+/* appshell label */
+.shell{margin-top:var(--space-6)}
+.shell-cap{display:flex;justify-content:space-between;align-items:center;gap:var(--space-4);flex-wrap:wrap;margin-top:var(--space-4)}
+.shell-cap .chips{display:flex;gap:var(--space-2);flex-wrap:wrap}
+.chipb{min-height:var(--target);display:inline-flex;align-items:center;padding:0 var(--space-4);border-radius:var(--radius-pill);border:var(--hairline) solid var(--line-2);background:transparent;color:var(--muted);font-size:var(--fs-footnote);cursor:pointer;transition:border-color var(--fade) var(--ease),color var(--fade) var(--ease),background-color var(--fade) var(--ease)}
+.chipb:hover{color:var(--text);border-color:var(--sn-edge)}
+.chipb[aria-pressed=true]{background:var(--sn-accent);color:var(--bg);border-color:var(--sn-accent)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-12);align-items:center}
+@media(max-width:900px){.two{grid-template-columns:1fr}}
+.side-text{font-size:var(--fs-lead);color:var(--text-2)}
+.side-text strong{color:var(--text-strong)}
+
+/* branding */
+.brand-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-8);align-items:stretch}
+@media(max-width:820px){.brand-grid{grid-template-columns:1fr}}
+.bp{border:var(--hairline) solid var(--line-2);border-radius:var(--radius-xl);background:var(--surface);overflow:hidden}
+.bp .pic{background:#fff;padding:var(--space-6);display:flex;align-items:center;justify-content:center;min-height:340px}
+.bp .pic img{width:100%;height:auto;mix-blend-mode:multiply}
+.bp .txt{padding:var(--space-5) var(--space-6) var(--space-6)}
+.bp h4{font-size:var(--fs-title-3);font-weight:700}
+.bp p{color:var(--muted);font-size:var(--fs-subhead);margin-top:var(--space-1)}
+.recon{width:100%;max-width:520px;height:auto}
+.recon .sq{fill:#e3e8ff;stroke:var(--bn-orange);stroke-width:2.5}
+.recon text{fill:#6b6b9c;font-size:13px}
+.recon .dim{stroke:var(--bn-orange);stroke-width:1.5;fill:none}
+.recon .piece{transition:transform var(--move-reveal) var(--ease-io),opacity var(--fade-reveal) var(--ease);transition-delay:calc(var(--stagger)*var(--i)*3)}
+.recon .p-a{transform:translate(-26px,-26px);opacity:0}.recon .p-b{transform:translate(0,-34px);opacity:0}.recon .p-c{transform:translate(26px,-26px);opacity:0}.recon .p-d{transform:translate(-30px,28px);opacity:0}.recon .p-e{transform:translate(0,40px);opacity:0}.recon .p-f{transform:translate(30px,28px);opacity:0}
+.in .recon .piece{transform:none;opacity:1}
+.recon .lbls{opacity:0;transition:opacity var(--fade-reveal) var(--ease);transition-delay:1s}
+.in .recon .lbls{opacity:1}
+.hero-mark{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-12);margin-top:var(--space-12);align-items:center}
+@media(max-width:820px){.hero-mark{grid-template-columns:1fr}}
+.shield{display:flex;align-items:center;justify-content:center;gap:clamp(10px,3vw,30px);padding:var(--space-10) var(--space-4);background:#f1f3ff;border-radius:var(--radius-xl)}
+.shield svg{width:clamp(70px,12vw,130px);height:auto}
+.shield .arrow{width:clamp(34px,6vw,60px);color:var(--bn-navy)}
+.shield .arrow path{stroke-dasharray:80;stroke-dashoffset:80;transition:stroke-dashoffset var(--move-reveal) var(--ease-io);transition-delay:calc(var(--stagger)*var(--i)*6)}
+.shield.in .arrow path{stroke-dashoffset:0}
+.shield .st{opacity:0;transform:scale(.8);transition:opacity var(--fade-reveal) var(--ease),transform var(--move-spring) var(--ease-spring);transition-delay:calc(var(--stagger)*var(--i)*6)}
+.shield.in .st{opacity:1;transform:none}
+.shield .hero-d{filter:drop-shadow(0 12px 14px rgba(5,5,80,.25))}
+.valence{display:flex;flex-direction:column;gap:var(--space-6);justify-content:center;background:#f1f3ff;border-radius:var(--radius-xl);padding:var(--space-10);font-size:clamp(1.9rem,4vw,2.9rem);font-weight:700;letter-spacing:var(--track-title)}
+.valence div{display:flex;align-items:center;gap:var(--space-5)}
+.valence svg{width:clamp(56px,8vw,80px);height:auto;flex:none;transition:transform var(--move-spring) var(--ease-spring)}
+.valence .up{color:var(--bn-green)}.valence .dn{color:var(--bn-pink)}
+.valence div:hover svg{transform:translateY(-6px) scale(1.08)}
+.valence .dn:hover svg{transform:translateY(6px) scale(1.08)}
+.gb{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-8);margin-top:var(--space-12)}
+@media(max-width:700px){.gb{grid-template-columns:1fr}}
+.gb button{background:#f1f3ff;border:0;border-radius:var(--radius-xl);padding:var(--space-10) var(--space-6) var(--space-8);display:flex;flex-direction:column;align-items:center;gap:var(--space-6);cursor:pointer;min-height:var(--target);font-size:clamp(1.5rem,3vw,2.2rem);font-weight:700;transition:transform var(--move) var(--ease),box-shadow var(--fade) var(--ease)}
+.gb button:hover{transform:translateY(-6px);box-shadow:0 30px 50px -26px rgba(255,255,255,.35)}
+.gb svg{width:min(240px,60%);height:auto;transition:transform var(--move-spring) var(--ease-spring)}
+.gb button.good{color:var(--bn-green)}.gb button.bad{color:var(--bn-pink)}
+.gb button[aria-pressed=true] svg{transform:rotate(180deg)}
+.gb button:focus-visible{outline-offset:-4px}
+
+/* reflection */
+.reflect{padding:var(--section-y) 0;background:var(--bg-2);border-top:var(--hairline) solid var(--line);margin-top:var(--section-y)}
+.refl{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-16);margin-top:var(--space-10)}
+@media(max-width:900px){.refl{grid-template-columns:1fr;gap:var(--space-10)}}
+.refl p{font-size:var(--fs-lead);color:var(--text-2)}
+.refl p strong{color:var(--text-strong)}
+.refl p b{color:var(--sn-accent);font-weight:700}
+.nexts h4{font-family:var(--serif);font-weight:400;font-size:var(--fs-quote-sm);letter-spacing:var(--track-quote);margin-bottom:var(--space-5)}
+.nexts ul{list-style:none}
+.nexts li{display:flex;gap:var(--space-4);padding:var(--space-4) 0;border-top:var(--hairline) solid var(--line);font-size:var(--fs-lead);color:var(--text-2)}
+.nexts li::before{content:"";flex:none;width:9px;height:9px;border-radius:50%;background:var(--bn-orange);margin-top:.6em;box-shadow:0 0 0 4px var(--sn-wash)}
+.nexts li:last-child{border-bottom:var(--hairline) solid var(--line)}
+
+/* appendix */
+.apx{padding:var(--section-y) 0 0}
+.film{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:var(--space-4);position:relative;margin-top:var(--space-12)}
+@media(max-width:1000px){.film{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:var(--space-8)}}
+@media(max-width:520px){.film{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.film::before{content:"";position:absolute;left:0;right:0;top:-22px;height:2px;background:var(--bn-orange);transform-origin:0 50%;transform:scaleX(0);transition:transform var(--move-reveal) var(--ease-io)}
+.film.in::before{transform:none}
+.film figure{position:relative}
+.film figure>div{background:#fff;border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-card);height:190px;display:flex;align-items:flex-start;justify-content:center;transition:transform var(--move) var(--ease)}
+.film figure>div img{width:100%;height:auto}
+.film figure:hover>div{transform:translateY(-6px)}
+.film figcaption{margin-top:var(--space-3);font-size:var(--fs-caption);line-height:var(--lh-caption);color:var(--muted)}
+.film figcaption b{color:var(--sn-accent);font-weight:400;font-variant-numeric:tabular-nums;margin-right:var(--space-1)}
+.live-id{display:inline-flex;align-items:center;gap:var(--space-3);border:var(--hairline) solid var(--line-2);border-radius:var(--radius-md);padding:var(--space-2-5) var(--space-4);font-size:var(--fs-subhead);margin-bottom:var(--space-6)}
+.live-id small{display:block;color:var(--muted);font-size:var(--fs-caption)}
+.live-id i{color:var(--bn-orange);font-style:normal;font-weight:700}
+.bullets{list-style:none;margin:var(--space-3) 0}
+.bullets li{display:flex;gap:var(--space-3);margin:var(--space-1-5) 0;font-size:var(--fs-subhead);color:var(--text-2)}
+.bullets li::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--bn-orange);margin-top:.65em}
+.kpi-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:var(--space-12);margin-top:var(--space-10);align-items:start}
+@media(max-width:900px){.kpi-wrap{grid-template-columns:1fr}}
+.goals h5{font-size:var(--fs-subhead);color:var(--text-strong);font-weight:700;margin:var(--space-6) 0 var(--space-3)}
+.goal{width:100%;text-align:left;display:block;border:var(--hairline) solid var(--line-2);border-radius:var(--radius-lg);background:var(--surface);padding:var(--space-4) var(--space-5);color:var(--text);cursor:pointer;margin-bottom:var(--space-3);transition:border-color var(--fade) var(--ease),background-color var(--fade) var(--ease)}
+.goal:hover,.goal[aria-pressed=true]{border-color:var(--sn-edge);background:var(--sn-wash)}
+.goal b{display:block;font-weight:700;color:var(--bn-orange);margin-bottom:var(--space-2)}
+.goal .k{display:flex;flex-wrap:wrap;gap:var(--space-1-5)}
+.kp{font-size:var(--fs-caption);padding:var(--space-1) var(--space-2-5);border-radius:var(--radius-sm);background:var(--bg-2);border:var(--hairline) solid var(--line-2);color:var(--muted);transition:border-color var(--fade) var(--ease),background-color var(--fade) var(--ease),color var(--fade) var(--ease)}
+.kp.lit{border-color:var(--bn-orange);background:var(--sn-wash);color:var(--text-strong)}
+.kp.q{color:var(--bn-orange)}
+.kgroup{margin-bottom:var(--space-8)}
+.kgroup h5{font-size:var(--fs-title-3);font-weight:700;color:var(--text-strong);margin-bottom:var(--space-2)}
+.kgroup>p{font-size:var(--fs-footnote);color:var(--muted);margin-bottom:var(--space-3);max-width:32rem}
+.kgroup .k{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.kgroup .kp{font-size:var(--fs-footnote);padding:var(--space-2) var(--space-3)}
+.live-strip{overflow:hidden;margin-top:var(--space-8);-webkit-mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.live-strip .row{display:flex;gap:var(--space-4);width:max-content;animation:marq var(--loop-marq) linear infinite;align-items:flex-start}
+.live-strip:hover .row{animation-play-state:paused}
+.live-strip img{height:170px;width:auto;border-radius:var(--radius-sm);background:#fff;flex:none}
+@keyframes marq{to{transform:translateX(-50%)}}
+.steps5{list-style:none;counter-reset:s;margin-top:var(--space-6);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:var(--space-5)}
+@media(max-width:1000px){.steps5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.steps5 li{counter-increment:s;font-size:var(--fs-footnote);line-height:var(--lh-caption);color:var(--muted);border-top:var(--hairline) solid var(--line-2);padding-top:var(--space-3)}
+.steps5 li::before{content:counter(s) ")";color:var(--sn-accent);margin-right:var(--space-1);font-variant-numeric:tabular-nums}
+
+.closing{padding:var(--space-30) 0 var(--space-12);overflow:hidden;border-top:var(--hairline) solid var(--line);margin-top:var(--section-y)}
+.closing .big{font-family:var(--serif);font-weight:400;font-size:var(--fs-display-xl);line-height:var(--lh-title);letter-spacing:var(--track-display);word-spacing:var(--word-display);color:var(--text-strong);display:flex;align-items:center;gap:var(--space-8);flex-wrap:wrap}
+.closing .big svg{width:clamp(70px,12vw,150px);color:var(--bn-orange);flex:none}
+.closing .big em{font-style:italic;color:var(--sn-accent)}
+.closing .row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:var(--space-5);margin-top:var(--space-16);font-size:var(--fs-footnote);color:var(--muted)}
+.closing .row a{color:var(--text)}
+.foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-4);padding-top:var(--space-6);padding-bottom:var(--space-7);font-size:var(--fs-footnote);color:var(--muted);border-top:var(--hairline) solid var(--line)}
+.foot a{text-decoration:none}
+.ctl{display:inline-flex;align-items:center;gap:var(--space-2-5);min-height:var(--target);background:none;border:0;color:var(--muted);font:400 var(--fs-footnote)/1 var(--sans);cursor:pointer;transition:color var(--fade) var(--ease)}
+.ctl:hover,.ctl[aria-pressed=true]{color:var(--text)}
+.pz{width:10px;height:11px;border-left:3px solid currentColor;border-right:3px solid currentColor}
+.ctl[aria-pressed=true] .pz{border:0;width:0;height:0;border-left:10px solid currentColor;border-top:6px solid transparent;border-bottom:6px solid transparent}
+#toast{position:fixed;left:50%;bottom:var(--space-7);transform:translate(-50%,30px);opacity:0;background:var(--glass-strong);-webkit-backdrop-filter:blur(var(--blur-sm));backdrop-filter:blur(var(--blur-sm));border:var(--hairline) solid var(--line-2);color:var(--text);font-size:var(--fs-footnote);padding:var(--space-2-5) var(--space-4);border-radius:var(--radius-pill);box-shadow:var(--shadow-card);transition:opacity var(--fade) var(--ease),transform var(--move) var(--ease);z-index:var(--z-tip);pointer-events:none}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* Pause motion (WCAG 2.2.2) */
+html.motion-paused *,html.motion-paused *::before,html.motion-paused *::after{animation-play-state:paused!important}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .plane,.scrollcue span,.eq.in .res,.uhoh.in .ghost,.dgm.pulse-loop .lit{animation:none}
+  .he{filter:none}
+  .live-strip{-webkit-mask:none;mask:none;overflow-x:auto}
+  .live-strip .row{animation:none}
+}
+html.motion-paused .live-strip .row{animation-play-state:paused}
+</style>
+<script src="/posthog.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the case study</a>
+<div id="progress" aria-hidden="true"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <marker id="ah" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11" markerHeight="11" orient="auto-start-reverse"><path d="M2 1.5 L10 6 L2 10.5" fill="none" stroke="#050550" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="ah-o" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11" markerHeight="11" orient="auto-start-reverse"><path d="M2 1.5 L10 6 L2 10.5" fill="none" stroke="#ff7410" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <clipPath id="circ"><circle cx="0.5" cy="0.5" r="0.5"/></clipPath>
+  </defs>
+  <!-- Bandit raccoon mark, rebuilt from the original vector geometry (the good) -->
+  <symbol id="rc" viewBox="420 404 400 312">
+    <path d="M581 465.54L519.5 404L458 465.54L476.45 484H562.55Z"/>
+    <path d="M781 465.54L719.5 404L658 465.54L676.45 484H762.55Z"/>
+    <path fill-rule="evenodd" d="M620 501H520L420 601L520 701L620 601L720 701L820 601L720 501ZM570 619L520 569L470 619L485 634H555ZM720 569L770 619L755 634H685L670 619Z"/>
+    <path d="M670 701L620 651L570 701L585 716H655Z"/>
+  </symbol>
+  <!-- inverted (the bad) -->
+  <symbol id="rcb" viewBox="1088 457 446 259">
+    <path d="M1411 475.46L1472.5 537L1534 475.46L1515.55 457H1429.45Z"/>
+    <path d="M1088 475.46L1149.5 537L1211 475.46L1192.55 457H1106.45Z"/>
+    <path fill-rule="evenodd" d="M1311 501H1211L1111 601L1211 701L1311 601L1411 701L1511 601L1411 501ZM1361 614L1411 664L1461 614L1446 599H1376ZM1211 664L1161 614L1176 599H1246L1261 614Z"/>
+    <path d="M1361 701L1311 651L1261 701L1276 716H1346Z"/>
+  </symbol>
+</svg>
+
+<header class="nav">
+  <a class="brand sig" href="/#work" aria-label="Philman Yeung, back to all work"><span aria-hidden="true">&larr;</span><img src="/logo.svg" width="3029" height="513" alt=""></a>
+  <nav aria-label="Site">
+    <a href="/#work">Work</a>
+    <a href="/#play">Play</a>
+    <a href="/about">About</a>
+  </nav>
+</header>
+<main id="main">
+
+<!-- HERO -->
+<section class="hero" id="top" aria-labelledby="title">
+  <div>
+    <div class="tag he lockup" style="--i:0">
+      <svg viewBox="420 404 400 312" role="img" aria-label="Bandit Labs logo"><use href="#rc"/></svg>
+      <b>Bandit Labs</b>
+    </div>
+    <h1 id="title" data-split>Product <em>Revamp</em></h1>
+    <p class="sub he" style="--i:2">Product &amp; UX Demonstration</p>
+    <dl class="meta he" style="--i:4">
+      <div><dt>Role</dt><dd>Product &amp; Design Consultant</dd></div>
+      <div><dt>Timeline</dt><dd>Jan 2022 - Mar 2022 <i>(2mo)</i></dd></div>
+      <div class="full"><dt>Objective</dt><dd>Enable Seed-funding round <i>via</i> Leading UX design, productization &amp; demo refinement</dd></div>
+    </dl>
+    <div class="hero-links he" style="--i:6">
+      <a class="pill-link" href="https://www.figma.com/design/qm3I43Zj3Z6d7vc4heMnKt/%F0%9F%9F%A2-Bandit-Labs---Dashboard-2.0?node-id=110-6839&amp;t=xkmHv46XawBTp2XK-1" target="_blank" rel="noopener">Figma Prototype <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12L12 4M5.5 4H12v6.5"/></svg></a>
+    </div>
+  </div>
+  <div class="stage" id="stage" aria-hidden="true">
+    <div class="plane" id="plane"><div class="appfit" data-app="hero"></div></div>
+  </div>
+  <div class="scrollcue" aria-hidden="true">SCROLL<span></span></div>
+</section>
+
+<!-- PROJECT SUMMARY -->
+<section class="summary" id="summary">
+  <div class="wrap">
+    <div class="eyebrow rv">Project Summary</div>
+    <div class="sum-grid">
+      <ol class="toc rv d1">
+        <li><a href="#problem"><span>01</span>Problem<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a></li>
+        <li><a href="#research"><span>02</span>Research &amp; Analysis<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a></li>
+        <li><a href="#insights"><span>03</span>Insights<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a></li>
+        <li><a href="#mockups"><span>04</span>Mockups<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a></li>
+        <li><a href="#screens"><span>05</span>UXUI Screens<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a></li>
+        <li><a href="#branding"><span>06</span>Branding<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a></li>
+      </ol>
+      <div class="facts rv d2">
+        <div><b>Role</b><span>Product &amp; Design Consultant</span></div>
+        <div><b>Timeline</b><span>Jan 2022 - Mar 2022 (2mo)</span></div>
+        <div><b>Objective</b><span>Enable Seed-funding round <i>via</i> Leading UX design, productization &amp; demo refinement</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 01 PROBLEM -->
+<section class="part" id="problem">
+  <div class="wrap">
+    <div class="eyebrow rv"><b>01</b>Problem</div>
+    <h2 class="sec split" data-split>Back<em>ground</em></h2>
+    <div class="bg2">
+      <div>
+        <p class="big-quote rv">Bandit Labs is an AI chat analytics platform that enables product teams with customer insights.</p>
+        <p class="big-quote rv d1">Find clarity for Agile product development through chat analytics.</p>
+        <p class="bold-line rv d2">Build ease between UX, CX and product.<a class="lnk" href="https://banditlabs.io" target="_blank" rel="noopener">banditlabs.io</a></p>
+      </div>
+      <div class="rv d2"><div class="appfit" data-app="bg" aria-hidden="true"></div><p class="cap">1280x800</p></div>
+    </div>
+
+    <div class="sub-h"><h3><span>1.1</span>Problem</h3></div>
+    <div class="problem2">
+      <div>
+        <p class="lede wide rv">Product teams use customer feedback to influence their product roadmap and features.</p>
+        <p class="lede wide rv d1">However, the process of turning raw data into actionable insight is not straightforward.</p>
+        <div class="eq" id="eq" aria-label="Pickaxe plus gem plus question mark equals ring">
+          <span style="--i:0" aria-hidden="true">&#x1F528;</span><span class="op" style="--i:1" aria-hidden="true">+</span>
+          <span style="--i:2" aria-hidden="true">&#x1F48E;</span><span class="op" style="--i:3" aria-hidden="true">+</span>
+          <span style="--i:4" aria-hidden="true">&#x2753;</span><span class="op" style="--i:5" aria-hidden="true">=</span>
+          <span class="res" style="--i:6" aria-hidden="true">&#x1F48D;</span>
+        </div>
+      </div>
+      <div class="rv d2">
+        <div class="sub-h" style="margin:0 0 var(--space-6);border:0;padding:0"><h3 style="font-size:var(--fs-title-3);font-family:var(--sans);font-weight:700">Problem (2)</h3></div>
+        <p class="lede wide"><b style="color:var(--text-strong)">Example</b><br>A company with $2b online revenue collects data through web analytics and customer chat data.</p>
+        <p class="lede wide">With millions of customer interactions, how does a product team interface with CX teams and data for everyday work?</p>
+        <div class="data-stack" id="dataStack" style="margin-top:var(--space-8)">
+          <h4>Data</h4>
+          <div class="vendors" id="vendors">
+            <img style="--i:0" src="/img/bandit/zendesk.webp" alt="Zendesk" width="180" height="120" loading="lazy">
+            <img style="--i:1" src="/img/bandit/google-analytics.webp" alt="Google Analytics" width="210" height="118" loading="lazy">
+            <img style="--i:2" src="/img/bandit/salesforce.webp" alt="Salesforce" width="140" height="98" loading="lazy">
+          </div>
+          <div class="uhoh" id="uhoh"><svg class="ghost" viewBox="0 0 56 56" fill="currentColor" aria-hidden="true"><circle cx="28" cy="18" r="11"/><path d="M6 52c0-13 10-20 22-20s22 7 22 20z"/></svg><span>uh oh.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 RESEARCH & ANALYSIS -->
+<section class="part" id="research">
+  <div class="wrap">
+    <div class="eyebrow rv"><b>02</b>Research &amp; Analysis</div>
+    <h2 class="sec split" data-split>User <em>Persona</em></h2>
+
+    <div class="persona-wrap rv">
+      <span class="focus-tag">Focus</span>
+      <div class="persona">
+        <div class="pface"><div class="ph"><img src="/img/bandit/rebecca.webp" alt="Rebecca Kapoor" width="360" height="360" loading="lazy"></div><b>Rebecca Kapoor</b><span>Head of Product<br>SaaS Company</span></div>
+        <div class="ptext">
+          <p>Rebecca is the newly hired Head of Product.</p>
+          <p>She loves technology, second to her core love of improving the impact of the products she works on. She&rsquo;s always listening to what people says about her product by &ldquo;lurking&rdquo; on Twitter.</p>
+          <p>Asides from work, she enjoys the physical challenge of hiking and biking.</p>
+          <p class="src">Primary Source: 5+ PMs, companies with 1B+ valuation</p>
+        </div>
+      </div>
+    </div>
+    <div class="persona-wrap rv" style="margin-top:var(--space-6)">
+      <span class="focus-tag" style="color:var(--muted)">Secondary</span>
+      <div class="persona sec2">
+        <div class="pface"><div class="ph"><img src="/img/bandit/simon.webp" alt="Simon Dela Cruz" width="360" height="360" loading="lazy"></div><b>Simon Dela Cruz</b><span>Director of CX<br>SaaS Company</span></div>
+        <div class="ptext">
+          <p>Simon is the definition of a &ldquo;people person.&rdquo;</p>
+          <p>That&rsquo;s why he was promoted to CX director, climbing as a customer service agent, to a supervisor and eventually manager.</p>
+          <p>He&rsquo;s extremely busy because he has a lot of vertical and horizontal relationships to manage. He loves working with people, but not so much with the data.</p>
+          <p class="src">Primary Source: 5+ CX Managers, companies with 1B+ valuation</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-h"><h3><span>2.1</span>User Stories</h3></div>
+    <div class="stories">
+      <div class="story rv"><div class="who"><img src="/img/bandit/rebecca.webp" alt="" width="92" height="92" loading="lazy">Rebecca</div>
+        <blockquote>&ldquo;<i>As the</i> Head of Product, <i>I want to</i> lead a <b>product vision</b> informed by <b>customer feedback</b>. <i>So that</i> each feature we release clearly contributes to our value prop. It&rsquo;s a <b>struggle to constantly ask for data</b> from your CX or data teams.&rdquo;</blockquote></div>
+      <div class="story rv d1"><div class="who"><img src="/img/bandit/simon.webp" alt="" width="92" height="92" loading="lazy">Simon</div>
+        <blockquote>&ldquo;<i>As the</i> CX Director, <i>I want to</i> understand our <b>customers</b> and how our CX team is <b>delivering a world-class experience</b>. <i>So that</i> I can enable my organization <b>transparently</b>, whether it&rsquo;s agent training, or informing the <b>product</b> team to create requested features&ldquo;</blockquote></div>
+    </div>
+
+    <div class="sub-h"><h3><span>2.2</span>Persona + Affinity</h3></div>
+    <p class="lede rv">PMs are our priority user. Insights were organized and mapped to a persona and user journey.</p>
+    <div class="aff" id="aff">
+      <img class="face" src="/img/bandit/rebecca.webp" alt="" width="110" height="110" loading="lazy">
+      <div class="aff-board">
+        <div class="aff-col"><h4>Needs</h4><div class="aff-grid">
+          <div class="note n" style="--i:0;--r:-1.5deg">Information Need:<small style="font-weight:700">Understanding immediate customer trends</small></div>
+          <div class="note n" style="--i:1;--r:1deg">Communicate and coordinate with Design and Data teams</div>
+          <div class="note n" style="--i:2;--r:1.5deg">Develop a deeper understanding of the product space</div>
+          <div class="note n" style="--i:3;--r:-1deg">Monitoring product KPIs and growth <small>(ex: CSAT)</small></div></div></div>
+        <div class="aff-col goals"><h4>Goals</h4><div class="aff-grid">
+          <div class="note g" style="--i:4;--r:1deg">Produce new features, and planning/ prioritization for the roadmap</div>
+          <div class="note g" style="--i:5;--r:-1.5deg">Optimize the user experience after product launch</div></div></div>
+        <div class="aff-col"><h4>Fears</h4><div class="aff-grid">
+          <div class="note f" style="--i:6;--r:-1deg">Spending additional time getting the right data</div>
+          <div class="note f" style="--i:7;--r:1.5deg">Credibility of the data sources (recency, quality, bias)</div>
+          <div class="note f" style="--i:8;--r:1deg">Spending developer resources on non-impactful items</div></div></div>
+      </div>
+    </div>
+    <p class="src">Primary Source: 5+ PMs, companies with 1B+ valuation</p>
+
+    <div class="sub-h"><h3><span>2.3</span>User Journey</h3></div>
+    <p class="lede wide rv">This product focuses on Product Managers (PM) as its core users, producing an indirect benefit for CX teams. The following is <b style="color:var(--bn-orange)">Product Development</b> in a nutshell.</p>
+    <div class="diagram rv scroll-x" tabindex="0" role="region" aria-label="User journey: Product Development">
+      <div class="inner">
+      <svg class="dgm" viewBox="0 0 1240 210" role="img" aria-label="Product Development flow: Identify Market/User Need, Business Feasibility, Technical Feasibility, Develop Feature?, Plan into Roadmap, Product Feature Launched">
+        <g class="pop" style="--i:0"><circle cx="40" cy="30" r="20" fill="#e3e8ff"/><image href="/img/bandit/rebecca.webp" x="20" y="10" width="40" height="40" clip-path="circle(20px at 20px 20px)"/></g>
+        <g class="pop" style="--i:1"><rect class="box" x="20" y="80" width="170" height="54"/><text class="bx" x="105" y="104" text-anchor="middle">Identify Market/</text><text class="bx" x="105" y="122" text-anchor="middle">User Need</text></g>
+        <path class="ln draw" pathLength="1" style="--i:2" d="M192 107H236" marker-end="url(#ah)"/>
+        <g class="pop" style="--i:3"><rect class="box" x="240" y="80" width="150" height="54"/><text class="bx" x="315" y="112" text-anchor="middle">Business Feasibility</text></g>
+        <path class="ln draw" pathLength="1" style="--i:4" d="M392 107H436" marker-end="url(#ah)"/>
+        <g class="pop" style="--i:5"><rect class="box" x="440" y="80" width="150" height="54"/><text class="bx" x="515" y="112" text-anchor="middle">Technical Feasibility</text></g>
+        <path class="ln draw" pathLength="1" style="--i:6" d="M592 107H636" marker-end="url(#ah)"/>
+        <g class="pop lit" style="--i:7"><polygon class="dia" points="640,107 705,60 770,107 705,154"/><text class="dia-t bx" x="705" y="104" text-anchor="middle">Develop</text><text class="dia-t bx" x="705" y="121" text-anchor="middle">Feature?</text></g>
+        <path class="ln draw" pathLength="1" style="--i:8" d="M772 107H816" marker-end="url(#ah)"/>
+        <g class="pop" style="--i:9"><rect class="box" x="820" y="80" width="150" height="54"/><text class="bx" x="895" y="112" text-anchor="middle">Plan into Roadmap</text></g>
+        <path class="ln draw" pathLength="1" style="--i:10" d="M972 107H1016" marker-end="url(#ah)"/>
+        <g class="pop" style="--i:11"><rect class="box" x="1020" y="80" width="170" height="54"/><text class="bx" x="1105" y="104" text-anchor="middle">Product Feature</text><text class="bx" x="1105" y="122" text-anchor="middle">Launched</text></g>
+        <path class="ln draw" pathLength="1" style="--i:12" d="M1192 107H1232" marker-end="url(#ah)"/>
+      </svg></div>
+    </div>
+    <p class="lede wide rv" style="margin-top:var(--space-6)">User Journey focusses on the <b style="color:var(--bn-orange)">long-run strategic</b> action that a PM takes, and how data is utilized.</p>
+
+    <div class="sub-h"><h3><span>2.4</span>User Journey (2)</h3><p class="mp" style="max-width:20rem;font-size:var(--fs-subhead)">Bandit Labs&rsquo; Impact</p></div>
+    <div class="diagram rv scroll-x" tabindex="0" role="region" aria-label="User journey with Bandit Labs impact area">
+      <div class="inner" style="min-width:1100px">
+      <svg class="dgm" viewBox="0 0 2000 860" role="img" aria-label="Detailed journey: seek feedback and market validation, then user tests or analyze collected data. Analyzing data leads to dashboard decisions, ETL process, data analysis, data visualization, summarize findings and identify features improvements. The Bandit Labs impact area is outlined.">
+        <g class="pop" style="--i:1"><rect class="impact" x="285" y="293" width="1700" height="545" rx="2" style="opacity:1"/></g>
+        <path class="ln draw" pathLength="1" style="--i:1" d="M8 207H42" marker-end="url(#ah)"/>
+        <g class="pop" style="--i:2"><rect class="box" x="47" y="169" width="243" height="76"/><text class="bx" x="168" y="203" text-anchor="middle">Seek Feedback, Market</text><text class="bx" x="168" y="224" text-anchor="middle">Validation</text></g>
+        <path class="ln draw" pathLength="1" style="--i:3" d="M292 207H314" marker-end="url(#ah)"/>
+        <g class="pop lit" style="--i:4"><polygon class="dia" points="318,207 441,132 564,207 441,282"/><text class="dia-t bx" x="441" y="196" text-anchor="middle">User tests, or</text><text class="dia-t bx" x="441" y="216" text-anchor="middle">analyze</text><text class="dia-t bx" x="441" y="236" text-anchor="middle">collected data?</text></g>
+        <path class="ln draw" pathLength="1" style="--i:5" d="M566 207H590" marker-end="url(#ah)"/>
+        <text class="lbl pop" style="--i:5" x="593" y="156">User Tests</text>
+        <g class="pop" style="--i:6"><rect class="box" x="593" y="169" width="243" height="76"/><text class="bx" x="714" y="203" text-anchor="middle">Plan User Tests, Provide</text><text class="bx" x="714" y="224" text-anchor="middle">Questions</text></g>
+        <path class="ln draw" pathLength="1" style="--i:7" d="M838 207H862" marker-end="url(#ah)"/>
+        <g class="pop" style="--i:8"><rect class="box" x="865" y="169" width="243" height="76"/><text class="bx" x="986" y="213" text-anchor="middle">Conduct User Test</text></g>
+        <path class="ln draw" pathLength="1" style="--i:9" d="M1110 207H1396V388"/>
+        <path class="ln draw" pathLength="1" style="--i:4" d="M441 284V312" marker-end="url(#ah)"/>
+        <text class="lbl pop" style="--i:5" x="461" y="291">Analyze</text><text class="lbl pop" style="--i:5" x="461" y="314">Data</text>
+
+        <g class="pop lit" style="--i:6"><polygon class="dia" points="318,390 441,315 564,390 441,465"/><text class="dia-t bx" x="441" y="386" text-anchor="middle">Is there a</text><text class="dia-t bx" x="441" y="406" text-anchor="middle">dashboard?</text></g>
+        <path class="ln draw" pathLength="1" style="--i:7" d="M566 390H590" marker-end="url(#ah)"/><text class="lbl pop" style="--i:7" x="564" y="358">No</text>
+        <g class="pop" style="--i:8"><rect class="box" x="593" y="352" width="243" height="76"/><text class="bx" x="714" y="396" text-anchor="middle">ETL Process</text></g>
+        <path class="ln draw" pathLength="1" style="--i:9" d="M838 390H862" marker-end="url(#ah)"/>
+        <g class="pop" style="--i:10"><rect class="box" x="865" y="352" width="243" height="76"/><text class="bx" x="986" y="396" text-anchor="middle">Data Analysis</text></g>
+        <path class="ln draw" pathLength="1" style="--i:11" d="M1110 390H1134" marker-end="url(#ah)"/>
+        <g class="pop" style="--i:12"><rect class="box" x="1138" y="352" width="244" height="76"/><text class="bx" x="1260" y="396" text-anchor="middle">Data Visualization</text></g>
+        <path class="ln draw" pathLength="1" style="--i:13" d="M1384 390H1422" marker-end="url(#ah)"/>
+        <g class="pop" style="--i:14"><rect class="box" x="1427" y="352" width="244" height="76"/><text class="bx" x="1549" y="396" text-anchor="middle">Summarize Findings</text></g>
+        <path class="ln draw" pathLength="1" style="--i:15" d="M1673 390H1712" marker-end="url(#ah)"/>
+        <g class="pop" style="--i:16"><rect class="box" x="1717" y="352" width="243" height="76"/><text class="bx" x="1838" y="386" text-anchor="middle">Identify Features</text><text class="bx" x="1838" y="408" text-anchor="middle">Improvements</text></g>
+
+        <path class="ln draw" pathLength="1" style="--i:7" d="M441 467V495" marker-end="url(#ah)"/><text class="lbl pop" style="--i:8" x="461" y="485">No</text>
+        <g class="pop lit" style="--i:9"><polygon class="dia" points="318,574 441,499 564,574 441,649"/><text class="dia-t bx" x="441" y="570" text-anchor="middle">Create a</text><text class="dia-t bx" x="441" y="590" text-anchor="middle">Dashboard?</text></g>
+        <path class="ln draw" pathLength="1" style="--i:10" d="M566 574H714V432" marker-end="url(#ah)"/><text class="lbl pop" style="--i:10" x="577" y="560">No</text>
+        <path class="ln draw" pathLength="1" style="--i:10" d="M441 651V724" marker-end="url(#ah)"/><text class="lbl pop" style="--i:11" x="456" y="684">Yes</text>
+
+        <g class="pop" style="--i:12"><rect class="box" x="319" y="728" width="245" height="84"/><text class="bx" x="441" y="758" text-anchor="middle">Talk to data team to create</text><text class="bx" x="441" y="778" text-anchor="middle">new dashboard regarding</text><text class="bx" x="441" y="798" text-anchor="middle">new KPI/ Function</text></g>
+        <path class="ln draw" pathLength="1" style="--i:13" d="M566 770H590" marker-end="url(#ah)"/>
+        <g class="pop" style="--i:14"><rect class="box" x="593" y="732" width="243" height="76"/><text class="bx" x="714" y="776" text-anchor="middle">Ensure Data Validation</text></g>
+        <path class="ln draw" pathLength="1" style="--i:15" d="M838 770H862" marker-end="url(#ah)"/>
+        <g class="pop" style="--i:16"><rect class="box" x="865" y="732" width="243" height="76"/><text class="bx" x="986" y="776" text-anchor="middle">Monitor Dashboard</text></g>
+        <path class="ln draw" pathLength="1" style="--i:17" d="M1110 770H1396V390"/>
+        <text class="impact-t" x="1966" y="826" text-anchor="end" font-size="26">Bandit Labs&rsquo; Impact</text>
+      </svg></div>
+    </div>
+
+    <div class="sub-h"><h3><span>2.5</span>Information Needs</h3></div>
+    <p class="lede wide rv">Interviews found that PMs exhibit the following user behaviour. Summary was surfaced to the front of the user flow, since there is at least 7x higher frequency of access.</p>
+    <div class="needs">
+      <div class="need rv"><h4>Summary</h4><ul><li>Multiple Times, Daily</li><li>Communicative</li><li>Advisory</li></ul></div>
+      <div class="need rv d1"><h4>Exploratory</h4><ul><li>Once a Week</li><li>Opportunistic</li><li>Curious</li></ul></div>
+      <div class="need rv d2"><h4>Inquiry</h4><ul><li>Once a Week</li><li>Strategic</li><li>Diagnostic</li></ul></div>
+    </div>
+    <div class="needs-foot src"><span>Consulted UBC Researcher</span><span>See: Wilson&rsquo;s Information-seeking Model</span></div>
+
+    <div class="sub-h"><h3><span>2.6</span>User Task Flow</h3></div>
+    <p class="lede rv">User task flow documents a how a PM navigates an information need with Bandit Labs.</p>
+    <div class="diagram rv scroll-x" id="taskflow" tabindex="0" role="region" aria-label="User task flow">
+      <div class="inner" style="min-width:1000px">
+      <svg class="dgm" viewBox="0 0 1620 560" role="img" aria-label="Access Dashboard Home, then Identify Data/Information Need Area and Observe KPIs, then Drill down to Specifics, Identify Actionable Insights, Ensure Data Validity, Prioritize and Decide based on Data, then back to the start. Summary, Explore and Drilldown mark the modes.">
+        <g class="pop" style="--i:0"><circle cx="135" cy="64" r="34" fill="#e3e8ff"/><image href="/img/bandit/rebecca.webp" x="101" y="30" width="68" height="68" clip-path="circle(34px at 34px 34px)"/></g>
+        <g class="pop hot step" data-s="0" style="--i:1"><rect class="box" x="30" y="150" width="210" height="160"/><text class="bx" x="52" y="238" font-size="18">Access</text><text class="bx" x="52" y="262" font-size="18">Dashboard Home</text></g>
+        <path class="ln draw" pathLength="1" style="--i:2" d="M242 230H270V115H296" marker-end="url(#ah)"/>
+        <path class="ln draw" pathLength="1" style="--i:2" d="M270 230V305H296" marker-end="url(#ah)"/>
+        <g class="pop step" data-s="1" style="--i:3"><rect class="box" x="300" y="40" width="200" height="150"/><text class="bx" x="322" y="86" font-size="17">Identify Data/</text><text class="bx" x="322" y="110" font-size="17">Information</text><text class="bx" x="322" y="134" font-size="17">Need Area</text></g>
+        <g class="pop step" data-s="2" style="--i:4"><rect class="box" x="300" y="230" width="200" height="150"/><text class="bx" x="322" y="276" font-size="17">Observe KPIs</text></g>
+        <g class="pop" style="--i:4"><rect class="chip" x="540" y="50" width="130" height="52" rx="2"/><text class="chip-t bx" x="605" y="82" text-anchor="middle" font-size="17">Explore</text></g>
+        <path class="ln draw" pathLength="1" style="--i:5" d="M502 150H665V226" marker-end="url(#ah)"/>
+        <path class="ln draw" pathLength="1" style="--i:5" d="M502 305H566" marker-end="url(#ah)"/>
+        <g class="pop step" data-s="3" style="--i:6"><rect class="box" x="570" y="230" width="190" height="150"/><text class="bx" x="590" y="276" font-size="17">Drill down to</text><text class="bx" x="590" y="300" font-size="17">Specifics</text></g>
+        <path class="ln draw" pathLength="1" style="--i:7" d="M762 305H826" marker-end="url(#ah)"/>
+        <g class="pop step" data-s="4" style="--i:8"><rect class="box" x="830" y="230" width="190" height="150"/><text class="bx" x="850" y="276" font-size="17">Identify</text><text class="bx" x="850" y="300" font-size="17">Actionable</text><text class="bx" x="850" y="324" font-size="17">Insights</text></g>
+        <path class="ln draw" pathLength="1" style="--i:9" d="M1022 305H1086" marker-end="url(#ah)"/>
+        <g class="pop step" data-s="5" style="--i:10"><rect class="box" x="1090" y="230" width="190" height="150"/><text class="bx" x="1110" y="276" font-size="17">Ensure Data</text><text class="bx" x="1110" y="300" font-size="17">Validity</text></g>
+        <path class="ln draw" pathLength="1" style="--i:11" d="M1282 305H1346" marker-end="url(#ah)"/>
+        <g class="pop step" data-s="6" style="--i:12"><rect class="box" x="1350" y="230" width="220" height="150"/><text class="bx" x="1370" y="276" font-size="17">Prioritize, Decide</text><text class="bx" x="1370" y="300" font-size="17">based on Data</text></g>
+        <path class="ln draw" pathLength="1" style="--i:13;--len:1" d="M1460 382V450H135V312" marker-end="url(#ah)"/>
+        <g class="pop" style="--i:14"><rect class="chip" x="330" y="480" width="150" height="52" rx="2"/><text class="chip-t bx" x="405" y="512" text-anchor="middle" font-size="17">Summary</text></g>
+        <g class="pop" style="--i:15"><rect class="chip" x="500" y="480" width="150" height="52" rx="2"/><text class="chip-t bx" x="575" y="512" text-anchor="middle" font-size="17">Drilldown</text></g>
+      </svg></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 INSIGHTS -->
+<section class="part" id="insights">
+  <div class="wrap">
+    <div class="eyebrow rv"><b>03</b>Insights</div>
+    <h2 class="sec split" data-split>UXUI <em>Audit</em></h2>
+    <div class="audit rv" id="audit">
+      <div class="audit-grid">
+        <h3>Existing screens of the app were critiqued and modified.</h3>
+        <div style="position:relative">
+          <div class="old-app" aria-hidden="true">
+            <div>
+              <div class="pnl"><h6>Conversation Filters</h6>
+                <div style="font-size:11px">Star Rating (1 - 5)</div>
+                <label><i></i>&#9733;</label><label><i></i>&#9733;&#9733;</label><label><i></i>&#9733;&#9733;&#9733;</label><label><i></i>&#9733;&#9733;&#9733;&#9733;</label><label><i></i>&#9733;&#9733;&#9733;&#9733;&#9733;</label>
+                <div style="margin-top:10px;font-size:11px">Issue Filter</div><div class="sel">Feedback</div>
+                <div style="font-size:11px">Start Date/Time</div><div class="sel">yyyy-mm-dd</div>
+                <div style="font-size:11px">End Date/Time</div><div class="sel">yyyy-mm-dd</div>
+              </div>
+              <div style="margin-top:10px"><span class="btnx">Agent Monitor</span><span class="btnx">Aggregate Linguistics</span></div>
+            </div>
+            <div class="pnl"><h6>Matching Conversations</h6>
+              <div class="srch"><span></span><b></b></div>
+              <div class="conv"><h6>Amanda Issacson</h6><small>July 14, 2021, 1:32pm</small>i have some things that are not performing for me the way they are supposed to... <u>more...</u><em>&#9733;&#9733;&#9733;&#9733;&#9733;</em></div>
+              <div class="conv"><h6>Sarah Lockwood</h6><small>July 14, 2021, 1:28pm</small>i purchased a bunch of headbands from you for my sister and i but they are now so loose...<em>&#9733;&#9733;&#9733;&#9733;&#9733;</em></div>
+              <div class="conv"><h6>Ben Offenback</h6><small>July 14, 2021, 11:37pm</small>It's not a quality problem, so you should pay the shipping. The sleeves are too ...<em>&#9733;&#9733;&#9733;&#9733;&#9733;</em></div>
+              <div class="conv"><h6>Jane Smith</h6><small>July 9, 2021, 9:19pm</small>The tracking on my return says that you received it 2 weeks ago...<em>&#9733;&#9733;&#9733;&#9733;&#9733;</em></div>
+            </div>
+          </div>
+          <div class="sticky s1" style="--i:0"><p>Statistical information is good for credibility/ academic proof</p><p>UI can be hidden</p><p>Label the term estimation</p></div>
+          <div class="sticky s2" style="--i:1"><p>Behaves like a modal; is not a modal?</p></div>
+          <div class="sticky s3" style="--i:2"><p>Chat bubbles are responsive for mobile; Does not follow UI convention for chat bubbles.</p><p>Chat bubbles should be length of the bounding text</p><p>Lower priority: Chat bubble time stamps can be smaller, lower hierarchy, and aligned to the side of the screen respective to the agent and user</p></div>
+          <div class="sticky s4" style="--i:3"><p>Aggregate Analysis surfaced to the front of the user flow</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-h"><h3><span>3.1</span>Information Hierarchy</h3></div>
+    <div class="two">
+      <div class="side-text rv"><p>After the audit, the entire product was remapped to fit a user journey, to aid in Bandit Lab&rsquo;s demo scenario to prospective customers.</p><p>This prioritizes and surfaces insights, depending on information needs of the Product Manager.</p></div>
+      <div class="diagram rv" id="tree">
+        <svg class="dgm" viewBox="0 0 1000 600" role="img" aria-label="Information hierarchy: Login, Settings, Dashboard with Key KPIs and Summary Statistics; Agent Reporting with Cust. Sentiment and Agent Performance; Insight Explorer with Product Mentions, Trending Phrases and Flagged Chats (User Generated)">
+          <g class="pop" style="--i:0"><rect class="tree-blue" x="30" y="20" width="150" height="44"/><text class="tree-blue-t bx" x="105" y="48" text-anchor="middle">Login</text></g>
+          <path class="ln draw" pathLength="1" style="--i:1" d="M105 66V92" marker-end="url(#ah)"/>
+          <g class="pop" style="--i:1"><rect class="tree-blue" x="30" y="96" width="150" height="44"/><text class="tree-blue-t bx" x="105" y="124" text-anchor="middle">Settings</text></g>
+          <path class="ln draw" pathLength="1" style="--i:2" d="M105 142V168" marker-end="url(#ah)"/>
+          <g class="pop" style="--i:2"><rect class="tree-blue" x="30" y="172" width="150" height="44"/><text class="tree-blue-t bx" x="105" y="200" text-anchor="middle">Dashboard</text></g>
+          <path class="ln draw" pathLength="1" style="--i:3" d="M182 194H556" marker-end="url(#ah)"/>
+          <g class="pop" style="--i:4"><rect class="tree-box" x="560" y="174" width="130" height="40"/><text class="bx" x="625" y="199" text-anchor="middle">Key KPIs</text></g>
+          <g class="pop" style="--i:5"><rect class="tree-box" x="740" y="174" width="210" height="40"/><text class="bx" x="845" y="199" text-anchor="middle">Summary Statistics</text></g>
+          <path class="ln draw" pathLength="1" style="--i:4" d="M60 218V258H206" marker-end="url(#ah)"/>
+          <path class="ln draw" pathLength="1" style="--i:4" d="M60 218V420H206" marker-end="url(#ah)"/>
+          <g class="pop" style="--i:5"><rect class="tree-blue" x="210" y="236" width="190" height="44"/><text class="tree-blue-t bx" x="305" y="264" text-anchor="middle">Agent Reporting</text></g>
+          <g class="pop" style="--i:6"><rect class="tree-blue" x="210" y="398" width="190" height="44"/><text class="tree-blue-t bx" x="305" y="426" text-anchor="middle">Insight Explorer</text></g>
+          <path class="ln draw" pathLength="1" style="--i:6" d="M402 258H440V300H556" marker-end="url(#ah)"/>
+          <path class="ln draw" pathLength="1" style="--i:6" d="M440 258V352H556" marker-end="url(#ah)"/>
+          <g class="pop" style="--i:7"><rect class="tree-box" x="560" y="280" width="190" height="40"/><text class="bx" x="655" y="305" text-anchor="middle">Cust. Sentiment</text></g>
+          <g class="pop" style="--i:8"><rect class="tree-box" x="560" y="332" width="190" height="40"/><text class="bx" x="655" y="357" text-anchor="middle">Agent Performance</text></g>
+          <path class="ln draw" pathLength="1" style="--i:8" d="M402 420H440V412H556" marker-end="url(#ah)"/>
+          <path class="ln draw" pathLength="1" style="--i:8" d="M440 420V470H556" marker-end="url(#ah)"/>
+          <path class="ln draw" pathLength="1" style="--i:8" d="M440 440V528H556" marker-end="url(#ah)"/>
+          <g class="pop" style="--i:9"><rect class="tree-box" x="560" y="392" width="150" height="40"/><text class="bx" x="635" y="417" text-anchor="middle">Product Mentions</text></g>
+          <g class="pop" style="--i:10"><rect class="tree-box" x="560" y="450" width="190" height="40"/><text class="bx" x="655" y="475" text-anchor="middle">Trending Phrases</text></g>
+          <g class="pop" style="--i:11"><rect class="tree-box" x="560" y="508" width="270" height="40"/><text class="bx" x="695" y="533" text-anchor="middle">Flagged Chats (User Generated)</text></g>
+          <path class="impact draw" pathLength="1" style="--i:12;stroke-dasharray:3 9;stroke-dashoffset:0" d="M845 216V580H305V446" marker-end="url(#ah-o)"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="sub-h"><h3><span>3.2</span>Product Solution</h3></div>
+    <div class="solution rv">
+      <div class="sol-a"><h4>User Wins</h4><p>For Product Managers and CX Teams, Bandit Labs surfaces data in a streamlined, easy to use way.</p><p>Rebecca can focus on product development, while the CX Director, Simon, no longer has the headache of sending weekly reports to the product team.</p></div>
+      <div class="sol-b"><h4>Business Wins</h4><p>Bandit Labs needed productization to expedite their funding round and product-market-fit, so that they could scale. <i>Massively.</i></p><p>This is the accessible, user-centric product to demo to a problem space that is hungry for their product.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 MOCKUPS -->
+<section class="part" id="mockups">
+  <div class="wrap">
+    <div class="eyebrow rv"><b>04</b>Mockups</div>
+    <h2 class="sec split" data-split>Lo-fi <em>UI</em></h2>
+    <div class="lofi">
+      <div class="side-text rv"><p>Low fidelity sketches were used to communicate initial suggestions to the Bandit Labs founder and head of engineering.</p><p>The previous information hierarchy was reflected in the visual hierarchy and layout of the app.</p></div>
+      <div class="sketch rv d1"><img src="/img/bandit/lofi-sketch.webp" alt="Hand-drawn low fidelity sketches of the dashboard and chat explorer layouts" width="760" height="983" loading="lazy"></div>
+    </div>
+
+    <div class="sub-h"><h3><span>4.1</span>Mid-fi UI</h3></div>
+    <div class="annot" id="mf1">
+      <div class="mfw" style="position:relative">
+        <div class="mf" style="aspect-ratio:520/330" id="mf1box"></div>
+      </div>
+      <ol>
+        <li><button type="button" aria-pressed="false" data-pin="1"><span class="n">1</span><span><b>Sidebar separates specific goals</b> within the task flow.</span></button></li>
+        <li><button type="button" aria-pressed="false" data-pin="2"><span class="n">2</span><span>Use of <b>card system</b> in accordance with modern dashboard practices, enabling modularity and customizability for the user.</span></button></li>
+        <li><button type="button" aria-pressed="false" data-pin="3"><span class="n">3</span><span><b>Aggregate analysis surfaced to main page</b>, due to the high-frequency nature of information need for the PM.</span></button></li>
+      </ol>
+    </div>
+
+    <div class="sub-h"><h3><span>4.2</span>Mid-fi UI (2)</h3></div>
+    <div class="annot" id="mf2">
+      <div class="mfw" style="position:relative">
+        <div class="mf" style="aspect-ratio:520/330" id="mf2box"></div>
+      </div>
+      <ol>
+        <li><button type="button" aria-pressed="false" data-pin="1"><span class="n">1</span><span><b>Chat Explorer</b> was moved to a separate tab, away from the main dashboard.</span></button></li>
+        <li><button type="button" aria-pressed="false" data-pin="2"><span class="n">2</span><span><b>Flagging</b> chats is a feature borrowed from User Research platforms like UserTesting.com &amp; Phonic.</span></button></li>
+        <li><button type="button" aria-pressed="false" data-pin="3"><span class="n">3</span><span><b>Date filters</b>, available for narrowing content down for exploratory and diagnostic purposes.</span></button></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- 05 UXUI SCREENS -->
+<section class="part" id="screens">
+  <div class="wrap">
+    <div class="eyebrow rv"><b>05</b>UXUI Screens</div>
+    <h2 class="sec split" data-split>Final UI and <em>Prototype</em></h2>
+    <div class="two">
+      <div class="side-text rv"><p>Included <strong>Key KPIs</strong> and <strong>Data Summary</strong> for identified user needs for information.</p><p>Colour used to depict changes and signals for further analysis or data-informed action made by the user.</p></div>
+      <div><a class="pill-link rv" href="https://www.figma.com/design/qm3I43Zj3Z6d7vc4heMnKt/%F0%9F%9F%A2-Bandit-Labs---Dashboard-2.0?node-id=110-6839&amp;t=xkmHv46XawBTp2XK-1" target="_blank" rel="noopener">Figma Prototype <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12L12 4M5.5 4H12v6.5"/></svg></a></div>
+    </div>
+    <div class="shell rv">
+      <div class="appfit" data-app="main" id="mainApp"></div>
+      <div class="shell-cap">
+        <div class="chips" role="group" aria-label="Switch screen">
+          <button type="button" class="chipb" data-go="dash" aria-pressed="true">Dashboard</button>
+          <button type="button" class="chipb" data-go="ie" aria-pressed="false">UI - Topic Explorer</button>
+          <button type="button" class="chipb" data-go="aa" aria-pressed="false">UI - Agent Monitor</button>
+        </div>
+        <span class="mp" style="font-size:var(--fs-footnote)">Rebuilt in code. Click the sidebar, a chat, or a filter.</span>
+      </div>
+    </div>
+
+    <div class="sub-h"><h3><span>5.1</span>UI - Topic Explorer</h3></div>
+    <div class="two">
+      <div class="shell rv" style="margin:0"><div class="appfit" data-app="ie-static" aria-hidden="true"></div></div>
+      <div class="shell rv d1" style="margin:0"><div class="appfit" data-app="ie-chat" aria-hidden="true"></div></div>
+    </div>
+
+    <div class="sub-h"><h3><span>5.2</span>UI - Agent Monitor</h3></div>
+    <div class="two">
+      <div class="shell rv" style="margin:0"><div class="appfit" data-app="aa-static" aria-hidden="true"></div></div>
+      <div class="side-text rv d1"><p><strong>Sankey Plots</strong> describe the &ldquo;flow of sentiment&rdquo; or contribution towards metrics after a CX engagement.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 BRANDING -->
+<section class="part" id="branding">
+  <div class="wrap">
+    <div class="eyebrow rv"><b>06</b>Branding</div>
+    <h2 class="sec split" data-split>Branding &amp; <em>Logo</em></h2>
+    <div class="brand-grid">
+      <div class="bp rv"><div class="pic"><img src="/img/bandit/logo-sketches.webp" alt="Pencil sketches of raccoon logo variations" width="900" height="770" loading="lazy"></div><div class="txt"><h4>Logo Ideation</h4><p>Experimentation and mutations of the original logo.</p></div></div>
+      <div class="bp rv d1" id="recon"><div class="pic">
+        <svg class="recon" viewBox="0 0 520 440" role="img" aria-label="Logo built from 200 pt squares and a 35 pt unit">
+          <g class="piece p-a" style="--i:0"><polygon class="sq" points="60,70 160,70 160,170 60,170" opacity=".9"/></g>
+          <g class="piece p-b" style="--i:1"><polygon class="sq" points="190,100 260,70 330,100 260,130"/></g>
+          <g class="piece p-c" style="--i:2"><polygon class="sq" points="360,100 410,70 460,100 410,130"/></g>
+          <g class="piece p-d" style="--i:3"><polygon class="sq" points="260,170 330,240 260,310 190,240"/></g>
+          <g class="piece p-e" style="--i:4"><polygon class="sq" points="260,260 340,340 260,420 180,340"/></g>
+          <g class="piece p-f" style="--i:5"><polygon class="sq" points="350,240 420,310 350,380 280,310" opacity=".7"/></g>
+          <g class="lbls"><text x="110" y="124" text-anchor="middle">200 pt</text><text x="110" y="140" text-anchor="middle">square</text><text x="260" y="344" text-anchor="middle">200 pt square/2</text><text x="410" y="344" text-anchor="middle">35pt</text><path class="dim" d="M60 190H160M60 184V196M160 184V196"/></g>
+        </svg></div><div class="txt"><h4>Logo Re-construction</h4><p>Logo is built from replicable and measured proportions.</p></div></div>
+    </div>
+
+    <div class="sub-h"><h3><span>6.1</span>Branding &amp; Logo</h3></div>
+    <div class="hero-mark">
+      <div class="rv"><h4 style="font-size:var(--fs-title-3);font-weight:700;color:var(--text-strong)">The Anti-Hero</h4><p class="lede">Not your conventional hero, but Bandit will get the job done.</p>
+        <div class="shield" id="shield" style="margin-top:var(--space-6)" aria-hidden="true">
+          <svg viewBox="0 0 100 100" class="st" style="--i:0"><path d="M50 8L90 22V52C90 74 72 88 50 94C28 88 10 74 10 52V22Z" fill="#fff" stroke="#050550" stroke-width="6" stroke-linejoin="round"/></svg>
+          <svg class="arrow" viewBox="0 0 60 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path style="--i:1" d="M4 12H54M44 4L54 12L44 20"/></svg>
+          <svg viewBox="0 0 100 100" class="st" style="--i:2"><path d="M50 8L90 22L84 52L50 92L16 52L10 22Z" fill="#050550" opacity=".5"/><path d="M50 14L84 28L78 54L50 86L22 54L16 28Z" fill="#050550"/></svg>
+          <svg class="arrow" viewBox="0 0 60 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path style="--i:3" d="M4 12H54M44 4L54 12L44 20"/></svg>
+          <svg viewBox="0 0 100 100" class="st hero-d" style="--i:4"><path d="M50 6L94 52L50 98L6 52Z" fill="#050550"/></svg>
+        </div>
+      </div>
+      <div class="rv d1"><h4 style="font-size:var(--fs-title-3);font-weight:700;color:var(--text-strong)">Up Arrow, Down Arrow</h4><p class="lede">The triangle asset can be used to depict the valence of data.</p>
+        <div class="valence" style="margin-top:var(--space-6)">
+          <div class="up"><svg viewBox="0 0 80 56" fill="currentColor" aria-hidden="true"><path d="M40 4L76 40L66 52H14L4 40Z"/></svg><span><span data-count="23" data-suffix="%">23%</span> Revenue</span></div>
+          <div class="dn"><svg viewBox="0 0 80 56" fill="currentColor" aria-hidden="true"><path d="M40 52L4 16L14 4H66L76 16Z"/></svg><span><span data-count="0.54" data-dec="2">0.54</span> CSAT</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-h"><h3><span>6.2</span>Branding &amp; Logo</h3></div>
+    <p class="lede wide rv">The visual language of the diamond can be inverted to represent a &ldquo;rise&rdquo; or &ldquo;positivity&rdquo;.<br>Meaning is embedded in mutations of the logo, and can be utilized in expressing brand attributes.</p>
+    <div class="gb">
+      <button type="button" class="good rv" aria-pressed="false" aria-label="The Good. Press to invert the mark"><svg viewBox="420 404 400 312" fill="currentColor" aria-hidden="true"><use href="#rc"/></svg><span>&ldquo;The Good&rdquo;</span></button>
+      <button type="button" class="bad rv d1" aria-pressed="false" aria-label="The Bad. Press to invert the mark"><svg viewBox="1088 457 446 259" fill="currentColor" aria-hidden="true"><use href="#rcb"/></svg><span>&ldquo;The Bad&rdquo;</span></button>
+    </div>
+  </div>
+</section>
+
+<!-- REFLECTION -->
+<section class="reflect" id="reflection">
+  <div class="wrap">
+    <div class="eyebrow rv">Project Reflection</div>
+    <h2 class="sec split" data-split>Project <em>Reflection</em></h2>
+    <div class="refl">
+      <div class="rv">
+        <p>For this project, I am designing a product for <strong>product managers</strong> as a product manager.</p>
+        <p>I was able to tap into my experiences working in product development with CX and PM leaders, and use the <b>culmination</b> of all of the skills I gained in university.</p>
+        <p>I realize that a background knowledge in the needs of startups has an influence on my design process. I&rsquo;m glad to have documented this project!</p>
+      </div>
+      <div class="nexts rv d1"><h4>Next Steps</h4>
+        <ul>
+          <li>Seek further validation for metrics included in dashboards</li>
+          <li>Create a custom design system, as Chakra UI is not sufficient for complex data visualizations</li>
+          <li>Flesh out interactions, and the user journey for CX managers</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- APPENDIX -->
+<section class="apx" id="appendix">
+  <div class="wrap">
+    <div class="eyebrow rv">Appendix</div>
+    <h2 class="sec split" data-split>UX <em>Analysis</em></h2>
+    <p class="mp rv" style="font-size:var(--fs-title-3);color:var(--text-strong);font-weight:700">CX Team Data Points</p>
+    <div class="two" style="margin-top:var(--space-8);align-items:start">
+      <div class="side-text rv"><p><strong>Understanding the Customer&rsquo;s Goals with Chat</strong></p>
+        <p>This user flow displays the user experience where the customer&rsquo;s user and customer service agents generate data that Bandit Labs can analyze. The purpose for documenting this step is to understand what goals chat accomplishes for the business. This is essential when setting up initial calls and demos in the sales process.</p></div>
+      <div class="side-text rv d1"><p><strong>In the example below, VICHY uses LiveChat as a channel for:</strong></p>
+        <ul class="bullets"><li>Informing consumer inquiries with accurate product information, as a knowledge base for applying and using their products.</li><li>Answering requests regarding orders; dealing with more specific logistical issues related to their ecommerce system and orders.</li></ul>
+        <p>This is evidence of defined categories in terms of conversation types. When the data types for the chat may remain the same, KPI goals of organizations differs</p></div>
+    </div>
+    <div class="live-id rv" style="margin-top:var(--space-8)"><span><i>LiveChat</i> (vichy.ca)<small>Product Information | Orders</small></span></div>
+    <div class="film" id="film">
+      <figure class="rv"><div><img src="/img/bandit/vichy-1.webp" alt="" width="340" height="436" loading="lazy"></div><figcaption><b>1)</b>Webpage displaying the chat agent&rsquo;s profile as well as the &ldquo;Chat Now&rdquo; call-to-action (CTA).</figcaption></figure>
+      <figure class="rv d1"><div><img src="/img/bandit/vichy-2.webp" alt="" width="340" height="517" loading="lazy"></div><figcaption><b>2)</b>Privacy and Terms of Service. It is to inform users not to use this chat as medical advice.</figcaption></figure>
+      <figure class="rv d2"><div><img src="/img/bandit/vichy-3.webp" alt="" width="340" height="516" loading="lazy"></div><figcaption><b>3)</b>Input Information and Requests.</figcaption></figure>
+      <figure class="rv d3"><div><img src="/img/bandit/vichy-4.webp" alt="" width="340" height="316" loading="lazy"></div><figcaption><b>4)</b>Template messages.</figcaption></figure>
+      <figure class="rv d4"><div><img src="/img/bandit/vichy-5.webp" alt="" width="340" height="387" loading="lazy"></div><figcaption><b>5)</b>Note, their chat services are bilingual to serve Canadian consumers.</figcaption></figure>
+      <figure class="rv d4"><div><img src="/img/bandit/vichy-6.webp" alt="" width="340" height="517" loading="lazy"></div><figcaption><b>6)</b>Customer Satisfaction measured.</figcaption></figure>
+    </div>
+    <p class="src"><b style="color:var(--sn-accent);font-weight:400">7)</b> Sending a transcript to the user via Email.</p>
+
+    <div class="sub-h"><h3><span>A.1</span>Further Competitive Analysis</h3><p class="mp" style="font-size:var(--fs-subhead)">CX Team Data Points</p></div>
+    <p class="lede rv"><strong style="color:var(--text-strong)">Understanding the Customer&rsquo;s Goals with Chat</strong><br>Additional user flows.</p>
+    <div class="live-id rv" style="margin-top:var(--space-6)"><span><i>Oracle</i> (ae.com)<small>Product Information | Orders</small></span></div>
+    <ol class="steps5 rv">
+      <li>Webpage.</li><li>Question Categories; ROC.</li><li>There is a slight delay in connection to an agent.</li>
+      <li>&ldquo;Listening&rdquo; is a signifier that the agent is active. There is no post-chat prompt or pop-up after the chat ends.</li>
+      <li>Measurement of CSAT and feedback (OPTIONAL). Discoverable in their menu.</li>
+    </ol>
+    <p class="lede rv" style="margin-top:var(--space-10)"><strong style="color:var(--text-strong)">Live Chat Variants</strong><br>Over 50 Live Chat variants were documented.</p>
+    <div class="live-strip" id="liveStrip" aria-hidden="true"><div class="row"></div></div>
+
+    <div class="sub-h"><h3><span>A.2</span>KPI Brainstorm</h3><p class="mp" style="font-size:var(--fs-subhead)">Customer Service &amp; Chat KPIs</p></div>
+    <p class="lede wide rv">KPIs can be assembled in to broader organizational goals. The following are the types of KPIs that the implementation of Bandit Labs can potentially improve for a company.</p>
+    <div class="kpi-wrap" id="kpis">
+      <div class="goals">
+        <h5>Example Goals (constructed from KPIs) a Company may make:</h5>
+        <button type="button" class="goal" aria-pressed="false" data-k="esc chats pages"><b>Reduce Customer service calls by half in the next 6 months</b><span class="k"><span class="kp">Service Escalation Rate</span><span class="kp">Pages visited immediately before chat; CTR of previous page</span><span class="kp"># of Chats</span></span></button>
+        <button type="button" class="goal" aria-pressed="false" data-k="csat frt chats res"><b>Improve quality of customer service, while maintaining same level of agents</b><span class="k"><span class="kp">Customer Satisfaction (CSAT)</span><span class="kp">First Response Time (FRT)</span><span class="kp">Average # of Chats</span><span class="kp">Resolution Time</span></span></button>
+      </div>
+      <div>
+        <h5 style="font-size:var(--fs-subhead);color:var(--text-strong);font-weight:700;margin-bottom:var(--space-5)">KPIs (Digital)</h5>
+        <div class="kgroup"><h5>Customer Service &amp; Chat KPIs</h5><p>Customer Care may not always be the economic buyer in terms of product adoption. Can we create evidence through other KPIs?</p>
+          <div class="k"><span class="kp" data-k="csat">Customer Satisfaction (CSAT)</span><span class="kp">Net promoter score (NPS)</span><span class="kp">Active Issues</span><span class="kp" data-k="res">Average Resolution Time</span><span class="kp" data-k="frt">First Response Time (FRT)</span><span class="kp" data-k="chats"># of Chats</span><span class="kp q">Concern Classification?</span><span class="kp" data-k="esc">Service Escalation Rate</span></div></div>
+        <div class="kgroup"><h5>E-Commerce KPIs</h5><p>If chat analytics can provide an impact on the KPIs below, could provide leverage and evidence in solving a company&rsquo;s e-commerce problems.</p>
+          <div class="k"><span class="kp">Shopping Cart Abandon Rate</span><span class="kp">Conversion Rate</span><span class="kp">Cost of Customer Acquisition</span><span class="kp">Average Order Value</span><span class="kp">Gross Profit</span><span class="kp">Sales</span><span class="kp">Churn Rate</span><span class="kp">New vs Returning Customer Orders</span><span class="kp">Customer Lifetime Value</span></div></div>
+        <div class="kgroup"><h5>Marketing KPIs</h5>
+          <div class="k"><span class="kp">Site traffic</span><span class="kp">Time on site</span><span class="kp">New vs Returning Visitors</span><span class="kp">Average session duration</span><span class="kp">Bounce rate</span><span class="kp">Pageviews per visit</span></div>
+          <p style="margin-top:var(--space-3)">(Note, these visitors may have different interactions when considering live chat)</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="closing" aria-label="Closing">
+  <div class="wrap">
+    <p class="big rv"><svg viewBox="420 404 400 312" fill="currentColor" aria-hidden="true"><use href="#rc"/></svg><span>Bandit <em>Labs</em></span></p>
+    <div class="row rv"><span>Philman Yeung | Product Revamp: Product &amp; UX Demonstration</span><span><a class="lnk" href="https://www.linkedin.com/in/philmanyeung">linkedin.com/in/philmanyeung</a></span><span><a class="lnk" href="https://banditlabs.io" target="_blank" rel="noopener">banditlabs.io</a></span></div>
+  </div>
+</section>
+</main>
+<footer class="foot wrap">
+  <span id="copy"></span>
+  <button type="button" class="ctl" id="pause" aria-pressed="false"><span class="pz" aria-hidden="true"></span><span class="pl">Pause motion</span></button>
+  <a class="lnk" href="/#work">Back to all work <span aria-hidden="true">&larr;</span></a>
+</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(()=>{
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const root=document.documentElement;
+
+/* Pause motion: html.motion-paused, remembered in localStorage.motion */
+let paused=reduce;
+try{const m=localStorage.getItem('motion');if(m==='paused')paused=true;else if(m==='playing')paused=false}catch(e){}
+const pauseBtn=$('#pause');
+function setPaused(p,save){paused=p;root.classList.toggle('motion-paused',p);
+  if(pauseBtn){pauseBtn.setAttribute('aria-pressed',String(p));pauseBtn.querySelector('.pl').textContent=p?'Play motion':'Pause motion'}
+  if(save){try{localStorage.setItem('motion',p?'paused':'playing')}catch(e){}}}
+setPaused(paused,false);
+if(pauseBtn)pauseBtn.addEventListener('click',()=>setPaused(!paused,true));
+
+/* split headings into words */
+$$('[data-split]').forEach(el=>{
+  const walk=n=>{[...n.childNodes].forEach(c=>{
+    if(c.nodeType===3){const f=document.createDocumentFragment();c.textContent.split(/(\s+)/).forEach(t=>{if(!t)return;if(/^\s+$/.test(t)){f.appendChild(document.createTextNode(t));return}const w=document.createElement('span');w.className='w';const i=document.createElement('span');i.textContent=t;w.appendChild(i);f.appendChild(w)});c.replaceWith(f)}
+    else if(c.nodeType===1&&!c.classList.contains('w'))walk(c)})};
+  walk(el);
+  el.querySelectorAll('.w>span').forEach((s,i)=>s.style.setProperty('--i',i));
+  el.classList.add('split');
+});
+
+/* toast (aria-live) */
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),1600)}
+
+/* ---------- count up ---------- */
+function countUp(el){
+  const to=+el.dataset.count,dec=+(el.dataset.dec||0),suf=el.dataset.suffix||'';
+  const fmt=v=>v.toFixed(dec)+suf;
+  if(reduce||paused){el.textContent=fmt(to);return}
+  const t0=performance.now(),d=1300;
+  const step=n=>{const p=Math.min((n-t0)/d,1);el.textContent=fmt(to*(1-Math.pow(1-p,4)));if(p<1)requestAnimationFrame(step)};
+  requestAnimationFrame(step);
+}
+const cio=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;cio.unobserve(e.target);countUp(e.target)}),{threshold:.6});
+
+/* ---------- Bandit UI kit: every screen is rebuilt in HTML, not pasted in ---------- */
+const I={
+  dash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.3 18.5a9.2 9.2 0 1 1 17.4 0"/><path d="M12 18.5l3.6-5.6"/><path d="M6.6 13.6h.01M9 9.4h.01M15 9.4h.01M17.4 13.6h.01"/></svg>',
+  ie:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h16v11H12l-4.5 4v-4H4z"/><path d="M8.5 10h.01M12 10h.01M15.5 10h.01"/></svg>',
+  aa:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9.5" r="3.2"/><path d="M6.2 20c0-3.4 2.6-5.6 5.8-5.6s5.8 2.2 5.8 5.6"/><circle cx="5" cy="8" r="2"/><circle cx="19" cy="8" r="2"/></svg>',
+  set:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5l1.6 2.3 2.7-.7.9 2.7 2.7.9-.7 2.7 2.3 1.6-2.3 1.6.7 2.7-2.7.9-.9 2.7-2.7-.7L12 21.5l-1.6-2.3-2.7.7-.9-2.7-2.7-.9.7-2.7L2.5 12l2.3-1.6-.7-2.7 2.7-.9.9-2.7 2.7.7z"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7.4v.01"/></svg>',
+  kb:'<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="8" cy="13" r="1.4"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+  flag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 4h13l-3 4.5 3 4.5H5"/></svg>',
+  user:'<svg class="u" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-4 3-6 7-6s7 2 7 6"/></svg>',
+  chev:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l5 5 5-5"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v9M7.5 12h9"/></svg>',
+  chk:'<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.4l2.7 2.6L10 3.4"/></svg>',
+  up:'<svg class="tri up" viewBox="0 0 20 14"><path d="M10 0L20 10L17 14H3L0 10Z" fill="currentColor"/></svg>',
+  dn:'<svg class="tri dn" viewBox="0 0 20 14"><path d="M10 14L0 4L3 0H17L20 4Z" fill="currentColor"/></svg>',
+  dnp:'<svg class="tri" style="width:34px;height:24px;color:var(--bn-pink)" viewBox="0 0 20 14"><path d="M10 14L0 4L3 0H17L20 4Z" fill="currentColor"/></svg>',
+  star:'<svg viewBox="0 0 24 24"><path d="M12 2l3 6.9 7.5.7-5.7 5 1.7 7.4L12 18l-6.5 4 1.7-7.4-5.7-5 7.5-.7z" fill="currentColor"/></svg>'
+};
+const stars=n=>`<span class="stars" aria-hidden="true">${[1,2,3,4,5].map(i=>`<span class="${i<=n?'f':'e'}">${I.star}</span>`).join('')}</span>`;
+const logoMark='<svg viewBox="420 404 400 312" fill="currentColor" aria-hidden="true"><use href="#rc"/></svg>';
+const NAV=[['dash','Dashboard'],['ie','Insight Explorer'],['aa','Agent Analytics'],['set','Settings']];
+const TITLES={dash:'Dashboard',ie:'Insight Explorer',aa:'Agent Analytics'};
+const user='<div class="usr"><span>Rebecca K.</span><img src="/img/bandit/rebecca.webp" alt="" width="40" height="40"></div>';
+const head=(k,on)=>`<div class="scr-h hd${on?' on':''}" data-h="${k}"><div><h5>${TITLES[k]}</h5><p>Customer Experience Data | Live<i></i></p></div>${k==='dash'?'':user}</div>`;
+
+const dashBody=()=>`<div class="body">
+  <div class="cards">
+    <div class="kpi"><h6>Avg. CSAT</h6><span class="kb">${I.kb}</span><div class="v"><span style="display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--bn-pink);font-weight:400;gap:0;margin-right:2px"><small style="font-size:12px;margin:0">-0.3pt</small>${I.dnp}</span><span data-count="3.9" data-dec="1">3.9</span></div><div class="d">(Mar 7-13)</div><span class="info">${I.info}</span></div>
+    <div class="kpi"><h6>Msg. Sentiment</h6><span class="kb">${I.kb}</span><div class="v"><span class="g" style="font-weight:400">+</span><span data-count="63.1" data-dec="1">63.1</span>%</div><div class="d">(Mar 7-13)</div><span class="info">${I.info}</span></div>
+    <div class="kpi"><h6>Agent Self-Report</h6><span class="kb">${I.kb}</span><div class="v"><span class="g" data-count="9">9</span><span>/10</span></div><div class="d">(Mar 7-13)</div></div>
+    <div class="kpi add">${I.plus}<span>Add Modules</span></div>
+  </div>
+  <div class="panel"><h6>Daily Data Summary</h6><span class="kb">${I.kb}</span>
+    <div class="tabs"><span class="on">Summary</span><span>Trending Topics</span><span>Flagged</span><span>Customers</span></div>
+    <div class="sum">
+      <div><h6>Chat Stats</h6>
+        <div class="stat up">${I.up}<b>Chat Avg. Handle Time</b><b>17:25</b><small>(+41s)</small></div>
+        <div class="stat dn">${I.dn}<b>Chat Avg. Talk Time</b><b>13:07</b><small>(-2s)</small></div>
+        <div class="stat up">${I.up}<b>Chat Avg. Wrap Time</b><b>06:28</b><small>(+43s)</small></div></div>
+      <div class="ins"><h6>Message Insights</h6><h6 style="font-weight:400">Flagged Words</h6>
+        <span class="ch">&lsquo;delayed&rsquo;</span><span class="ch">&lsquo;refund&rsquo;</span><span class="ch">&lsquo;upset&rsquo;</span>
+        <h6 style="font-weight:400;margin-top:14px">Trending Topics (Top 3)</h6>
+        <span class="ch o">MIRROR (Product)</span><span class="ch o">Afterpay</span><span class="ch o">Virtual Shopping</span>
+        <h6 style="font-weight:400;margin-top:14px">Trending Topics</h6><p class="big">32 <span style="font-weight:400">(</span><b>2 New</b><span style="font-weight:400">)</span></p></div>
+    </div>
+  </div>
+</div>`;
+
+const CHATS=[
+  ['#C445348','Bonny B.',3,'i have some things that are not performing for me the way they...','Mar. 7, 2022','Flagged: Refund'],
+  ['#C445347','Colin',2,'i purchased a bunch of headbands from you for my sister and it’s not working out..','Mar. 5, 2022'],
+  ['#C445346','Evan',1,'I think the package is lost. This really really really sucks!','Mar. 2, 2022'],
+  ['#C445345','Evan',1,'So I have no idea where the package it is... can you help?','Mar. 2, 2022']
+];
+const ieBody=()=>`<div class="ie"><div class="l">
+  <div class="search"><span>Search for Chat Name, Keyword, UserID</span><b>Search</b></div>
+  <div class="qchips" role="group" aria-label="Keywords">${['ALL','‘delayed’','‘upset’','‘delivery’','‘packaging’','‘refund’','‘failed’','+'].map((c,i)=>`<button type="button" aria-pressed="${i===1}">${c}</button>`).join('')}</div>
+  <div class="ie-t"><h6>Chats</h6><span>Querying 5,049 chats</span></div>
+  ${CHATS.map((c,i)=>`<button type="button" class="crow" data-open="${i}"><b>${c[0]}</b><small>${c[4]}</small><span class="stars" style="position:absolute;right:14px;top:12px">${stars(c[2])}</span><p><strong style="font-weight:700">${c[1]}</strong> ${c[3]}</p>${c[5]?`<span class="flag">${c[5]} ${I.flag}</span>`:''}</button>`).join('')}
+</div><div class="r"><h6>Filters</h6>
+  ${[5,4,3,2,1].map((n,i)=>`<button type="button" class="fl" aria-pressed="${i!==0}" aria-label="${n} stars"><i>${I.chk}</i>${stars(n)}</button>`).join('')}
+  <div class="field">Start Date</div><div class="inp"><span>DD/MM/YYYY</span><b>${I.cal}</b></div>
+  <div class="field">End Date</div><div class="inp"><span>03/07/2022</span><b>${I.cal}</b></div>
+  <div class="field">Agent</div><div class="inp" style="background:var(--bn-lav)"><span style="color:var(--bn-navy)">Genji</span><span style="width:20px;margin-right:6px">${I.chev}</span></div>
+  <div class="field">Customer</div><div class="inp" style="background:var(--bn-lav)"><span style="color:var(--bn-navy)">(All)</span><span style="width:20px;margin-right:6px">${I.chev}</span></div>
+</div></div>`;
+const drill=on=>`<div class="drill${on?' on':''}" role="dialog" aria-label="Chat drilldown: Bonny B.">
+  <div class="top"><h6>Bonny B.</h6>${stars(3)}<button type="button" class="x" aria-label="Close chat">&times;</button></div>
+  <div class="ts">Mar. 7, 2022, 1:03PM</div>
+  <div class="bub a" style="--i:0">Thank you for reaching out to us at <mark>&lt;company name&gt;</mark> <span class="tg">ORG</span><span class="ava">G</span></div>
+  <div class="bub a" style="--i:1">HI <mark>&lt;customer name&gt;</mark> <span class="tg">PER</span> how are you?<span class="ava">G</span></div>
+  <div class="bub c" style="--i:2">i purchased a bunch of headbands from you for my sister and i but they are now so loose they slip right off our heads :(<span class="ava">B</span></div>
+  <div class="ts">Mar. 7, 2022, 1:05PM</div>
+  <div class="bub a" style="--i:3">oh no! that’s such a bummer. i’m so sorry to hear that.<span class="ava">G</span></div>
+  <div class="bub c" style="--i:4">we haven’t even had them for long! maybe a month give or take a week...<span class="ava">B</span></div>
+</div>`;
+const aaBody=()=>`<div class="body"><div class="aa-top">
+  <div class="kpi"><h6>% Positive</h6><span class="kb">${I.kb}</span><div class="v"><span style="display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--bn-pink);font-weight:400;margin-right:2px"><small style="font-size:12px">-0.3pt</small>${I.dnp}</span><span data-count="55.3" data-dec="1">55.3</span>%</div><div class="d">(Mar 7-13)</div><span class="info">${I.info}</span></div>
+  <div class="agents"><h6>Agents</h6><span class="kb" style="position:absolute;right:22px;top:16px;width:16px;height:16px">${I.kb}</span>
+    <div class="sel"><span>(All)</span>${I.chev}</div>
+    <div class="ag"><div>${I.user}<span style="width:46px">Diego</span>${stars(3)}</div><div>${I.user}<span style="width:46px">Benji</span>${stars(4)}</div><div>${I.user}<span style="width:46px">Elsa</span>${stars(4)}</div></div>
+    <span class="info" style="position:absolute;right:20px;bottom:12px;width:20px;height:20px;color:var(--bn-purple)">${I.info}</span></div>
+</div>
+<div class="panel" style="padding-bottom:12px"><h6>Agent Productivity</h6><span class="kb">${I.kb}</span>
+  <div class="tabs"><span style="cursor:default" aria-disabled="true">Statistics</span><span class="on">Sentiment</span></div>
+  <div style="font-weight:700;font-size:16px;margin:6px 0 16px 14px">Sentiment Impact (Sankey Diagram)</div>
+  <div class="sankey" style="height:290px;margin-left:14px">
+    <svg viewBox="0 0 640 290" role="img" aria-label="Sentiment before agent: 61% positive, 39% negative. After agent: 70% positive, 30% negative.">
+      <text class="hd2" x="20" y="14">Before Agent</text><text class="hd2" x="300" y="14">After Agent</text>
+      <path class="band" d="M64 26H300V180H64Z"/>
+      <path class="band" d="M64 188C180 188 180 180 300 180V202C180 202 180 210 64 210Z"/>
+      <path class="band" d="M64 210H300V286H64Z" style="opacity:.0"/>
+      <path class="band" d="M64 210C180 210 180 210 300 210V286C180 286 180 286 64 286Z"/>
+      <rect class="bar" x="20" y="26" width="44" height="154" fill="var(--bn-green)"/><rect class="bar b" x="20" y="188" width="44" height="98" fill="var(--bn-pink)"/>
+      <rect class="bar" x="300" y="26" width="44" height="176" fill="var(--bn-green)"/><rect class="bar b" x="300" y="210" width="44" height="76" fill="var(--bn-pink)"/>
+      <text x="82" y="52">61%</text><text x="76" y="196">39%</text><text x="360" y="120">70%</text><text x="360" y="252">30%</text>
+    </svg>
+  </div>
+</div></div>`;
+
+const sidebar=(active,live)=>`<div class="sb"><div class="logo">${logoMark}<b>BANDIT LABS</b></div>${NAV.map(([k,t])=>{
+  const disabled=k==='set';
+  return `<button type="button" class="nv" ${live&&!disabled?`data-go="${k}"`:''} ${k===active?'aria-current="page"':''} ${disabled||!live?'aria-disabled="true"':''} ${!live?'tabindex="-1"':''}>${I[k]}<span>${t}</span></button>`}).join('')}</div>`;
+
+function buildApp(el,kind){
+  const live=kind==='main';
+  const map={hero:['dash'],bg:['dash'],main:['dash','ie','aa'],'ie-static':['ie'],'ie-chat':['ie'],'aa-static':['aa']};
+  const list=map[kind];const active=list[0];
+  const bodies={dash:dashBody,ie:ieBody,aa:aaBody};
+  const app=document.createElement('div');app.className='app';
+  app.innerHTML=sidebar(active,live)+`<div class="mn">${list.map((k,i)=>head(k,i===0)).join('')}${list.map((k,i)=>`<div class="scr${i===0?' on':''}" data-s="${k}">${bodies[k]()}${k==='ie'?drill(kind==='ie-chat'):''}</div>`).join('')}</div>`;
+  el.appendChild(app);
+  el.querySelectorAll('[data-count]').forEach(n=>cio.observe(n));
+  const fit=()=>{app.style.setProperty('--k',(el.clientWidth/1280).toFixed(4))};
+  fit();new ResizeObserver(fit).observe(el);
+
+  if(live){
+    const go=k=>{
+      app.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.dataset.s===k));
+      app.querySelectorAll('.scr-h').forEach(s=>s.classList.toggle('on',s.dataset.h===k));
+      app.querySelectorAll('.nv').forEach(n=>{if(n.dataset.go)n.toggleAttribute('aria-current',n.dataset.go===k);if(n.dataset.go===k)n.setAttribute('aria-current','page')});
+      $$('.chipb[data-go]').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.go===k)));
+      app.querySelector('.drill')?.classList.remove('on');
+      app.querySelectorAll(`[data-s="${k}"] [data-count]`).forEach(n=>{n.textContent='0';countUp(n)});
+    };
+    app.addEventListener('click',e=>{const b=e.target.closest('.nv[data-go]');if(b)go(b.dataset.go)});
+    $$('.chipb[data-go]').forEach(c=>c.addEventListener('click',()=>go(c.dataset.go)));
+    el._go=go;
+  }
+  /* shared interactions */
+  app.querySelectorAll('.qchips button').forEach(b=>b.addEventListener('click',()=>{
+    const all=b.parentElement.firstElementChild;const on=b.getAttribute('aria-pressed')!=='true';
+    if(b===all){b.parentElement.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');return}
+    b.setAttribute('aria-pressed',String(on));all.setAttribute('aria-pressed','false')}));
+  app.querySelectorAll('.fl').forEach(b=>b.addEventListener('click',()=>b.setAttribute('aria-pressed',String(b.getAttribute('aria-pressed')!=='true'))));
+  const dr=app.querySelector('.drill');
+  if(dr&&kind==='main'){
+    const open=()=>{dr.classList.add('on');dr.querySelector('.x').focus({preventScroll:true})};
+    const close=()=>{dr.classList.remove('on')};
+    app.querySelectorAll('.crow').forEach((r,i)=>r.addEventListener('click',()=>{if(i===0)open();else toast('Only the flagged chat is designed in the prototype')}));
+    dr.querySelector('.x').addEventListener('click',close);
+    app.addEventListener('keydown',e=>{if(e.key==='Escape'&&dr.classList.contains('on')){close()}});
+  }
+}
+$$('[data-app]').forEach(el=>buildApp(el,el.dataset.app));
+/* hero + background: count up once visible (already observed above) */
+
+/* ---------- mid-fi wireframes (SVG, rebuilt) ---------- */
+function mfSide(active){
+  const it=['DASHBOARD',active,'AGENT ANALYSIS'];
+  return `<rect width="94" height="330" fill="#cfcfd8"/><text x="47" y="18" font-size="6.5" font-weight="700" text-anchor="middle" fill="#3a3a48" letter-spacing="1">BANDIT LABS</text>`+
+    it.map((t,i)=>{const on=(i===(active==='CHAT EXPLORER'?1:0));return `<rect x="6" y="${40+i*22}" width="82" height="16" fill="${on?'#fff':'#dcdce3'}"/><text x="12" y="${51+i*22}" font-size="6.5" font-weight="700" fill="#3a3a48">${t}</text>`}).join('')+
+    `<rect x="6" y="302" width="82" height="16" fill="#dcdce3"/><text x="12" y="313" font-size="6.5" font-weight="700" fill="#3a3a48">SETTINGS</text>`;
+}
+const mf1=`<svg viewBox="0 0 520 330" width="100%" height="100%" font-family="inherit" aria-label="Mid-fi dashboard wireframe" role="img"><rect width="520" height="330" fill="#e8e8ed"/>${mfSide('DATA EXPLORER')}
+<text x="106" y="24" font-size="9" font-weight="700" fill="#2a2a33">DASHBOARD</text><rect x="498" y="12" width="9" height="9" fill="#fff" stroke="#8c8c99"/>
+<rect x="104" y="36" width="180" height="70" fill="#fff"/><text x="112" y="50" font-size="7" font-weight="700" fill="#2a2a33">Trending Topics</text>${[0,1,2,3].map(i=>`<rect x="${112+i*42}" y="68" width="38" height="14" fill="#f3f3f6" stroke="#cfcfd8"/><text x="${131+i*42}" y="78" font-size="6" text-anchor="middle" fill="#55556a">Topic</text>`).join('')}
+<rect x="292" y="36" width="110" height="70" fill="#fff"/><text x="300" y="50" font-size="7" font-weight="700" fill="#2a2a33">KPI 1</text><path d="M312 80l9-12 9 12z" fill="#2a2a33"/><text x="334" y="80" font-size="17" font-weight="700" fill="#2a2a33">26%</text><text x="347" y="98" font-size="6" text-anchor="middle" fill="#55556a">KPI 1 (Week 23)</text>
+<rect x="410" y="36" width="90" height="70" fill="none" stroke="#9a9aa8" stroke-dasharray="3 3"/><text x="455" y="78" font-size="20" text-anchor="middle" fill="#8c8c99">+</text>
+<rect x="104" y="118" width="396" height="190" fill="#fff"/><text x="112" y="132" font-size="7.5" font-weight="700" fill="#2a2a33">Aggregate Analytics</text>
+<text x="112" y="150" font-size="6.5" font-weight="700" fill="#2a2a33">Basic Stats</text><rect x="110" y="153" width="40" height="1.5" fill="#2a2a33"/><text x="164" y="150" font-size="6.5" fill="#55556a">Common Phrases</text><text x="226" y="150" font-size="6.5" fill="#55556a">Intensity</text>
+${['Flagged Words','Trending Topic','Trending Topic Count','Average CSAT'].map((t,i)=>`<text x="112" y="${176+i*22}" font-size="6.5" fill="#55556a">${t}</text><rect x="210" y="${171+i*22}" width="${[60,36,22,30][i]}" height="7" fill="#e3e3ea"/>`).join('')}
+</svg>`;
+const mf2=`<svg viewBox="0 0 520 330" width="100%" height="100%" font-family="inherit" aria-label="Mid-fi chat explorer wireframe" role="img"><rect width="520" height="330" fill="#e8e8ed"/>${mfSide('CHAT EXPLORER')}
+<text x="106" y="24" font-size="9" font-weight="700" fill="#2a2a33">CHAT EXPLORER</text><text x="494" y="22" font-size="6" text-anchor="end" fill="#2a2a33">Chat Drilldown</text>
+<text x="106" y="44" font-size="6.5" font-weight="700" fill="#2a2a33">Chats</text><rect x="104" y="48" width="252" height="14" fill="#fff" stroke="#8c8c99"/>
+${[['#445342UID','Lara Croft','Mar. 2, 2021',5],['#123457UID','Peter Parker','Mar. 2, 2021',4],['#121212UID','Harrison Ford','Mar. 1, 2021',2],['#123456UID','Peter Parker','Mar. 1, 2021',2]].map((c,i)=>`<rect x="104" y="${70+i*58}" width="252" height="50" fill="#fff" stroke="#9a9aa8"/><text x="112" y="${84+i*58}" font-size="6.5" font-weight="700" fill="#2a2a33">${c[0]}</text><text x="112" y="${95+i*58}" font-size="6" fill="#55556a">${c[1]}</text><text x="112" y="${105+i*58}" font-size="5.5" fill="#8c8c99">${c[2]}</text><text x="344" y="${84+i*58}" font-size="8" text-anchor="end" fill="#55556a" letter-spacing="1">${'★'.repeat(c[3])}</text><path d="M346 ${106+i*58}v-8h8v4h-5z" fill="none" stroke="#55556a" stroke-width="1"/>`).join('')}
+<rect x="364" y="34" width="140" height="278" fill="#fff" stroke="#cfcfd8"/><text x="372" y="48" font-size="7" font-weight="700" fill="#2a2a33">Filters</text>
+${[5,4,3,2,1].map((n,i)=>`<rect x="372" y="${55+i*10}" width="6" height="6" fill="#fff" stroke="#55556a" stroke-width=".8"/><text x="383" y="${61+i*10}" font-size="7" fill="#2a2a33" letter-spacing=".6">${'★'.repeat(n)}</text>`).join('')}
+<text x="372" y="122" font-size="5.5" fill="#55556a">Show Flagged Chats</text><rect x="372" y="126" width="16" height="8" rx="4" fill="#fff" stroke="#55556a"/><circle cx="376" cy="130" r="2.6" fill="#55556a"/><text x="394" y="132" font-size="5.5" fill="#55556a">Toggle 1</text>
+<text x="372" y="154" font-size="5.5" font-weight="700" fill="#2a2a33">Date Selector</text><rect x="372" y="158" width="94" height="12" fill="#f3f3f6" stroke="#cfcfd8"/><text x="376" y="167" font-size="5.5" fill="#8c8c99">DD/MM/YYYY</text><rect x="468" y="158" width="14" height="12" fill="#cfcfd8"/>
+<text x="372" y="190" font-size="5.5" font-weight="700" fill="#2a2a33">Issue Filter</text><rect x="372" y="194" width="124" height="12" fill="#f3f3f6" stroke="#cfcfd8"/><text x="376" y="203" font-size="5.5" fill="#55556a">Returns</text>
+<text x="372" y="222" font-size="5.5" font-weight="700" fill="#2a2a33">Agent Filter</text><rect x="372" y="226" width="124" height="12" fill="#f3f3f6" stroke="#cfcfd8"/><text x="376" y="235" font-size="5.5" fill="#55556a">Benji</text>
+<text x="372" y="254" font-size="5.5" font-weight="700" fill="#2a2a33">Customer Filter</text><rect x="372" y="258" width="124" height="12" fill="#f3f3f6" stroke="#cfcfd8"/><text x="376" y="267" font-size="5.5" fill="#55556a">Peter Parker</text>
+</svg>`;
+function mfInit(id,svg,pins,zones){
+  const box=$('#'+id+'box');if(!box)return;box.innerHTML=svg;
+  const wrap=box.parentElement;
+  const pe=pins.map((p,i)=>{const b=document.createElement('button');b.type='button';b.className='pin';b.textContent=i+1;b.setAttribute('aria-label','Annotation '+(i+1));b.style.left=`calc(${p[0]}% - 17px)`;b.style.top=`calc(${p[1]}% - 17px)`;box.appendChild(b);return b});
+  const ze=zones.map(z=>{const d=document.createElement('div');d.className='zone';d.style.cssText=`left:${z[0]/5.2}%;top:${z[1]/3.3}%;width:${z[2]/5.2}%;height:${z[3]/3.3}%`;box.appendChild(d);return d});
+  const btns=$$('#'+id+' ol button');
+  const set=(i,on)=>{pe[i].classList.toggle('on',on);ze[i].classList.toggle('on',on);btns[i].setAttribute('aria-pressed',String(on))};
+  const only=i=>{pe.forEach((_,j)=>set(j,j===i))};
+  btns.forEach((b,i)=>{b.addEventListener('click',()=>only(btns[i].getAttribute('aria-pressed')==='true'?-1:i));b.addEventListener('mouseenter',()=>only(i))});
+  pe.forEach((p,i)=>{p.addEventListener('click',()=>only(p.classList.contains('on')?-1:i));p.addEventListener('mouseenter',()=>only(i))});
+  wrap.addEventListener('mouseleave',()=>only(-1));
+  const io2=new IntersectionObserver(es=>{if(es[0].isIntersecting){io2.disconnect();if(!reduce&&!paused)[0,1,2].forEach(i=>setTimeout(()=>only(i),900+i*900));setTimeout(()=>only(-1),900+3*900)}},{threshold:.6});io2.observe(box);
+}
+mfInit('mf1',mf1,[[14,22],[86,12],[28,80]],[[0,36,94,86],[104,36,396,70],[104,118,396,190]]);
+mfInit('mf2',mf2,[[45,9],[64,33],[88,55]],[[96,8,262,60],[104,70,252,50],[368,150,132,56]]);
+
+/* ---------- live strip (appendix) ---------- */
+const strip=$('#liveStrip .row');
+if(strip){for(let r=0;r<2;r++)for(let i=1;i<=31;i++){const im=new Image();im.src=`/img/bandit/live-${String(i).padStart(2,'0')}.webp`;im.alt='';im.loading='lazy';strip.appendChild(im)}}
+
+/* ---------- good/bad toggle ---------- */
+$$('.gb button').forEach(b=>b.addEventListener('click',()=>b.setAttribute('aria-pressed',String(b.getAttribute('aria-pressed')!=='true'))));
+
+/* ---------- KPI goals ---------- */
+const goals=$$('.goal'),kps=$$('#kpis .kgroup .kp');
+goals.forEach(g=>g.addEventListener('click',()=>{
+  const on=g.getAttribute('aria-pressed')!=='true';goals.forEach(x=>x.setAttribute('aria-pressed','false'));g.setAttribute('aria-pressed',String(on));
+  const keys=on?g.dataset.k.split(' '):[];kps.forEach(k=>k.classList.toggle('lit',keys.includes(k.dataset.k)));
+}));
+
+/* ---------- task flow: walk the steps, 3 loops ---------- */
+function walkSteps(){
+  const steps=$$('#taskflow .step');let n=0,total=steps.length*3;
+  const t=setInterval(()=>{
+    if(paused||reduce){return}
+    steps.forEach(s=>s.classList.remove('lit'));
+    if(n>=total){clearInterval(t);return}
+    steps[n%steps.length].classList.add('lit');n++;
+  },1000);
+}
+
+/* ---------- reveal observer ---------- */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const el=e.target;el.classList.add('in');io.unobserve(el);setTimeout(()=>el.classList.add('done'),reduce?0:1500);
+  if(el.id==='taskflow')setTimeout(walkSteps,2600)}}),{threshold:.15,rootMargin:'0px 0px -6% 0px'});
+$$('.rv,.split,.eq,.vendors,.uhoh,.aff,.audit,#recon,.shield,.film,.diagram').forEach(el=>{if(!el.closest('.hero'))io.observe(el)});
+$$('.valence [data-count]').forEach(n=>cio.observe(n));
+requestAnimationFrame(()=>{$('.hero').classList.add('ready');setTimeout(()=>$$('.hero .split').forEach(e=>e.classList.add('in')),reduce?0:300)});
+
+/* nav: glass after the hero, hides on scroll down, returns on scroll up or focus */
+const nav=$('.nav');let lastY=scrollY;
+nav.addEventListener('focusin',()=>nav.classList.remove('hide'));
+function navTick(){const y=scrollY;nav.classList.toggle('solid',y>innerHeight*.6);
+  if(Math.abs(y-lastY)>6){nav.classList.toggle('hide',y>lastY&&y>innerHeight*.3&&!nav.contains(document.activeElement));lastY=y}}
+
+/* progress + hero tilt (pointer only, never scroll) */
+const plane=$('#plane'),prog=$('#progress');
+let mx=0,my=0;
+addEventListener('pointermove',e=>{mx=e.clientX/innerWidth-.5;my=e.clientY/innerHeight-.5},{passive:true});
+function frame(){
+  const h=root.scrollHeight-innerHeight;
+  prog.style.transform=`scaleX(${h>0?scrollY/h:0})`;
+  if(!reduce&&!paused&&plane)plane.style.transform=`rotateX(${46-my*8}deg) rotateZ(${-22+mx*8}deg)`;
+  navTick();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+const cp=$('#copy');if(cp)cp.textContent='© '+new Date().getFullYear()+' Philman Yeung';
+})();
+</script>
+<script>
+/* Preview mode: used by the portfolio's hover preview (bandit-labs#preview).
+   Hides navigation and slowly scrolls through the case study while the preview is visible. */
+(function(){
+  if (location.hash !== '#preview') return;
+  var d = document.documentElement; d.classList.add('is-preview');
+  var st = document.createElement('style');
+  st.textContent = '.is-preview .nav,.is-preview #progress,.is-preview .scrollcue,.is-preview .skip{display:none!important}html.is-preview{scroll-behavior:auto!important;overflow:hidden}.is-preview body{pointer-events:none}';
+  document.head.appendChild(st);
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var on = false, y = 0, last = 0, hold = 1.2;
+  addEventListener('message', function(e){
+    if (e.source !== parent || !e.data || e.data.pretzelPreview === undefined) return;
+    var was = on; on = !!e.data.pretzelPreview;
+    if (on && !was) { last = 0; requestAnimationFrame(tick); }
+  });
+  function tick(ts){
+    if (!on) return;
+    var dt = Math.min(0.05, (ts - (last || ts)) / 1000); last = ts;
+    if (hold > 0) hold -= dt;
+    else {
+      y += dt * 300;
+      var max = document.documentElement.scrollHeight - innerHeight;
+      if (y >= max) { y = 0; hold = 1.2; }
+      window.scrollTo(0, y);
+    }
+    requestAnimationFrame(tick);
+  }
+})();
+</script>
+<script src="/flow.js"></script>
+<script>document.querySelectorAll('a[href^="/#"],a[href="/about"]').forEach(function(a){a.addEventListener("click",function(e){if(e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();window.flowTo(a.href,e.clientX,e.clientY)})});</script>
+</body>
+</html>
